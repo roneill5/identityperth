@@ -1,0 +1,16 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	// Deliberately NOT "identity-perth": that Worker belongs to the archived v1 site.
+	"name": "identityperth-web",
+	"main": "worker/index.ts",
+	"compatibility_date": "2026-10-16",
+	"assets": {
+		"directory": "./dist",
+		"binding": "ASSETS",
+		"html_handling": "auto-trailing-slash",
+		"not_found_handling": "404-page",
+		// Only the Studio's deep links need the Worker; every other request is
+		// answered straight from the asset store.
+		"run_worker_first": ["/backend", "/backend/*"]
+	}
+}

@@ -1,0 +1,136 @@
+---
+/**
+ * Responsive image from a Sanity `figure`. Builds a srcset through the Sanity
+ * image CDN, applies hotspot and crop, and uses the LQIP as a blurred
+ * placeholder until the real image loads. Works with expanded assets
+ * (`asset->{...}`) and with raw references (images inside rich text).
+ * With `portraitAspect`, narrow screens get a portrait crop via <picture>.
+ * `fill` images are not cropped by the CDN: CSS covers the box and the
+ * hotspot becomes `object-position`, so a tile and the page hero it grows
+ * into show the same framing of the same original.
+ */
+import { urlFor } from '../sanity/image';
+
+interface ImageAsset {
+	_id?: string | null;
+	_ref?: string | null;
+	url?: string | null;
+	metadata?: {
+		lqip?: string | null;
+		dimensions?: { width?: number | null; height?: number | null; aspectRatio?: number | null } | null;
+	} | null;
+}
+
+export interface Figure {
+	asset?: ImageAsset | null;
+	alt?: string | null;
+	hotspot?: { x?: number | null; y?: number | null } | null;
+	crop?: unknown;
+}
+
+interface Props {
+	image: Figure;
+	/** Width/height ratio to crop to. Omit to keep the image's own ratio. */
+	aspect?: number;
+	/** Width/height ratio used below 768px instead of `aspect`. */
+	portraitAspect?: number;
+	/** Fill the positioned parent (absolute inset-0, object-cover). */
+	fill?: boolean;
+	/** The `sizes` attribute, e.g. "(min-width: 1024px) 50vw, 100vw". */
+	sizes?: string;
+	widths?: number[];
+	loading?: 'lazy' | 'eager';
+	fetchpriority?: 'high' | 'low' | 'auto';
+	class?: string;
+}
+
+const {
+	image,
+	aspect,
+	portraitAspect,
+	fill = false,
+	sizes = '100vw',
+	widths = [480, 768, 1024, 1440, 1920, 2560],
+	loading = 'lazy',
+	fetchpriority,
+	class: className,
+} = Astro.props;
+
+const asset = image?.asset;
+const id = asset?._id ?? asset?._ref ?? null;
+
+/** Sanity asset IDs encode the original size: image-<hash>-<w>x<h>-<ext>. */
+function dimsFromId(assetId: string | null): { width: number; height: number; aspectRatio?: number | null } | null {
+	const match = assetId?.match(/-(\d+)x(\d+)-/);
+	return match ? { width: Number(match[1]), height: Number(match[2]) } : null;
+}
+
+const dims = asset?.metadata?.dimensions ?? dimsFromId(id);
+const naturalRatio =
+	dims?.aspectRatio || (dims?.width && dims?.height ? dims.width / dims.height : 1.5);
+// A filled box crops in CSS, so the file keeps its own ratio.
+const cropTo = fill ? undefined : aspect;
+const ratio = cropTo ?? naturalRatio;
+const focal = fill && image?.hotspot ? `${Math.round((image.hotspot.x ?? 0.5) * 100)}% ${Math.round((image.hotspot.y ?? 0.5) * 100)}%` : null;
+
+function src(width: number, cropTo?: number) {
+	const builder = urlFor(image).width(width).quality(80);
+	return cropTo ? builder.height(Math.round(width / cropTo)).fit('crop').url() : builder.url();
+}
+
+const maxWidth = dims?.width ?? widths[widths.length - 1];
+const usable = widths.filter((w) => w <= maxWidth);
+const list = usable.length ? usable : [Math.min(maxWidth, widths[0])];
+// Only build URLs when there is an asset; an image whose upload failed renders nothing.
+const srcset = id ? list.map((w) => `${src(w, cropTo)} ${w}w`).join(', ') : '';
+const portraitSrcset = id && portraitAspect && !fill ? list.map((w) => `${src(w, portraitAspect)} ${w}w`).join(', ') : null;
+const fallbackWidth = list[Math.min(list.length - 1, 3)];
+const width = fallbackWidth;
+const height = Math.round(fallbackWidth / ratio);
+const lqip = asset?.metadata?.lqip ?? undefined;
+const imgClass = [
+	'block max-w-full bg-cover bg-center object-cover',
+	fill ? 'absolute inset-0 h-full w-full' : 'h-auto w-full',
+	className,
+];
+const style = [lqip ? `background-image:url(${lqip})` : null, focal ? `object-position:${focal};background-position:${focal}` : null].filter(Boolean).join(';') || undefined;
+---
+
+{id ? (
+	portraitSrcset ? (
+		<picture>
+			<source media="(max-width: 767px)" srcset={portraitSrcset} sizes={sizes} />
+			<img
+				src={src(fallbackWidth, cropTo)}
+				srcset={srcset}
+				sizes={sizes}
+				width={width}
+				height={height}
+				alt={image.alt ?? ''}
+				loading={loading}
+				decoding="async"
+				fetchpriority={fetchpriority}
+				draggable="false"
+				class:list={imgClass}
+				style={style}
+				data-img
+			/>
+		</picture>
+	) : (
+		<img
+			src={src(fallbackWidth, cropTo)}
+			srcset={srcset}
+			sizes={sizes}
+			width={width}
+			height={height}
+			alt={image.alt ?? ''}
+			loading={loading}
+			decoding="async"
+			fetchpriority={fetchpriority}
+			draggable="false"
+			class:list={imgClass}
+			style={style}
+			data-img
+		/>
+	)
+) : null}

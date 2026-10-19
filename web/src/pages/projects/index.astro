@@ -1,0 +1,21 @@
+---
+import Base from '../../layouts/Base.astro';
+import ProjectGrid from '../../components/ProjectGrid.astro';
+import { client } from '../../sanity/client';
+import { PROJECTS_QUERY } from '../../sanity/queries';
+
+const projects = await client.fetch(PROJECTS_QUERY);
+---
+
+<Base title="Projects" description="Selected brand, campaign, digital and print work by Identity, Perth.">
+	<h1 class="sr-only">Projects</h1>
+	{projects.length ? (
+		<>
+			<ProjectGrid projects={projects} />
+			<!-- The dog lives down here. Lead it home. -->
+			<div class="mt-4 md:mt-6" data-dog aria-hidden="true"></div>
+		</>
+	) : (
+		<p class="type-body px-gutter py-[20vh] text-paper/70">Projects are on their way.</p>
+	)}
+</Base>

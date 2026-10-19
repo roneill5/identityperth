@@ -1,0 +1,15 @@
+---
+/**
+ * The "ID" roundel: the official single SVG from Ross (28 x 28, ring and
+ * mark in one file, exported from Figma), with its fills on currentColor so
+ * it takes the text colour. Size it with height and width classes.
+ */
+import Mark from '../assets/brand/roundel.svg';
+
+interface Props {
+	class?: string;
+}
+const { class: className } = Astro.props;
+---
+
+<Mark class:list={['block shrink-0', className]} aria-hidden="true" />

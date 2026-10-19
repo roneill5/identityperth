@@ -1,0 +1,658 @@
+@import "tailwindcss";
+@plugin "tailwindcss-motion";
+
+/*
+ * Fonts. Figtree is the brand body face and is free (Google Fonts).
+ * Hansief (condensed caps) is a free font whose EULA permits web use.
+ * Capraia (serif, CAST) is commercial: its woff2 files live in public/fonts
+ * but stay out of git until the MyFonts webfont licence is bought; when a
+ * file is missing the browser falls back to Fraunces, which stands in.
+ */
+@import "@fontsource-variable/figtree";
+@import "@fontsource-variable/fraunces";
+@import "@fontsource/bebas-neue";
+@import "@fontsource/comic-neue/400.css";
+@import "@fontsource/comic-neue/700.css";
+
+@font-face {
+	font-family: "Capraia";
+	font-weight: 300;
+	font-style: normal;
+	font-display: swap;
+	src: url("/fonts/capraia-light.woff2") format("woff2");
+}
+@font-face {
+	font-family: "Capraia";
+	font-weight: 300;
+	font-style: italic;
+	font-display: swap;
+	src: url("/fonts/capraia-italic.woff2") format("woff2");
+}
+/* Hansief ships as the original OTF: its EULA allows @font-face use but not modified font files. */
+@font-face {
+	font-family: "Hansief";
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+	src: url("/fonts/hansief.otf") format("opentype");
+}
+
+@theme {
+	/* Colour. Values taken from the Figma design (ID-Website-2026 v1). */
+	--color-ink: #1e1d1e;
+	--color-paper: #f2f2f2;
+	--color-lime: #bdff3b;
+	--color-slate: #64737a;
+
+	/* Type families */
+	--font-sans: "Figtree Variable", Figtree, system-ui, sans-serif;
+	--font-serif: Capraia, "Fraunces Variable", Georgia, serif;
+	--font-display: Hansief, "Bebas Neue", Impact, sans-serif;
+
+	/* Spacing. 25px gutters in the design. */
+	--spacing-gutter: 25px;
+
+	/* Motion */
+	--ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+	--ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+@layer base {
+	:root {
+		/* The sidebar is 415/1440 of the frame in the design. */
+		--sidebar-w: max(280px, 28.8vw);
+		--topbar-h: 64px;
+		--ticker-h: 82px;
+	}
+
+	html {
+		background-color: var(--color-ink);
+		color: var(--color-paper);
+		font-family: var(--font-sans);
+		-webkit-font-smoothing: antialiased;
+		text-rendering: optimizeLegibility;
+	}
+
+	body {
+		min-height: 100dvh;
+	}
+
+	::selection {
+		background: var(--color-lime);
+		color: var(--color-ink);
+	}
+
+	/* Respect reduced motion. GSAP checks the same preference in app.ts. */
+	@media (prefers-reduced-motion: reduce) {
+		*,
+		*::before,
+		*::after {
+			animation-duration: 0.01ms !important;
+			animation-iteration-count: 1 !important;
+			transition-duration: 0.01ms !important;
+			scroll-behavior: auto !important;
+		}
+	}
+}
+
+@layer components {
+	/* Type scale. Sizes are the Figma values at 1440 wide, scaled fluidly. */
+	.type-nav {
+		font-family: var(--font-serif);
+		font-weight: 300;
+		font-size: clamp(1.625rem, 2.08vw, 2.375rem);
+		line-height: 1.5;
+		letter-spacing: 0.02em;
+	}
+	.type-menu {
+		font-family: var(--font-serif);
+		font-weight: 300;
+		font-size: clamp(2.25rem, 3.6vw, 4.75rem);
+		line-height: 1.2;
+		letter-spacing: 0.025em;
+	}
+	.type-h1 {
+		font-family: var(--font-serif);
+		font-weight: 300;
+		font-size: clamp(2rem, 3.2vw, 4rem);
+		line-height: 1.1;
+	}
+	.type-h2 {
+		font-family: var(--font-serif);
+		font-weight: 300;
+		font-size: clamp(1.625rem, 2.08vw, 2.5rem);
+		line-height: 1.2;
+	}
+	.type-h3 {
+		font-family: var(--font-serif);
+		font-weight: 300;
+		font-size: clamp(1.25rem, 1.4vw, 1.75rem);
+		line-height: 1.25;
+	}
+	.type-accordion {
+		font-family: var(--font-serif);
+		font-weight: 300;
+		font-size: clamp(0.9375rem, 1.05vw, 1.25rem);
+		line-height: 1.2;
+	}
+	.type-body {
+		font-family: var(--font-sans);
+		font-size: clamp(0.9375rem, 0.95vw, 1.125rem);
+		line-height: 1.5;
+	}
+	.type-small {
+		font-family: var(--font-sans);
+		font-size: 0.8125rem;
+		line-height: 1.4;
+	}
+	.type-label {
+		font-family: var(--font-display);
+		font-size: 1.125rem;
+		line-height: 1;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+	}
+	.type-display {
+		font-family: var(--font-display);
+		font-size: clamp(1.125rem, 1.43vw, 1.625rem);
+		line-height: 1;
+		letter-spacing: 0.053em;
+		text-transform: uppercase;
+	}
+	.type-ticker {
+		font-family: var(--font-display);
+		font-size: 15.5px;
+		line-height: 1;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		white-space: nowrap;
+	}
+
+	/* Stand-in tuning: only matters when Fraunces is rendering instead of Capraia. */
+	.font-serif,
+	.type-nav,
+	.type-menu,
+	.type-h1,
+	.type-h2,
+	.type-h3,
+	.type-accordion {
+		font-variation-settings: "opsz" 144, "SOFT" 0, "WONK" 0;
+	}
+
+	.skip-link {
+		position: fixed;
+		top: 0;
+		left: 0;
+		z-index: 100;
+		padding: 0.75rem 1rem;
+		background: var(--color-lime);
+		color: var(--color-ink);
+		transform: translateY(-120%);
+	}
+	.skip-link:focus-visible {
+		transform: none;
+	}
+
+	/* Links in running text */
+	.prose a {
+		color: var(--color-lime);
+		text-decoration: underline;
+		text-underline-offset: 0.15em;
+	}
+	.prose p + p,
+	.prose p + ul,
+	.prose ul + p {
+		margin-top: 1em;
+	}
+	.prose h2 {
+		font-family: var(--font-serif);
+		font-weight: 300;
+		font-size: clamp(1.5rem, 1.8vw, 2.25rem);
+		line-height: 1.2;
+		margin-top: 2em;
+		margin-bottom: 0.6em;
+	}
+	.prose h3 {
+		font-family: var(--font-serif);
+		font-weight: 300;
+		font-size: clamp(1.25rem, 1.4vw, 1.75rem);
+		line-height: 1.25;
+		margin-top: 1.6em;
+		margin-bottom: 0.5em;
+	}
+	.prose blockquote {
+		font-family: var(--font-serif);
+		font-weight: 300;
+		font-size: clamp(1.25rem, 1.6vw, 2rem);
+		line-height: 1.3;
+		color: var(--color-lime);
+		margin: 1.5em 0;
+	}
+	.prose ul {
+		list-style: disc;
+		padding-left: 1.25em;
+	}
+	.prose ol {
+		list-style: decimal;
+		padding-left: 1.25em;
+	}
+	.prose figure {
+		margin: 2em 0;
+	}
+	.prose figcaption {
+		margin-top: 0.5em;
+		font-size: 0.8125rem;
+		color: color-mix(in srgb, var(--color-paper) 70%, transparent);
+	}
+
+	/* Ticker marquee. will-change keeps the moving layer rasterised at full
+	   device resolution so the wordmark and roundel stay crisp while moving. */
+	.ticker-track {
+		display: flex;
+		width: max-content;
+		will-change: transform;
+		backface-visibility: hidden;
+		animation: ticker var(--ticker-duration, 40s) linear infinite;
+	}
+	.ticker:hover .ticker-track {
+		animation-play-state: paused;
+	}
+	@keyframes ticker {
+		to {
+			transform: translateX(-50%);
+		}
+	}
+
+	/* Sanity images: blurred LQIP until the real pixels arrive */
+	img[data-img] {
+		clip-path: inset(0);
+		transition: filter 0.7s ease;
+	}
+	img[data-img]:not(.is-loaded) {
+		filter: blur(12px);
+	}
+
+	/* Project tiles: a slow zoom in, a quicker settle out */
+	.tile .tile__media {
+		transition: transform 0.7s var(--ease-out-expo), opacity 0.4s ease;
+	}
+	.tile:hover .tile__media,
+	.tile:focus-visible .tile__media {
+		transform: scale(1.05);
+		transition-duration: 1.6s, 0.4s;
+		transition-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1), ease;
+	}
+
+	/* Gallery tiles: something to look into, nothing to click. A magnifier,
+	   SVG first, PNGs for browsers that cannot use an SVG cursor. */
+	.gallery-wall figure {
+		cursor:
+			url("/cursors/magnify.svg") 10 10,
+			-webkit-image-set(url("/cursors/magnify.png") 1x, url("/cursors/magnify@2x.png") 2x) 10 10,
+			url("/cursors/magnify.png") 10 10,
+			auto;
+	}
+
+	/* A cover growing into the project page hero (transitions.ts) */
+	.flip {
+		position: fixed;
+		z-index: 60;
+		overflow: hidden;
+		pointer-events: none;
+		background: var(--color-ink);
+	}
+	.flip img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transform-origin: center;
+	}
+
+	/* A heading that cycles its phrases: all stacked in one cell, words clipped for the swap */
+	.cycle {
+		display: grid;
+	}
+	.cycle__phrase {
+		grid-area: 1 / 1;
+	}
+	.cycle__phrase[aria-hidden="true"] {
+		visibility: hidden;
+	}
+	.cycle__word {
+		display: inline-block;
+		overflow: hidden;
+		vertical-align: top;
+		padding-bottom: 0.12em;
+		margin-bottom: -0.12em;
+	}
+	.cycle__word > span {
+		display: inline-block;
+	}
+
+	/* Accordion chrome for native <details> */
+	.accordion > summary {
+		list-style: none;
+		cursor: pointer;
+	}
+	.accordion > summary::-webkit-details-marker {
+		display: none;
+	}
+	.accordion > summary .icon-open,
+	.accordion[open] > summary .icon-closed {
+		display: none;
+	}
+	.accordion[open] > summary .icon-open {
+		display: block;
+	}
+}
+
+/*
+ * Page frame. Unlayered on purpose: these must beat utility classes such as
+ * `flex` on the sidebar when the splash home page hides it.
+ */
+.site-main {
+	padding-top: var(--topbar-h);
+}
+@media (width >= 64rem) {
+	.site-main {
+		padding-top: 0;
+		margin-left: var(--sidebar-w);
+	}
+}
+body[data-page="splash"] [data-sidebar] {
+	display: none;
+}
+body[data-page="splash"] .site-main {
+	padding-top: 0;
+	margin-left: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Widgets and Easter eggs. Unlayered so they beat utility classes.    */
+/* ------------------------------------------------------------------ */
+
+/* Logo: ID grows into IDENTITY on hover, one letter at a time. On desktop the
+   lockup shrinks as it unfolds so the whole word stays inside the column. */
+.logo__inner {
+	transform-origin: left top;
+	transition: transform 0.6s var(--ease-out-expo);
+}
+@media (width >= 64rem) {
+	.logo:hover .logo__inner,
+	.logo:focus-visible .logo__inner {
+		transform: scale(0.62);
+	}
+}
+/* In the menu the letters are animated by menu.ts, not by hover. */
+[data-menu] .logo__letter {
+	opacity: 1;
+	transform: none;
+	transition: none;
+}
+.logo__letter {
+	opacity: 0;
+	transform: translateX(-22%);
+	transform-box: fill-box;
+	transition:
+		opacity 0.28s ease-out,
+		transform 0.55s var(--ease-out-expo);
+	/* Leaving: the last letter goes first, so the word folds back into the mark. */
+	transition-delay: calc((5 - var(--i)) * 35ms);
+}
+.logo:hover .logo__letter,
+.logo:focus-visible .logo__letter {
+	opacity: 1;
+	transform: none;
+	transition-delay: calc(var(--i) * 60ms);
+}
+@media (prefers-reduced-motion: reduce) {
+	.logo__letter,
+	.logo__inner,
+	img[data-img],
+	.tile .tile__media {
+		transition-duration: 0s;
+	}
+}
+
+/* Toasts: a pill that rises from the bottom of the screen */
+.egg-toast {
+	position: fixed;
+	bottom: 28px;
+	left: 0;
+	right: 0;
+	z-index: 80;
+	display: flex;
+	align-items: center;
+	width: fit-content;
+	max-width: min(92vw, 460px);
+	margin-inline: auto;
+	padding: 12px 24px;
+	border-radius: 999px;
+	color: var(--color-paper);
+	background:
+		linear-gradient(180deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.03) 49%, rgba(0, 0, 0, 0.12) 51%, rgba(0, 0, 0, 0.28) 100%),
+		#2a292a;
+	border: 1px solid color-mix(in srgb, var(--color-paper) 18%, transparent);
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.08),
+		0 10px 30px rgba(0, 0, 0, 0.45);
+}
+.egg-toast__eyebrow {
+	display: block;
+	font-family: var(--font-sans);
+	font-size: 0.78rem;
+	line-height: 1.2;
+	color: color-mix(in srgb, var(--color-paper) 72%, transparent);
+}
+.egg-toast__title {
+	display: block;
+	font-family: var(--font-sans);
+	font-weight: 600;
+	font-size: 1rem;
+	line-height: 1.3;
+}
+/* Comic Sans mode */
+html.comic,
+html.comic * {
+	font-family: "Comic Sans MS", "Comic Neue", "Chalkboard SE", "Comic Relief", cursive !important;
+	cursor: url("/cursors/pencil.svg") 2 30, auto !important;
+}
+html.comic [data-logo] svg,
+html.comic [data-menu] svg,
+html.comic .ticker svg {
+	filter: url(#scribble);
+}
+html.comic .dog-room__dog {
+	filter: url(#scribble) drop-shadow(0 2px 0 rgba(0, 0, 0, 0.45));
+}
+
+/* Weather and clock */
+.wx {
+	display: flex;
+	align-items: stretch;
+	gap: 14px;
+	color: var(--color-paper);
+}
+.wx__item {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+}
+.wx__icon {
+	width: 30px;
+	height: 30px;
+	flex-shrink: 0;
+}
+.wx__icon svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+.wx__clock {
+	width: 30px;
+	height: 30px;
+	flex-shrink: 0;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.9;
+	stroke-linecap: round;
+}
+.wx__clock .wx__second {
+	stroke: var(--color-lime);
+	stroke-width: 1.2;
+}
+.wx__clock .wx__pin {
+	fill: var(--color-lime);
+	stroke: none;
+}
+.wx__text {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	line-height: 1;
+}
+.wx__big {
+	font-family: var(--font-display);
+	font-size: 1.05rem;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+.wx__label {
+	font-family: var(--font-display);
+	font-size: 0.58rem;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: var(--color-paper);
+}
+/* Below the desktop breakpoint only the weather icon and temperature show. */
+@media (width < 64rem) {
+	.wx__label,
+	.wx [data-clock] {
+		display: none;
+	}
+	.wx__icon {
+		width: 24px;
+		height: 24px;
+	}
+	.wx__big {
+		font-size: 0.9rem;
+	}
+}
+
+/* The dog's room: ink furniture on paper, a pixel floor, a dog that sleeps on the sofa */
+.dog-room {
+	position: relative;
+	height: 54px; /* the door (40px) on the floor (10px), plus a little headroom */
+	overflow: hidden;
+	background: var(--color-ink);
+	color: var(--color-paper);
+}
+.dog-room__floor {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 10px;
+	background-image:
+		linear-gradient(var(--color-paper), var(--color-paper)),
+		repeating-linear-gradient(90deg, transparent 0 22px, var(--color-paper) 22px 24px);
+	background-size: 100% 2px, 24px 100%;
+	background-position: 0 0, 0 0;
+	background-repeat: no-repeat, repeat-x;
+}
+.dog-room__door,
+.dog-room__sofa,
+.dog-room__item,
+.dog-room__dog {
+	position: absolute;
+	bottom: 10px;
+	display: block;
+}
+.dog-room__door { left: 24px; }
+.dog-room__sofa { right: 24px; }
+.dog-room__plant { left: 14%; }
+.dog-room__dining { left: 26%; display: flex; align-items: flex-end; }
+.dog-room__rug { left: 46%; }
+.dog-room__tv { left: 64%; }
+@media (width < 48rem) {
+	.dog-room__plant,
+	.dog-room__dining,
+	.dog-room__tv {
+		display: none;
+	}
+	.dog-room__rug { left: 40%; }
+}
+.dog-room__tv svg {
+	animation: dog-tv 3.1s steps(1) infinite;
+}
+@keyframes dog-tv {
+	0%, 100% { opacity: 1; }
+	47% { opacity: 0.88; }
+	50% { opacity: 1; }
+	83% { opacity: 0.93; }
+}
+.dog-room__door svg,
+.dog-room__sofa svg,
+.dog-room__item svg,
+.dog-room__dog svg {
+	display: block;
+}
+.dog-room__dog {
+	left: 0;
+	z-index: 2;
+	padding: 0;
+	border: 0;
+	background: none;
+	cursor: pointer;
+	transform-origin: center bottom;
+	will-change: transform;
+}
+.dog-room__heart {
+	position: absolute;
+	z-index: 3;
+	pointer-events: none;
+	animation: dog-heart 1s steps(8) forwards;
+}
+.dog-room__heart svg {
+	display: block;
+}
+@keyframes dog-heart {
+	to { transform: translateY(-10px); opacity: 0; }
+}
+/* Zs rise from the sofa once the dog is asleep */
+.dog-room__zzz {
+	position: absolute;
+	right: calc(24px + 10px);
+	bottom: calc(10px + 22px);
+	display: none;
+}
+.dog-room.is-asleep .dog-room__zzz {
+	display: block;
+}
+.dog-room__zzz svg {
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	opacity: 0;
+	animation: dog-zzz 2.7s steps(9) infinite;
+}
+.dog-room__zzz svg:nth-child(2) { animation-delay: 0.9s; }
+.dog-room__zzz svg:nth-child(3) { animation-delay: 1.8s; }
+@keyframes dog-zzz {
+	0% { transform: translate(0, 0); opacity: 0; }
+	12% { opacity: 1; }
+	100% { transform: translate(10px, -14px); opacity: 0; }
+}
+
+/* Pong arena */
+.pong {
+	position: relative;
+	width: 100%;
+	overflow: hidden;
+	border: 1px solid color-mix(in srgb, var(--color-paper) 25%, transparent);
+	background: var(--color-ink);
+}
+
+
+

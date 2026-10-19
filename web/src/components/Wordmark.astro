@@ -1,0 +1,20 @@
+---
+/**
+ * The IDENTITY lockup: the "ID" mark followed by "ENTITY", with the gap
+ * from the design (21% of the cap height). Size it with a height class on
+ * the wrapper, e.g. `class="h-10"`. Colour follows `currentColor`.
+ */
+import IdMark from '../assets/brand/id-mark.svg';
+import Entity from '../assets/brand/entity.svg';
+
+interface Props {
+	class?: string;
+}
+const { class: className } = Astro.props;
+---
+
+<span class:list={['inline-flex items-center', className]} aria-hidden="true">
+	<IdMark class="h-full w-auto" />
+	<span class="h-full aspect-[21/99]"></span>
+	<Entity class="h-full w-auto" />
+</span>

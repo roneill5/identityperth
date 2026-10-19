@@ -1,0 +1,41 @@
+---
+/** Renders a Sanity `media` object: an image or a video. */
+import SanityImage, { type Figure } from './SanityImage.astro';
+import VideoEmbed from './VideoEmbed.astro';
+import { hasVideo, type VideoData } from '../lib/video';
+
+export interface MediaData {
+	kind?: 'image' | 'video' | null;
+	image?: Figure | null;
+	video?: VideoData | null;
+}
+
+interface Props {
+	media: MediaData;
+	aspect?: number;
+	portraitAspect?: number;
+	fill?: boolean;
+	sizes?: string;
+	loading?: 'lazy' | 'eager';
+	fetchpriority?: 'high' | 'low' | 'auto';
+	class?: string;
+}
+
+const { media, aspect, portraitAspect, fill, sizes, loading, fetchpriority, class: className } = Astro.props;
+const showVideo = media.kind === 'video' && hasVideo(media.video);
+---
+
+{showVideo ? (
+	<VideoEmbed video={media.video!} aspect={aspect} fill={fill} class={className} loading={loading} />
+) : media.image?.asset ? (
+	<SanityImage
+		image={media.image}
+		aspect={aspect}
+		portraitAspect={portraitAspect}
+		fill={fill}
+		sizes={sizes}
+		loading={loading}
+		fetchpriority={fetchpriority}
+		class={className}
+	/>
+) : null}

@@ -1,0 +1,42 @@
+---
+/**
+ * Gallery: a wall of everything Identity has made, three across in the order
+ * they were added (Figma page 1: rows of matching ratios). Nothing links
+ * anywhere (it is separate from Projects); hovering a tile shows its caption
+ * on a lime bar under a small magnifier cursor (not an arrow, not a
+ * hand). Images blur up as they load instead of animating in.
+ */
+import Base from '../layouts/Base.astro';
+import SanityImage from '../components/SanityImage.astro';
+import { client } from '../sanity/client';
+import { GALLERY_QUERY } from '../sanity/queries';
+
+const items = await client.fetch(GALLERY_QUERY);
+---
+
+<Base title="Gallery" description="A wall of work from the Identity studio in Perth.">
+	<h1 class="sr-only">Gallery</h1>
+	{items.length ? (
+		<div class="gallery-wall grid grid-cols-2 gap-4 md:grid-cols-3">
+			{items.map((item, i) => {
+				const label = item.caption ?? item.project?.title ?? null;
+				const client = item.project?.client?.name ?? null;
+				return (
+					<figure class="group relative overflow-hidden bg-ink">
+						{item.image && <SanityImage image={item.image} sizes="(min-width: 768px) 24vw, 50vw" loading={i < 6 ? 'eager' : 'lazy'} />}
+						{(label || client) && (
+							<figcaption class="pointer-events-none absolute inset-x-0 bottom-0 flex h-[23px] translate-y-full items-center justify-between gap-3 bg-lime px-2.5 font-sans text-[11px] leading-none text-ink transition-transform duration-300 ease-(--ease-out-expo) group-hover:translate-y-0">
+								<span class="truncate">{label}</span>
+								<span class="shrink-0">{client !== label ? client : null}</span>
+							</figcaption>
+						)}
+					</figure>
+				);
+			})}
+		</div>
+	) : (
+		<p class="type-body px-gutter py-[20vh] text-paper/70">The gallery is being hung.</p>
+	)}
+	<!-- The dog lives down here too. -->
+	<div class="mt-4 md:mt-6" data-dog aria-hidden="true"></div>
+</Base>

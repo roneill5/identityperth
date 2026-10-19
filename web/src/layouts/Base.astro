@@ -1,0 +1,73 @@
+---
+import '../styles/global.css';
+import Sidebar from '../components/Sidebar.astro';
+import MenuOverlay from '../components/MenuOverlay.astro';
+import { getSettings } from '../sanity/fetch';
+
+interface Props {
+	title?: string;
+	description?: string | null;
+	image?: string | null;
+	/**
+	 * Page kind, mirrored onto <body data-page>. "splash" hides the sidebar
+	 * and lets the hero fill the viewport (the home page). "notfound" marks
+	 * the 404.
+	 */
+	page?: 'splash' | 'default' | 'notfound';
+	/** Extra classes on <main>. */
+	class?: string;
+}
+
+const settings = await getSettings();
+const siteName = settings?.siteName ?? 'Identity';
+const defaultTitle = settings?.seo?.title ?? `${siteName}, Perth`;
+const title = Astro.props.title ? `${Astro.props.title} | ${siteName}` : defaultTitle;
+const description = Astro.props.description ?? settings?.seo?.description ?? '';
+const image = Astro.props.image ?? settings?.seo?.image?.asset?.url ?? null;
+const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : Astro.url.pathname;
+const page = Astro.props.page ?? 'default';
+---
+
+<!doctype html>
+<html lang="en-AU">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<link rel="canonical" href={canonical} />
+		<meta property="og:site_name" content={siteName} />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content={canonical} />
+		{image && <meta property="og:image" content={image} />}
+		<meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'} />
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<meta name="theme-color" content="#1e1d1e" />
+		<meta name="generator" content={Astro.generator} />
+		<slot name="head" />
+		<!-- If you're reading this, go outside and touch grass. -->
+		<!-- Still here? Fine. Type the word "comic" anywhere on the page and see what happens. -->
+	</head>
+	<body class="bg-ink text-paper" data-page={page}>
+		<a href="#main" class="skip-link">Skip to content</a>
+		<Sidebar pathname={Astro.url.pathname} />
+		<main id="swup" class:list={['site-main relative min-h-dvh', Astro.props.class]}>
+			<div id="main" tabindex="-1" class="outline-none" data-page={page}>
+				<slot />
+			</div>
+		</main>
+		<MenuOverlay settings={settings} />
+
+		<!-- The scribble is for Comic Sans mode. -->
+		<svg width="0" height="0" aria-hidden="true" class="absolute">
+			<filter id="scribble">
+				<feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="7" />
+				<feDisplacementMap in="SourceGraphic" scale="5" xChannelSelector="R" yChannelSelector="G" />
+			</filter>
+		</svg>
+
+		<script src="../scripts/app.ts"></script>
+	</body>
+</html>

@@ -1,0 +1,139 @@
+---
+/**
+ * Full-screen menu from the design (Figma page 2): the IDENTITY lockup
+ * top-left in the same spot and size as the sidebar's ID mark (so opening
+ * the menu reads as the ID unfolding into the word), tagline top-right, the
+ * four sections as a serif row 45% down, the contact column on the right,
+ * "Menu" bottom-left and a close ring top-right. Fits the viewport on
+ * desktop; scrolls on small screens. Hidden until menu.ts opens it.
+ */
+import IdMark from '../assets/brand/id-mark.svg';
+import EntityLetters from '../assets/brand/entity-letters.svg';
+import Roundel from './Roundel.astro';
+import RingIcon from './icons/RingIcon.astro';
+import { NAV } from '../lib/site';
+
+interface Settings {
+	tagline?: string | null;
+	menuText?: string | null;
+	email?: string | null;
+	careersEmail?: string | null;
+	phone?: string | null;
+	address?: string | null;
+	socials?: { _key: string; label?: string | null; url?: string | null }[] | null;
+}
+
+interface Props {
+	settings: Settings | null;
+}
+const { settings } = Astro.props;
+const addressLines = settings?.address?.split('\n').filter(Boolean) ?? [];
+---
+
+<div
+	id="menu"
+	class="invisible fixed inset-0 z-50 bg-ink opacity-0"
+	data-menu
+	aria-hidden="true"
+	role="dialog"
+	aria-modal="true"
+	aria-label="Menu"
+>
+	<div class="relative flex h-full flex-col gap-12 overflow-y-auto p-gutter lg:block lg:overflow-hidden">
+		<a href="/" class="inline-flex w-fit items-start gap-3 text-lime lg:gap-[13px]" aria-label="Identity, home" data-menu-link data-menu-brand>
+			<span class="inline-flex h-10 items-center lg:h-[clamp(64px,6.9vw,99px)]" aria-hidden="true">
+				<IdMark class="h-full w-auto" />
+				<span class="h-full aspect-[21/99]"></span>
+				<EntityLetters class="h-full w-auto" />
+			</span>
+			<Roundel class="h-5 w-5 text-slate lg:h-[2.2vw] lg:w-[2.2vw]" />
+		</a>
+
+		<nav class="lg:absolute lg:left-gutter lg:top-[45%]" aria-label="Menu">
+			<ul class="type-menu flex flex-col lg:flex-row lg:flex-wrap lg:gap-x-[0.54em]">
+				{NAV.map((item) => (
+					<li class="overflow-hidden">
+						<a
+							href={item.href}
+							class="inline-block text-paper transition-colors duration-300 hover:text-lime"
+							target={item.external ? '_blank' : undefined}
+							rel={item.external ? 'noopener' : undefined}
+							data-menu-item
+							data-menu-link
+						>
+							{item.label}
+						</a>
+					</li>
+				))}
+			</ul>
+		</nav>
+
+		<div class="flex flex-col gap-10 lg:absolute lg:top-gutter lg:right-gutter lg:bottom-gutter lg:w-[31vw] lg:pr-12" data-menu-contact>
+			{settings?.tagline && <p class="type-display max-w-[11em] text-paper lg:-mt-[5px]">{settings.tagline}</p>}
+
+			<div class="flex flex-col gap-7 text-[16.5px] leading-[1.3] lg:absolute lg:top-[27.5vh] lg:left-0 lg:right-12">
+				{settings?.menuText && <p class="max-w-[18em]">{settings.menuText}</p>}
+
+				{settings?.email && (
+					<p>
+						<span class="block text-lime">inquiries:</span>
+						<a href={`mailto:${settings.email}`} class="hover:text-lime">{settings.email}</a>
+					</p>
+				)}
+				{settings?.careersEmail && (
+					<p>
+						<span class="block text-lime">careers:</span>
+						<a href={`mailto:${settings.careersEmail}`} class="hover:text-lime">{settings.careersEmail}</a>
+					</p>
+				)}
+				{settings?.phone && (
+					<p>
+						<span class="block text-lime">phone:</span>
+						<a href={`tel:${settings.phone.replace(/\s+/g, '')}`} class="hover:text-lime">{settings.phone}</a>
+					</p>
+				)}
+				{settings?.socials?.length ? (
+					<div>
+						<span class="block text-lime">socials:</span>
+						<ul class="leading-[1.6]">
+							{settings.socials.map((s) => (
+								<li>
+									<a href={s.url ?? '#'} class="hover:text-lime" rel="noopener" target="_blank">{s.label}</a>
+								</li>
+							))}
+						</ul>
+					</div>
+				) : null}
+				{addressLines.length ? (
+					<p>
+						<span class="block text-lime">address:</span>
+						{addressLines.map((line, i) => (
+							<>
+								{line}
+								{i < addressLines.length - 1 && <br />}
+							</>
+						))}
+					</p>
+				) : null}
+			</div>
+		</div>
+
+		<button
+			type="button"
+			class="type-label mt-auto hidden w-fit cursor-pointer text-left text-paper transition-colors hover:text-lime lg:absolute lg:left-gutter lg:bottom-gutter lg:block"
+			data-menu-toggle
+			aria-label="Close menu"
+		>
+			Menu
+		</button>
+
+		<button
+			type="button"
+			class="absolute right-gutter top-gutter z-10 cursor-pointer text-paper transition-colors hover:text-lime"
+			data-menu-toggle
+			aria-label="Close menu"
+		>
+			<RingIcon kind="close" class="h-6 w-6" />
+		</button>
+	</div>
+</div>

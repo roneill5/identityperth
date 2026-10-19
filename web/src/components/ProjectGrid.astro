@@ -1,0 +1,24 @@
+---
+/** The Projects layout: one wide tile, then a pair of squares, repeating. */
+import ProjectTile, { type ProjectCard } from './ProjectTile.astro';
+
+interface Props {
+	projects: ProjectCard[];
+	/** Every third tile (starting with the first) is wide. Off: all squares. */
+	lead?: boolean;
+	class?: string;
+}
+const { projects, lead = true, class: className } = Astro.props;
+const wide = (i: number) => lead && i % 3 === 0;
+---
+
+<div class:list={['grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6', className]} data-reveal-group>
+	{projects.map((project, i) => (
+		<ProjectTile
+			project={project}
+			variant={wide(i) ? 'wide' : 'square'}
+			loading={i < 3 ? 'eager' : 'lazy'}
+			class={wide(i) ? 'md:col-span-2' : undefined}
+		/>
+	))}
+</div>

@@ -1,0 +1,17 @@
+{
+  "name": "identity-perth",
+  "private": true,
+  "description": "identityperth.com: Astro front end (web/) and the Sanity Studio served at /backend (backend/)",
+  "engines": {
+    "node": ">=22.22.0"
+  },
+  "scripts": {
+    "dev": "npm run dev --prefix web",
+    "dev:studio": "npm run dev --prefix backend",
+    "build": "npm run build --prefix backend && npm run build --prefix web",
+    "preview": "npm run preview --prefix web",
+    "deploy": "npm run deploy --prefix web",
+    "typegen": "npm run typegen --prefix backend",
+    "install:all": "npm install --prefix web && npm install --prefix backend"
+  }
+}

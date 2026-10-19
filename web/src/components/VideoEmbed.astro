@@ -1,0 +1,40 @@
+---
+/**
+ * Renders a `video` object from Sanity through the Cloudflare Stream player.
+ * Loops run in background mode (silent, autoplay, no controls, no pointer
+ * events); players show controls and play on click.
+ */
+import { embedUrl, type VideoData } from '../lib/video';
+
+interface Props {
+	video: VideoData;
+	/** Width/height ratio for the frame. Defaults to 16:9. */
+	aspect?: number;
+	/** Fill the positioned parent instead of sizing by aspect ratio. */
+	fill?: boolean;
+	class?: string;
+	loading?: 'lazy' | 'eager';
+}
+
+const { video, aspect = 16 / 9, fill = false, class: className, loading = 'lazy' } = Astro.props;
+const loop = video.playback !== 'player';
+const src = embedUrl(video);
+---
+
+{src ? (
+	<div
+		class:list={['overflow-hidden bg-ink', fill ? 'absolute inset-0 h-full w-full' : 'relative w-full', className]}
+		style={fill ? undefined : `aspect-ratio:${aspect}`}
+		data-video={loop ? 'loop' : 'player'}
+	>
+		<iframe
+			class="absolute inset-0 h-full w-full"
+			src={src}
+			title="Video"
+			loading={loading}
+			allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+			allowfullscreen
+			style={loop ? 'pointer-events:none' : undefined}
+		/>
+	</div>
+) : null}

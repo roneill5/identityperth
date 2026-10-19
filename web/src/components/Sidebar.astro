@@ -1,0 +1,67 @@
+---
+/**
+ * Persistent left column on desktop (logo, primary nav, menu button and the
+ * weather and clock widgets) that collapses to a top bar on smaller screens.
+ * Lives outside the Swup container so it never re-renders between pages;
+ * app.ts keeps the active link in sync. The nav sits 36.5% down the column,
+ * as in the design. Hovering the ID mark unfolds IDENTITY one letter at a
+ * time, shrinking the lockup so the whole word fits inside the column.
+ */
+import IdMark from '../assets/brand/id-mark.svg';
+import EntityLetters from '../assets/brand/entity-letters.svg';
+import SidebarWidgets from './SidebarWidgets.astro';
+import { NAV, isActive } from '../lib/site';
+
+interface Props {
+	pathname: string;
+}
+const { pathname } = Astro.props;
+---
+
+<header
+	class="fixed inset-x-0 top-0 z-40 flex h-(--topbar-h) items-center justify-between gap-4 bg-ink/90 px-gutter backdrop-blur-sm lg:inset-y-0 lg:right-auto lg:h-auto lg:w-(--sidebar-w) lg:flex-col lg:items-start lg:justify-between lg:bg-transparent lg:py-gutter lg:backdrop-blur-none"
+	data-sidebar
+>
+	<a href="/" class="logo relative z-50 block h-8 text-lime lg:h-[clamp(64px,6.9vw,99px)]" aria-label="Identity, home" data-logo>
+		<span class="logo__inner relative block h-full">
+			<IdMark class="h-full w-auto" aria-hidden="true" />
+			<span class="logo__entity pointer-events-none absolute left-full top-0 flex h-full items-center" aria-hidden="true">
+				<span class="h-full aspect-[21/99]"></span>
+				<EntityLetters class="h-full w-auto" />
+			</span>
+		</span>
+	</a>
+
+	<nav class="hidden lg:absolute lg:left-gutter lg:top-[36.5%] lg:block" aria-label="Primary">
+		<ul class="type-nav">
+			{NAV.map((item) => (
+				<li>
+					<a
+						href={item.href}
+						class="nav-link inline-block text-paper transition-colors duration-300 hover:text-lime aria-[current=page]:text-lime"
+						aria-current={isActive(pathname, item.href) ? 'page' : undefined}
+						target={item.external ? '_blank' : undefined}
+						rel={item.external ? 'noopener' : undefined}
+						data-nav-link
+					>
+						{item.label}
+					</a>
+				</li>
+			))}
+		</ul>
+	</nav>
+
+	<div class="flex items-center gap-4 lg:w-full lg:items-end lg:justify-between">
+		<button
+			type="button"
+			class="type-label cursor-pointer text-paper transition-colors duration-300 hover:text-lime lg:order-first"
+			data-menu-toggle
+			aria-expanded="false"
+			aria-controls="menu"
+		>
+			<span data-menu-label-closed>Menu</span>
+			<span data-menu-label-open hidden>Close</span>
+		</button>
+		<SidebarWidgets />
+	</div>
+</header>

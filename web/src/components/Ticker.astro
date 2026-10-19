@@ -1,0 +1,53 @@
+---
+/**
+ * The scrolling strip under the home hero: wordmark, phrase, roundel,
+ * location, repeated. Pure CSS marquee; the track is duplicated so the loop
+ * is seamless. Sizes and gaps are from Figma page 6 (15 / 30 / 26 px between
+ * items, 87 px before the next wordmark). Phrases break after the first
+ * word and the location after the comma, as in the design.
+ */
+import Wordmark from './Wordmark.astro';
+import Roundel from './Roundel.astro';
+
+/** The location that follows every phrase, part of the lockup in the design. */
+const LOCATION = 'Perth, Western Australia';
+
+interface Props {
+	phrases: string[];
+	class?: string;
+}
+const { phrases, class: className } = Astro.props;
+// Short lists are repeated so the strip always fills the viewport.
+const filled = phrases.length ? Array.from({ length: Math.max(1, Math.ceil(6 / phrases.length)) }, () => phrases).flat() : [];
+const splitFirst = (text: string) => {
+	const i = text.indexOf(' ');
+	return i > 0 ? [text.slice(0, i), text.slice(i + 1)] : [text, ''];
+};
+const splitComma = (text: string) => {
+	const i = text.indexOf(',');
+	return i > 0 ? [text.slice(0, i + 1), text.slice(i + 1).trim()] : [text, ''];
+};
+---
+
+{filled.length ? (
+	<div class:list={['ticker h-(--ticker-h) overflow-hidden bg-ink', className]} aria-label="Identity, Perth, Western Australia">
+		<div class="ticker-track h-full items-center" style={`--ticker-duration:${Math.max(30, filled.length * 7)}s`}>
+			{[0, 1].map((copy) => (
+				<ul class="flex h-full shrink-0 items-center" aria-hidden={copy === 1 ? 'true' : undefined}>
+					{filled.map((phrase) => {
+						const [first, rest] = splitFirst(phrase);
+						const [place, region] = splitComma(LOCATION);
+						return (
+							<li class="flex items-center pr-[87px]">
+								<Wordmark class="mr-[15px] h-[27.75px] text-lime" />
+								<span class="type-ticker mr-[30px]">{first}{rest && <><br />{rest}</>}</span>
+								<Roundel class="mr-[26px] h-[28px] w-[28px] text-paper" />
+								<span class="font-sans text-[11.3px] font-medium leading-[1.4]">{place}{region && <><br />{region}</>}</span>
+							</li>
+						);
+					})}
+				</ul>
+			))}
+		</div>
+	</div>
+) : null}

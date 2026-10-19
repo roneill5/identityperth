@@ -1,0 +1,67 @@
+---
+/**
+ * A project tile from the Projects page design (Figma page 7): the cover,
+ * and on hover a slate wash (#64737a at 70%) with the title, client, tagline
+ * and summary over it. The image is left alone apart from a slow zoom. The
+ * labels stay visible on touch screens where there is no hover. `data-flip` lets transitions.ts grow
+ * the cover into the project page hero on click.
+ */
+import SanityImage, { type Figure } from './SanityImage.astro';
+
+export interface ProjectCard {
+	_id: string;
+	title: string | null;
+	slug: string | null;
+	tagline?: string | null;
+	summary?: string | null;
+	client?: { name?: string | null } | null;
+	cover?: Figure | null;
+}
+
+interface Props {
+	project: ProjectCard;
+	variant?: 'wide' | 'square';
+	/** Label shown above the title, e.g. "Next project". */
+	eyebrow?: string;
+	loading?: 'lazy' | 'eager';
+	class?: string;
+}
+
+const { project, variant = 'square', eyebrow, loading = 'lazy', class: className } = Astro.props;
+const aspect = variant === 'wide' ? 1025 / 475 : 1;
+const sizes = variant === 'wide' ? '(min-width: 1024px) 71vw, 100vw' : '(min-width: 1024px) 35vw, (min-width: 768px) 50vw, 100vw';
+// Imported projects sometimes carry the same line as tagline and summary.
+const summary = project.summary && project.summary !== project.tagline ? project.summary : null;
+const client = project.client?.name && project.client.name !== project.title ? project.client.name : null;
+---
+
+<a
+	href={`/projects/${project.slug}`}
+	class:list={['tile group relative block overflow-hidden bg-ink', className]}
+	style={`aspect-ratio:${aspect}`}
+	data-flip
+>
+	{project.cover && (
+		<SanityImage
+			image={project.cover}
+			aspect={aspect}
+			portraitAspect={variant === 'wide' ? 4 / 5 : undefined}
+			fill
+			sizes={sizes}
+			loading={loading}
+			class="tile__media"
+		/>
+	)}
+	<span class="pointer-events-none absolute inset-0 bg-slate/70 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100" aria-hidden="true"></span>
+
+	<div class="absolute inset-0 flex flex-col justify-between p-5 lg:px-[22px] lg:pt-[19px] lg:pb-[18px]">
+		<div class="font-display flex justify-between gap-4 text-[11px] uppercase leading-none tracking-[1px] text-paper transition-opacity duration-300 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-visible:opacity-100">
+			<span>{eyebrow ?? project.title}</span>
+			<span>{eyebrow ? project.title : client}</span>
+		</div>
+		<div class="max-w-[300px] opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
+			{project.tagline && <p class="font-sans text-[12px] leading-[1.25] text-paper">{project.tagline}</p>}
+			{summary && <p class="font-sans mt-[13px] text-[12px] leading-[16.3px] text-paper">{summary}</p>}
+		</div>
+	</div>
+</a>

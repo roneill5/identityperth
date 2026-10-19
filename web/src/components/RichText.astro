@@ -1,0 +1,18 @@
+---
+/** Renders Sanity `blockContent` (Portable Text). */
+import { PortableText } from 'astro-portabletext';
+import Figure from './portable-text/Figure.astro';
+import Link from './portable-text/Link.astro';
+
+interface Props {
+	value: unknown;
+	class?: string;
+}
+const { value, class: className } = Astro.props;
+---
+
+{Array.isArray(value) && value.length ? (
+	<div class:list={['prose type-body', className]}>
+		<PortableText value={value as never} components={{ type: { figure: Figure }, mark: { link: Link } }} />
+	</div>
+) : null}

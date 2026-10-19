@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.astro/
+.sanity/
+.wrangler/
+.output/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+.dev.vars
+
+# OS and editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Logs
+*.log
+npm-debug.log*
+
+# Generated seed data (references files on the machine that built it)
+backend/seed/
+# The Studio build lands here before Astro copies it into dist/backend.
+web/public/backend/
+
+# Research notes and large local-only assets
+/research/
+
+# Capraia (CAST) needs a webfont licence from MyFonts before it can ship. Hansief is free for web use (see research/fonts/hansief-eula.pdf)
+web/public/fonts/capraia-*.woff2

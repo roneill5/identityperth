@@ -1,0 +1,8 @@
+---
+/** `link` marks inside rich text. External links open in a new tab. */
+const { node } = Astro.props;
+const href: string = node?.markDef?.href ?? '#';
+const external = /^https?:\/\//.test(href) && !href.startsWith('https://identityperth.com');
+---
+
+<a href={href} target={external ? '_blank' : undefined} rel={external ? 'noopener' : undefined}><slot /></a>

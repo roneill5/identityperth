@@ -1,0 +1,15 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Page not found" page="notfound">
+	<div class="flex min-h-dvh flex-col items-center justify-center px-gutter py-16 text-center">
+		<p class="type-label text-lime">404</p>
+		<h1 class="type-h1 mt-4 max-w-[14em]">Without Identity, who are you?</h1>
+		<div class="pong mt-10 w-full max-w-[460px]" style="aspect-ratio:4/3">
+			<canvas class="absolute inset-0 h-full w-full touch-none" data-pong aria-label="Pong. W and S or the arrow keys move the left paddle, space serves."></canvas>
+		</div>
+		<p class="type-body mt-10 max-w-[30em] text-paper/80">That page isn’t here. The work is. In the meantime, the computer would like a game.</p>
+		<a href="/projects" class="type-label mt-6 inline-block text-lime hover:text-paper">See the projects</a>
+	</div>
+</Base>

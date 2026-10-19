@@ -1,0 +1,12 @@
+---
+/** `figure` blocks inside rich text. */
+import SanityImage from '../SanityImage.astro';
+
+const { node } = Astro.props;
+---
+
+{node?.asset ? (
+	<figure>
+		<SanityImage image={node} sizes="(min-width: 1024px) 42vw, 100vw" />
+	</figure>
+) : null}

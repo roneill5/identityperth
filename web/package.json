@@ -1,0 +1,41 @@
+{
+  "name": "web",
+  "type": "module",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=22.22.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "deploy": "wrangler deploy",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@fontsource-variable/figtree": "^5.3.0",
+    "@fontsource-variable/fraunces": "^5.3.0",
+    "@fontsource/bebas-neue": "^5.3.0",
+    "@fontsource/comic-neue": "^5.3.0",
+    "@sanity/client": "^8.9.0",
+    "@sanity/image-url": "^2.1.1",
+    "@swup/js-plugin": "^3.2.0",
+    "@swup/preload-plugin": "^3.2.12",
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.4.0",
+    "astro-portabletext": "^1.0.1",
+    "canvas-confetti": "^1.9.4",
+    "groq": "^6.19.0",
+    "gsap": "^3.15.0",
+    "swup": "^4.10.0",
+    "tailwindcss": "^4.3.3",
+    "tailwindcss-motion": "^1.1.1",
+    "vite": "^8.3.4"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@types/canvas-confetti": "^1.9.0",
+    "typescript": "^6.0.3",
+    "wrangler": "^4.151.0"
+  }
+}

@@ -1,0 +1,220 @@
+---
+/**
+ * Studio: a column of photographs beside a sticky accordion (About, Services,
+ * Team, Clients, Contact). The column follows the accordion's order, and on
+ * desktop scrolling it opens the matching section (scripts/studio.ts); the
+ * About heading cycles through its phrases (scripts/cycle.ts). Measurements
+ * are from Figma pages 3 to 5 at 1440 wide.
+ */
+import Base from '../layouts/Base.astro';
+import SanityImage, { type Figure } from '../components/SanityImage.astro';
+import RichText from '../components/RichText.astro';
+import RingIcon from '../components/icons/RingIcon.astro';
+import { client } from '../sanity/client';
+import { STUDIO_QUERY } from '../sanity/queries';
+import { getSettings } from '../sanity/fetch';
+
+const [{ page, services, team, clients, testimonials }, settings] = await Promise.all([
+	client.fetch(STUDIO_QUERY),
+	getSettings(),
+]);
+const addressLines = settings?.address?.split('\n').filter(Boolean) ?? [];
+
+const headings = [page?.aboutHeading, ...(page?.aboutHeadings ?? [])].filter(
+	(h, i, all): h is string => Boolean(h) && all.indexOf(h) === i,
+);
+
+interface ColumnImage {
+	image: Figure;
+	opens: string;
+	aspect: number;
+	mono?: boolean;
+	alt?: string;
+}
+// Studio photos crop to 5:7 (528 x 740 in the design), portraits to 528 x 612.
+const column: ColumnImage[] = [
+	...(page?.images ?? []).map((image) => ({ image, opens: 'about', aspect: 5 / 7 })),
+	...services.flatMap((s) => (s.image?.asset ? [{ image: s.image, opens: `services:${s._id}`, aspect: 5 / 7, alt: s.title ?? undefined }] : [])),
+	...team.flatMap((m) => (m.portrait?.asset ? [{ image: m.portrait, opens: `team:${m._id}`, aspect: 528 / 612, mono: true, alt: m.name ?? undefined }] : [])),
+	...(page?.clientsImages ?? []).map((image) => ({ image, opens: 'clients', aspect: 5 / 7 })),
+	...(page?.contactImages ?? []).map((image) => ({ image, opens: 'contact', aspect: 5 / 7 })),
+];
+
+const summaryClass = 'type-accordion flex items-center justify-between border-b border-slate pt-2 pb-[7px]';
+const sections = [
+	{ id: 'about', label: 'About' },
+	{ id: 'services', label: 'Services' },
+	{ id: 'team', label: 'Team' },
+	{ id: 'clients', label: 'Clients' },
+	{ id: 'contact', label: 'Contact' },
+] as const;
+---
+
+<Base title="Studio" description={page?.seo?.description ?? 'Identity is a connected strategic and creative partner in Perth, Western Australia.'}>
+	<div class="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,calc(31.02vw+var(--spacing-gutter)))] lg:gap-x-gutter" data-studio>
+		<div class="flex flex-col gap-4 lg:order-1" data-studio-images>
+			{column.map((item, i) => (
+				<div class:list={['relative overflow-hidden bg-ink', item.mono && 'grayscale']} style={`aspect-ratio:${item.aspect}`} data-opens={item.opens}>
+					<SanityImage image={{ ...item.image, alt: item.image.alt ?? item.alt ?? null }} aspect={item.aspect} fill sizes="(min-width: 1024px) 37vw, 100vw" loading={i < 2 ? 'eager' : 'lazy'} />
+				</div>
+			))}
+		</div>
+
+		<div class="px-gutter pt-12 pb-16 lg:sticky lg:top-0 lg:order-2 lg:self-start lg:px-0 lg:pt-5 lg:pr-gutter lg:pb-gutter" data-accordion>
+			<h1 class="sr-only">Studio</h1>
+
+			<details class="accordion" data-section="about" open>
+				<summary class={summaryClass}>
+					<span>{sections[0].label}</span>
+					<RingIcon kind="plus" class="icon-closed h-[14.4px] w-[14.4px]" />
+					<RingIcon kind="close" class="icon-open h-[14.4px] w-[14.4px]" />
+				</summary>
+				<div class="pt-[19px] pb-[5px]">
+					{headings.length ? (
+						<h2 class="type-h2 cycle mb-4" data-cycle>
+							{headings.map((h, i) => (
+								<span class="cycle__phrase" data-phrase aria-hidden={i > 0 ? 'true' : undefined}>{h}</span>
+							))}
+						</h2>
+					) : null}
+					<RichText value={page?.aboutBody} class="type-small max-w-[400px] leading-[16.31px] [&_p+p]:mt-4" />
+					{page?.aboutHighlights?.length ? (
+						<ul class="type-small mt-2 leading-[16.31px] text-lime">
+							{page.aboutHighlights.map((line) => (
+								<li>{line}</li>
+							))}
+						</ul>
+					) : null}
+				</div>
+			</details>
+
+			<details class="accordion" data-section="services">
+				<summary class={summaryClass}>
+					<span>{sections[1].label}</span>
+					<RingIcon kind="plus" class="icon-closed h-[14.4px] w-[14.4px]" />
+					<RingIcon kind="close" class="icon-open h-[14.4px] w-[14.4px]" />
+				</summary>
+				<ul class="pt-[14px]">
+					{services.map((service) => (
+						<li>
+							<details class="accordion group" data-item={`services:${service._id}`}>
+								<summary class="type-h2 py-[4.75px] text-paper transition-colors duration-300 group-open:text-lime hover:text-lime">{service.title}</summary>
+								{service.description && <p class="type-small max-w-[414px] pt-1 pb-1 leading-[16.31px] text-paper">{service.description}</p>}
+							</details>
+						</li>
+					))}
+				</ul>
+			</details>
+
+			<details class="accordion" data-section="team">
+				<summary class={summaryClass}>
+					<span>{sections[2].label}</span>
+					<RingIcon kind="plus" class="icon-closed h-[14.4px] w-[14.4px]" />
+					<RingIcon kind="close" class="icon-open h-[14.4px] w-[14.4px]" />
+				</summary>
+				<ul class="pt-[15px] pb-3">
+					{team.map((member) => (
+						<li>
+							<details class="accordion group" data-item={`team:${member._id}`}>
+								<summary class="type-h2 py-[4.75px] text-paper transition-colors duration-300 group-open:text-lime hover:text-lime">{member.name}</summary>
+								<div class="pb-2">
+									{member.role && <p class="font-display -mt-0.5 text-[17px] uppercase leading-[21px] tracking-[1px] text-lime">{member.role}</p>}
+									{member.bio && <p class="type-small mt-2.5 max-w-[410px] leading-[16.8px] text-paper">{member.bio}</p>}
+									{member.portrait?.asset && (
+										<div class="mt-4 max-w-[240px] grayscale lg:hidden">
+											<SanityImage image={member.portrait} aspect={528 / 612} sizes="240px" />
+										</div>
+									)}
+								</div>
+							</details>
+						</li>
+					))}
+				</ul>
+			</details>
+
+			<details class="accordion" data-section="clients">
+				<summary class={summaryClass}>
+					<span>{sections[3].label}</span>
+					<RingIcon kind="plus" class="icon-closed h-[14.4px] w-[14.4px]" />
+					<RingIcon kind="close" class="icon-open h-[14.4px] w-[14.4px]" />
+				</summary>
+				<div class="pt-[15px] pb-3">
+					{page?.clientsIntro && <p class="type-small mb-4 max-w-[400px] leading-[16.31px]">{page.clientsIntro}</p>}
+					<ul class="type-h3 columns-2 gap-6">
+						{clients.map((c) => (
+							<li class="break-inside-avoid py-0.5 text-paper">{c.name}</li>
+						))}
+					</ul>
+					{testimonials.length ? (
+						<ul class="mt-6 flex flex-col gap-5">
+							{testimonials.map((t) => (
+								<li>
+									<blockquote class="type-small max-w-[400px] leading-[16.31px] text-paper">“{t.quote}”</blockquote>
+									<p class="type-small mt-1.5 leading-[16.31px] text-lime">
+										{t.name}
+										{t.role && `, ${t.role}`}
+										{t.client?.name && `, ${t.client.name}`}
+									</p>
+								</li>
+							))}
+						</ul>
+					) : null}
+				</div>
+			</details>
+
+			<details class="accordion" data-section="contact" id="contact">
+				<summary class={summaryClass}>
+					<span>{sections[4].label}</span>
+					<RingIcon kind="plus" class="icon-closed h-[14.4px] w-[14.4px]" />
+					<RingIcon kind="close" class="icon-open h-[14.4px] w-[14.4px]" />
+				</summary>
+				<div class="type-body flex flex-col gap-5 pt-[15px] pb-3">
+					{settings?.menuText && <p class="max-w-[22em]">{settings.menuText}</p>}
+					{settings?.email && (
+						<p>
+							<span class="block text-lime">inquiries:</span>
+							<a href={`mailto:${settings.email}`} class="hover:text-lime">{settings.email}</a>
+						</p>
+					)}
+					{settings?.careersEmail && (
+						<p>
+							<span class="block text-lime">careers:</span>
+							<a href={`mailto:${settings.careersEmail}`} class="hover:text-lime">{settings.careersEmail}</a>
+						</p>
+					)}
+					{settings?.phone && (
+						<p>
+							<span class="block text-lime">phone:</span>
+							<a href={`tel:${settings.phone.replace(/\s+/g, '')}`} class="hover:text-lime">{settings.phone}</a>
+						</p>
+					)}
+					{settings?.socials?.length ? (
+						<div>
+							<span class="block text-lime">socials:</span>
+							<ul class="leading-[1.6]">
+								{settings.socials.map((s) => (
+									<li>
+										<a href={s.url ?? '#'} class="hover:text-lime" rel="noopener" target="_blank">{s.label}</a>
+									</li>
+								))}
+							</ul>
+						</div>
+					) : null}
+					{addressLines.length ? (
+						<p>
+							<span class="block text-lime">address:</span>
+							{addressLines.map((line, i) => (
+								<>
+									{line}
+									{i < addressLines.length - 1 && <br />}
+								</>
+							))}
+						</p>
+					) : null}
+				</div>
+			</details>
+		</div>
+	</div>
+	<!-- And the dog. -->
+	<div class="mt-4 md:mt-6" data-dog aria-hidden="true"></div>
+</Base>

@@ -1,0 +1,28 @@
+---
+/**
+ * The circled plus and circled cross from the design, drawn with the same
+ * 14.4 unit ring (0.8 stroke). Plus arms 8.32 long, cross 6.57 across, both
+ * 0.98 thick, as exported from Figma. Colour follows `currentColor`.
+ */
+interface Props {
+	kind: 'plus' | 'close';
+	class?: string;
+}
+const { kind, class: className } = Astro.props;
+---
+
+<svg
+	viewBox="0 0 14.4 14.4"
+	width="14.4"
+	height="14.4"
+	fill="none"
+	aria-hidden="true"
+	class:list={['shrink-0', className]}
+>
+	<circle cx="7.2" cy="7.2" r="6.8" stroke="currentColor" stroke-width="0.8" />
+	{kind === 'plus' ? (
+		<path d="M7.2 3.04v8.32M3.04 7.2h8.32" stroke="currentColor" stroke-width="0.98" />
+	) : (
+		<path d="M3.91 3.91l6.58 6.58M10.49 3.91l-6.58 6.58" stroke="currentColor" stroke-width="0.98" />
+	)}
+</svg>
