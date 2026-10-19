@@ -5,7 +5,6 @@ import { gsap, reducedMotion } from './motion';
 import { initMenu } from './menu';
 import { initPage, destroyPage, markImages } from './page';
 import { initWeather } from './weather';
-import { initEggs } from './eggs';
 import { armFlips, curtainIn, curtainOut, flipIn, flipOut } from './transitions';
 
 /**
@@ -86,5 +85,4 @@ updateNav();
 syncPageKind();
 armFlips();
 initWeather();
-initEggs();
 initPage();

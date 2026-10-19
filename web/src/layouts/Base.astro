@@ -47,8 +47,6 @@ const page = Astro.props.page ?? 'default';
 		<meta name="theme-color" content="#1e1d1e" />
 		<meta name="generator" content={Astro.generator} />
 		<slot name="head" />
-		<!-- If you're reading this, go outside and touch grass. -->
-		<!-- Still here? Fine. Type the word "comic" anywhere on the page and see what happens. -->
 	</head>
 	<body class="bg-ink text-paper" data-page={page}>
 		<a href="#main" class="skip-link">Skip to content</a>
@@ -60,13 +58,6 @@ const page = Astro.props.page ?? 'default';
 		</main>
 		<MenuOverlay settings={settings} />
 
-		<!-- The scribble is for Comic Sans mode. -->
-		<svg width="0" height="0" aria-hidden="true" class="absolute">
-			<filter id="scribble">
-				<feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="7" />
-				<feDisplacementMap in="SourceGraphic" scale="5" xChannelSelector="R" yChannelSelector="G" />
-			</filter>
-		</svg>
 
 		<script src="../scripts/app.ts"></script>
 	</body>

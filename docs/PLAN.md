@@ -65,7 +65,7 @@ Video rule: everything on Cloudflare Stream, nothing uploaded to Sanity. A `vide
 | `/gallery` | Gallery | Three across in the order added (rows align when ratios match, as in the design), no links. Hover shows the caption on a lime bar |
 | `/studio` | Studio | Photo column beside a sticky accordion: About, Services, Team, Clients, Contact. The column follows the accordion's order; scrolling a photo through the middle opens its section, opening a section scrolls to its photo. The About heading cycles through its phrases |
 | Thinking | (external) | Links to Substack in a new tab until there is writing to publish (`THINKING_URL` in `web/src/lib/site.ts`). The article schema and queries stay for later |
-| `/404` | Not found | Pong, keyboard-driven, in the middle of the message |
+| `/404` | Not found | Copy and a link back to Projects (Pong lives on the `mini-games` branch) |
 
 ## 6. Motion spec
 
@@ -89,13 +89,9 @@ Taken from the Forth & Back teardown (`research/` folder, not in git) and adapte
 
 Still to design with Seth: the "A clearer Identity" moment Nick described (type or imagery that starts unresolved and resolves on scroll). The hooks exist (`data-reveal`, GSAP context per page); the idea needs a design first.
 
-## 6a. Widgets and Easter eggs (16 to 19 Oct)
+## 6a. Widgets and mini games
 
-What is live: Joondalup weather and a Perth clock beside the menu (Open-Meteo, Fluent icons, still), Comic Sans mode (type `comic`, `undo` restores), keyboard Pong in the 404, and the dog's living room along the bottom of Projects, Studio and Gallery (half height, paper on ink).
-
-Taken out on 19 Oct at Ross's request, for now: the achievements system, the `cmd` terminal and its commands (say our name, roll, screensaver), the duck hunt and `/quack`, the ten-click logo, Konami. Nothing had been committed, so that code is gone rather than in history; the spec for it is in the earlier versions of this section if it is ever rebuilt. Ross's rule for anything that comes back: visual or playable, never typed.
-
-Things to decide with Nick and Seth: the pixel art (dog, furniture) is mine and could be redrawn by Jake; the room height is 76px, easy to change.
+Live on `main`: Joondalup weather and a Perth clock beside the menu (Open-Meteo, Fluent icons, still). The mini games (the dog's living room along the bottom of Projects, Studio and Gallery, keyboard Pong in the 404, Comic Sans mode) are on the `mini-games` branch, taken off `main` on 19 Oct. Earlier eggs (achievements, terminal, duck hunt, screensaver) were removed before anything was committed; Ross's rule for anything that comes back: visual or playable, never typed.
 
 ## 7. Phases
 

@@ -117,20 +117,13 @@ src/
 └── styles/global.css           design tokens, type scale, fonts
 ```
 
-Motion hooks any component can use without JavaScript: `data-reveal`, `data-reveal-group`, `data-parallax="0.15"`, `data-hover-video`, `data-loop-video`, `data-slideshow`, `data-splash`, `data-accordion`, `data-cycle`, `data-studio`, `data-flip` / `data-flip-target`, `data-pong`, `data-dog`. They are set up again after every Swup page change. Every Sanity image carries `data-img` and blurs up from its LQIP when it loads.
+Motion hooks any component can use without JavaScript: `data-reveal`, `data-reveal-group`, `data-parallax="0.15"`, `data-hover-video`, `data-loop-video`, `data-slideshow`, `data-splash`, `data-accordion`, `data-cycle`, `data-studio`, `data-flip` / `data-flip-target`. They are set up again after every Swup page change. Every Sanity image carries `data-img` and blurs up from its LQIP when it loads.
 
 Transitions: the splash home rises its ticker screen as a curtain over the hero and the next page is revealed underneath; clicking a project tile grows the cover into the project page hero (filled images are cropped in CSS from the same original, with the Sanity hotspot as `object-position`, so the framing never jumps); everything else is a short fade. All in `scripts/transitions.ts` and `scripts/app.ts`. The Studio accordion animates open and shut (`scripts/accordion.ts`).
 
-## Widgets and Easter eggs
+## Widgets
 
 Live bits beside the menu button: weather in Joondalup from [Open-Meteo](https://open-meteo.com/) (free, no key, cached for ten minutes) drawn with Microsoft's [Fluent](https://github.com/microsoft/fluentui-system-icons) weather icons (MIT, still), and an analogue clock on Perth time. Code in `web/src/scripts/weather.ts`, icons in `web/src/assets/icons/weather/`.
 
-Three eggs, in `web/src/scripts/eggs/` (the fuller set from 16 to 19 October, achievements, terminal, duck hunt, screensaver and so on, was taken out on 19 October before anything was committed, so it would have to be rebuilt if it is ever wanted back):
+The mini games (the dog along the bottom of Projects, Studio and Gallery, Pong on the 404, Comic Sans mode) are kept on the `mini-games` branch, off `main` for now.
 
-| Egg | How to find it |
-| --- | --- |
-| Comic Sans mode | Type `comic` anywhere on a page, or Ctrl+Alt+C. `undo` restores |
-| Pong | The 404 page, in the middle of the message. W and S or the arrow keys, space serves, a finger on touch screens; first to five |
-| The dog | A short strip at the bottom of Projects, Studio and Gallery, paper on ink: the door opens, the dog follows your cursor through the living room, and when it reaches the sofa it hops up and sleeps (pixel Zs). Click it for a heart |
-
-Fonts for Comic Sans mode fall back to Comic Neue (OFL) where Comic Sans is not installed. 

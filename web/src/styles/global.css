@@ -11,8 +11,6 @@
 @import "@fontsource-variable/figtree";
 @import "@fontsource-variable/fraunces";
 @import "@fontsource/bebas-neue";
-@import "@fontsource/comic-neue/400.css";
-@import "@fontsource/comic-neue/700.css";
 
 @font-face {
 	font-family: "Capraia";
@@ -369,7 +367,7 @@ body[data-page="splash"] .site-main {
 }
 
 /* ------------------------------------------------------------------ */
-/* Widgets and Easter eggs. Unlayered so they beat utility classes.    */
+/* Widgets. Unlayered so they beat utility classes.                   */
 /* ------------------------------------------------------------------ */
 
 /* Logo: ID grows into IDENTITY on hover, one letter at a time. On desktop the
@@ -413,58 +411,6 @@ body[data-page="splash"] .site-main {
 	.tile .tile__media {
 		transition-duration: 0s;
 	}
-}
-
-/* Toasts: a pill that rises from the bottom of the screen */
-.egg-toast {
-	position: fixed;
-	bottom: 28px;
-	left: 0;
-	right: 0;
-	z-index: 80;
-	display: flex;
-	align-items: center;
-	width: fit-content;
-	max-width: min(92vw, 460px);
-	margin-inline: auto;
-	padding: 12px 24px;
-	border-radius: 999px;
-	color: var(--color-paper);
-	background:
-		linear-gradient(180deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.03) 49%, rgba(0, 0, 0, 0.12) 51%, rgba(0, 0, 0, 0.28) 100%),
-		#2a292a;
-	border: 1px solid color-mix(in srgb, var(--color-paper) 18%, transparent);
-	box-shadow:
-		inset 0 1px 0 rgba(255, 255, 255, 0.08),
-		0 10px 30px rgba(0, 0, 0, 0.45);
-}
-.egg-toast__eyebrow {
-	display: block;
-	font-family: var(--font-sans);
-	font-size: 0.78rem;
-	line-height: 1.2;
-	color: color-mix(in srgb, var(--color-paper) 72%, transparent);
-}
-.egg-toast__title {
-	display: block;
-	font-family: var(--font-sans);
-	font-weight: 600;
-	font-size: 1rem;
-	line-height: 1.3;
-}
-/* Comic Sans mode */
-html.comic,
-html.comic * {
-	font-family: "Comic Sans MS", "Comic Neue", "Chalkboard SE", "Comic Relief", cursive !important;
-	cursor: url("/cursors/pencil.svg") 2 30, auto !important;
-}
-html.comic [data-logo] svg,
-html.comic [data-menu] svg,
-html.comic .ticker svg {
-	filter: url(#scribble);
-}
-html.comic .dog-room__dog {
-	filter: url(#scribble) drop-shadow(0 2px 0 rgba(0, 0, 0, 0.45));
 }
 
 /* Weather and clock */
@@ -539,120 +485,3 @@ html.comic .dog-room__dog {
 		font-size: 0.9rem;
 	}
 }
-
-/* The dog's room: ink furniture on paper, a pixel floor, a dog that sleeps on the sofa */
-.dog-room {
-	position: relative;
-	height: 54px; /* the door (40px) on the floor (10px), plus a little headroom */
-	overflow: hidden;
-	background: var(--color-ink);
-	color: var(--color-paper);
-}
-.dog-room__floor {
-	position: absolute;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	height: 10px;
-	background-image:
-		linear-gradient(var(--color-paper), var(--color-paper)),
-		repeating-linear-gradient(90deg, transparent 0 22px, var(--color-paper) 22px 24px);
-	background-size: 100% 2px, 24px 100%;
-	background-position: 0 0, 0 0;
-	background-repeat: no-repeat, repeat-x;
-}
-.dog-room__door,
-.dog-room__sofa,
-.dog-room__item,
-.dog-room__dog {
-	position: absolute;
-	bottom: 10px;
-	display: block;
-}
-.dog-room__door { left: 24px; }
-.dog-room__sofa { right: 24px; }
-.dog-room__plant { left: 14%; }
-.dog-room__dining { left: 26%; display: flex; align-items: flex-end; }
-.dog-room__rug { left: 46%; }
-.dog-room__tv { left: 64%; }
-@media (width < 48rem) {
-	.dog-room__plant,
-	.dog-room__dining,
-	.dog-room__tv {
-		display: none;
-	}
-	.dog-room__rug { left: 40%; }
-}
-.dog-room__tv svg {
-	animation: dog-tv 3.1s steps(1) infinite;
-}
-@keyframes dog-tv {
-	0%, 100% { opacity: 1; }
-	47% { opacity: 0.88; }
-	50% { opacity: 1; }
-	83% { opacity: 0.93; }
-}
-.dog-room__door svg,
-.dog-room__sofa svg,
-.dog-room__item svg,
-.dog-room__dog svg {
-	display: block;
-}
-.dog-room__dog {
-	left: 0;
-	z-index: 2;
-	padding: 0;
-	border: 0;
-	background: none;
-	cursor: pointer;
-	transform-origin: center bottom;
-	will-change: transform;
-}
-.dog-room__heart {
-	position: absolute;
-	z-index: 3;
-	pointer-events: none;
-	animation: dog-heart 1s steps(8) forwards;
-}
-.dog-room__heart svg {
-	display: block;
-}
-@keyframes dog-heart {
-	to { transform: translateY(-10px); opacity: 0; }
-}
-/* Zs rise from the sofa once the dog is asleep */
-.dog-room__zzz {
-	position: absolute;
-	right: calc(24px + 10px);
-	bottom: calc(10px + 22px);
-	display: none;
-}
-.dog-room.is-asleep .dog-room__zzz {
-	display: block;
-}
-.dog-room__zzz svg {
-	position: absolute;
-	left: 0;
-	bottom: 0;
-	opacity: 0;
-	animation: dog-zzz 2.7s steps(9) infinite;
-}
-.dog-room__zzz svg:nth-child(2) { animation-delay: 0.9s; }
-.dog-room__zzz svg:nth-child(3) { animation-delay: 1.8s; }
-@keyframes dog-zzz {
-	0% { transform: translate(0, 0); opacity: 0; }
-	12% { opacity: 1; }
-	100% { transform: translate(10px, -14px); opacity: 0; }
-}
-
-/* Pong arena */
-.pong {
-	position: relative;
-	width: 100%;
-	overflow: hidden;
-	border: 1px solid color-mix(in srgb, var(--color-paper) 25%, transparent);
-	background: var(--color-ink);
-}
-
-
-

@@ -3,8 +3,6 @@ import { initSplash } from './splash';
 import { initCycle } from './cycle';
 import { initStudio } from './studio';
 import { initAccordion } from './accordion';
-import { initPong } from './eggs/pong';
-import { initDog } from './eggs/dog';
 
 /**
  * Per-page behaviour. Everything created here is torn down in `destroyPage`
@@ -19,8 +17,6 @@ import { initDog } from './eggs/dog';
  *   data-accordion         animated <details> inside; data-group makes them exclusive
  *   data-cycle             a heading that cycles through its [data-phrase] children
  *   data-studio            the Studio page: photo column and accordion in step
- *   data-pong              a <canvas> that plays Pong
- *   data-dog               a zone that wakes the pixel dog while on screen
  */
 
 let ctx: gsap.Context | null = null;
@@ -93,13 +89,11 @@ export function initPage(root: ParentNode = document) {
 		cleanups.push(() => observer.disconnect());
 	}
 
-	// Splash, accordions, games and pets
+	// Splash, accordions, the Studio sync
 	root.querySelectorAll<HTMLElement>('[data-splash]').forEach((el) => cleanups.push(initSplash(el)));
 	root.querySelectorAll<HTMLElement>('[data-accordion]').forEach((el) => cleanups.push(initAccordion(el)));
 	root.querySelectorAll<HTMLElement>('[data-cycle]').forEach((el) => cleanups.push(initCycle(el)));
 	root.querySelectorAll<HTMLElement>('[data-studio]').forEach((el) => cleanups.push(initStudio(el)));
-	root.querySelectorAll<HTMLCanvasElement>('canvas[data-pong]').forEach((el) => cleanups.push(initPong(el)));
-	root.querySelectorAll<HTMLElement>('[data-dog]').forEach((el) => cleanups.push(initDog(el)));
 
 	ScrollTrigger.refresh();
 }
