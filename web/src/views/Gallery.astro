@@ -1,0 +1,47 @@
+---
+/**
+ * Gallery: a wall of everything Identity has made, three across in the order
+ * they were added (Figma page 1: rows of matching ratios). Nothing links
+ * anywhere (it is separate from Projects); hovering a tile shows its caption
+ * on a lime bar under a small magnifier cursor (not an arrow, not a
+ * hand). On phones it is three narrow columns with 10px gaps and a tap
+ * opens the image in a panel with its caption (scripts/gallery.ts), as on
+ * Forth and Back. Images blur up as they load instead of animating in.
+ */
+import Base from '../layouts/Base.astro';
+import SanityImage from '../components/SanityImage.astro';
+import { client } from '../sanity/client';
+import { GALLERY_QUERY } from '../sanity/queries';
+import { urlFor } from '../sanity/image';
+
+/** The draft client on /preview, the build-time one everywhere else. */
+const sanity = Astro.locals.sanity ?? client;
+
+const items = await sanity.fetch(GALLERY_QUERY);
+---
+
+<Base title="Gallery" description="A wall of work from the Identity studio in Perth.">
+	<h1 class="sr-only">Gallery</h1>
+	{items.length ? (
+		<div class="gallery-wall grid grid-cols-3 gap-[10px] px-[14px] pt-5 lg:gap-4 lg:px-0 lg:pt-0">
+			{items.map((item, i) => {
+				const label = item.caption ?? item.project?.title ?? null;
+				const client = item.project?.client?.name ?? null;
+				const large = item.image?.asset ? urlFor(item.image).width(1200).quality(80).url() : null;
+				return (
+					<figure class="group relative overflow-hidden bg-ink" data-lightbox={large ?? undefined} data-caption={[label, client].filter(Boolean).join(', ') || undefined}>
+						{item.image && <SanityImage image={item.image} sizes="(min-width: 1024px) 24vw, 33vw" loading={i < 6 ? 'eager' : 'lazy'} />}
+						{(label || client) && (
+							<figcaption class="pointer-events-none absolute inset-x-0 bottom-0 hidden h-[23px] translate-y-full items-center justify-between gap-3 bg-lime px-2.5 font-sans text-[11px] leading-none text-ink transition-transform duration-300 ease-(--ease-out-expo) group-hover:translate-y-0 lg:flex">
+								<span class="truncate">{label}</span>
+								<span class="shrink-0">{client !== label ? client : null}</span>
+							</figcaption>
+						)}
+					</figure>
+				);
+			})}
+		</div>
+	) : (
+		<p class="type-body px-gutter py-[20vh] text-paper/70">The gallery is being hung.</p>
+	)}
+</Base>

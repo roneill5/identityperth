@@ -1,0 +1,20 @@
+---
+import Base from '../layouts/Base.astro';
+import ProjectGrid from '../components/ProjectGrid.astro';
+import { client } from '../sanity/client';
+import { PROJECTS_QUERY } from '../sanity/queries';
+
+/** The draft client on /preview, the build-time one everywhere else. */
+const sanity = Astro.locals.sanity ?? client;
+
+const projects = await sanity.fetch(PROJECTS_QUERY);
+---
+
+<Base title="Projects" description="Selected brand, campaign, digital and print work by Identity, Perth.">
+	<h1 class="sr-only">Projects</h1>
+	{projects.length ? (
+		<ProjectGrid projects={projects} />
+	) : (
+		<p class="type-body px-gutter py-[20vh] text-paper/70">Projects are on their way.</p>
+	)}
+</Base>

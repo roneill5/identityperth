@@ -288,7 +288,7 @@ for (const { slug, data, body, folder } of projects) {
 		client: { _type: 'reference', _ref: clientId },
 		tagline: paragraphs[0] && paragraphs[0].length <= 90 ? paragraphs[0] : undefined,
 		summary: data.blurb?.replace(/…$/, '.') || paragraphs[0] || data.title,
-		cover: figure(heroFile, altText),
+		cover: { _type: 'media', kind: 'image', image: figure(heroFile, altText) },
 		year: Number(data.year) || undefined,
 		services,
 		body: bodyBlocks,
@@ -374,7 +374,7 @@ docs.push({
 	images: studioImages.slice(0, 2),
 	clientsImages: studioImages.slice(2, 4),
 	contactImages: studioImages.slice(4, 6),
-	seo: { _type: 'seo', description: COPY.clearerBody.split('. ')[0] + '.' },
+	seo: { _type: 'seo', description: 'Identity is a strategic and creative partner in Perth, founded in 2009, for organisations that care how they are understood, experienced and remembered.' },
 });
 
 // ---------- write ----------

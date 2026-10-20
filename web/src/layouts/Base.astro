@@ -3,6 +3,8 @@ import '../styles/global.css';
 import Sidebar from '../components/Sidebar.astro';
 import MenuOverlay from '../components/MenuOverlay.astro';
 import { getSettings } from '../sanity/fetch';
+import { client } from '../sanity/client';
+import { stegaClean } from '@sanity/client/stega';
 
 interface Props {
 	title?: string;
@@ -18,18 +20,20 @@ interface Props {
 	class?: string;
 }
 
-const settings = await getSettings();
-const siteName = settings?.siteName ?? 'Identity';
-const defaultTitle = settings?.seo?.title ?? `${siteName}, Perth`;
-const title = Astro.props.title ? `${Astro.props.title} | ${siteName}` : defaultTitle;
-const description = Astro.props.description ?? settings?.seo?.description ?? '';
+const settings = await getSettings(Astro.locals.sanity ?? client);
+const preview = Boolean(Astro.locals.preview);
+// Preview pages carry invisible stega characters in their strings; metadata must not.
+const siteName = stegaClean(settings?.siteName ?? 'Identity');
+const defaultTitle = stegaClean(settings?.seo?.title ?? `${siteName}, Perth`);
+const title = Astro.props.title ? `${stegaClean(Astro.props.title)} | ${siteName}` : defaultTitle;
+const description = stegaClean(Astro.props.description ?? settings?.seo?.description ?? '');
 const image = Astro.props.image ?? settings?.seo?.image?.asset?.url ?? null;
 const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : Astro.url.pathname;
 const page = Astro.props.page ?? 'default';
 ---
 
 <!doctype html>
-<html lang="en-AU">
+<html lang="en-AU" data-preview={preview ? '' : undefined}>
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -46,16 +50,21 @@ const page = Astro.props.page ?? 'default';
 		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 		<meta name="theme-color" content="#1e1d1e" />
 		<meta name="generator" content={Astro.generator} />
+		{preview && <meta name="robots" content="noindex, nofollow" />}
 		<slot name="head" />
 	</head>
 	<body class="bg-ink text-paper" data-page={page}>
 		<a href="#main" class="skip-link">Skip to content</a>
 		<Sidebar pathname={Astro.url.pathname} />
-		<main id="swup" class:list={['site-main relative min-h-dvh', Astro.props.class]}>
+		<main id="swup" class:list={['site-main relative min-h-[calc(100dvh-88px)] lg:min-h-dvh', Astro.props.class]}>
 			<div id="main" tabindex="-1" class="outline-none" data-page={page}>
 				<slot />
 			</div>
 		</main>
+		<!-- A second Swup container for the home page's ticker screen, so it
+		     arrives with the page on every visit; the curtain lifts it out of
+		     here before a swap. Empty everywhere else. -->
+		<div id="ticker"><slot name="ticker" /></div>
 		<MenuOverlay settings={settings} />
 
 

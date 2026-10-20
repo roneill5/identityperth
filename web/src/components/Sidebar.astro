@@ -1,11 +1,13 @@
 ---
 /**
- * Persistent left column on desktop (logo, primary nav, menu button and the
- * weather and clock widgets) that collapses to a top bar on smaller screens.
- * Lives outside the Swup container so it never re-renders between pages;
- * app.ts keeps the active link in sync. The nav sits 36.5% down the column,
- * as in the design. Hovering the ID mark unfolds IDENTITY one letter at a
- * time, shrinking the lockup so the whole word fits inside the column.
+ * Site chrome. On desktop (1024 and up) a fixed left column: logo, primary
+ * nav 36.5% down, and a bottom row with the menu button and the weather and
+ * clock widgets. On phones and tablets the header is a plain 88px strip
+ * with the logo that scrolls away with the page, and a fixed 45px bar along
+ * the bottom carries the Menu pill and the widgets (the pattern from Forth
+ * and Back's phone layout). Both live outside the Swup container so they
+ * never re-render between pages; app.ts keeps the active link in sync.
+ * Hovering the ID mark unfolds IDENTITY one letter at a time.
  */
 import IdMark from '../assets/brand/id-mark.svg';
 import EntityLetters from '../assets/brand/entity-letters.svg';
@@ -19,10 +21,10 @@ const { pathname } = Astro.props;
 ---
 
 <header
-	class="fixed inset-x-0 top-0 z-40 flex h-(--topbar-h) items-center justify-between gap-4 bg-ink/90 px-gutter backdrop-blur-sm lg:inset-y-0 lg:right-auto lg:h-auto lg:w-(--sidebar-w) lg:flex-col lg:items-start lg:justify-between lg:bg-transparent lg:py-gutter lg:backdrop-blur-none"
+	class="relative z-40 flex h-[88px] items-center px-[14px] lg:fixed lg:inset-y-0 lg:left-0 lg:h-auto lg:w-(--sidebar-w) lg:flex-col lg:items-start lg:justify-between lg:px-gutter lg:py-gutter"
 	data-sidebar
 >
-	<a href="/" class="logo relative z-50 block h-8 text-lime lg:h-[clamp(64px,6.9vw,99px)]" aria-label="Identity, home" data-logo>
+	<a href="/" class="logo relative z-50 block h-[60px] text-lime lg:h-[clamp(64px,6.9vw,99px)]" aria-label="Identity, home" data-logo>
 		<span class="logo__inner relative block h-full">
 			<IdMark class="h-full w-auto" aria-hidden="true" />
 			<span class="logo__entity pointer-events-none absolute left-full top-0 flex h-full items-center" aria-hidden="true">
@@ -38,7 +40,7 @@ const { pathname } = Astro.props;
 				<li>
 					<a
 						href={item.href}
-						class="nav-link inline-block text-paper transition-colors duration-300 hover:text-lime aria-[current=page]:text-lime"
+						class="nav-link inline-block text-paper transition-colors duration-200 hover:text-lime aria-[current=page]:text-lime"
 						aria-current={isActive(pathname, item.href) ? 'page' : undefined}
 						target={item.external ? '_blank' : undefined}
 						rel={item.external ? 'noopener' : undefined}
@@ -51,10 +53,10 @@ const { pathname } = Astro.props;
 		</ul>
 	</nav>
 
-	<div class="flex items-center gap-4 lg:w-full lg:items-end lg:justify-between">
+	<div class="hidden lg:flex lg:w-full lg:items-end lg:justify-between">
 		<button
 			type="button"
-			class="type-label cursor-pointer text-paper transition-colors duration-300 hover:text-lime lg:order-first"
+			class="type-label cursor-pointer text-paper transition-colors duration-200 hover:text-lime"
 			data-menu-toggle
 			aria-expanded="false"
 			aria-controls="menu"
@@ -65,3 +67,12 @@ const { pathname } = Astro.props;
 		<SidebarWidgets />
 	</div>
 </header>
+
+<!-- Phones and tablets: the bar along the bottom -->
+<div class="bottom-bar lg:hidden" data-bottom-bar>
+	<button type="button" class="bottom-bar__pill" data-menu-toggle aria-expanded="false" aria-controls="menu">
+		<span data-menu-label-closed>Menu</span>
+		<span data-menu-label-open hidden>Close</span>
+	</button>
+	<SidebarWidgets />
+</div>

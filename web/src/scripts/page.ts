@@ -3,6 +3,7 @@ import { initSplash } from './splash';
 import { initCycle } from './cycle';
 import { initStudio } from './studio';
 import { initAccordion } from './accordion';
+import { initLightbox } from './gallery';
 
 /**
  * Per-page behaviour. Everything created here is torn down in `destroyPage`
@@ -14,42 +15,56 @@ import { initAccordion } from './accordion';
  *   data-parallax="0.15"   drift vertically at a fraction of scroll speed
  *   data-loop-video        (on <video>) play while on screen, pause off screen
  *   data-splash            scroll or swipe commits the move to Projects
- *   data-accordion         animated <details> inside; data-group makes them exclusive
+ *   data-accordion         animated <details> inside, one open at a time
+ *   data-lightbox          (on gallery figures) tap opens the image in a panel on phones
  *   data-cycle             a heading that cycles through its [data-phrase] children
  *   data-studio            the Studio page: photo column and accordion in step
  */
 
 let ctx: gsap.Context | null = null;
 const cleanups: Array<() => void> = [];
+let settled = false;
+
+/**
+ * The next initPage treats whatever is already on screen as arrived: no
+ * entrance reveals for it. Used by the curtain transition, which shows the
+ * new page's first screen before page:view fires.
+ */
+export function arriveSettled() {
+	settled = true;
+}
 
 export function initPage(root: ParentNode = document) {
 	destroyPage();
 	const container = root.querySelector<HTMLElement>('#swup') ?? document.body;
 	const reduce = reducedMotion();
+	const skipOnScreen = settled;
+	settled = false;
+	const onScreen = (el: Element) => el.getBoundingClientRect().top < window.innerHeight;
 
 	ctx = gsap.context(() => {
 		// Reveal on scroll
 		root.querySelectorAll<HTMLElement>('[data-reveal]').forEach((el) => {
-			if (reduce) return;
+			if (reduce || (skipOnScreen && onScreen(el))) return;
 			gsap.from(el, {
 				opacity: 0,
-				y: 24,
-				duration: 0.9,
+				y: 16,
+				duration: 0.7,
 				ease: EASE.out,
-				scrollTrigger: { trigger: el, start: 'top 90%', once: true },
+				scrollTrigger: { trigger: el, start: 'top 92%', once: true },
 			});
 		});
 
 		// Groups reveal item by item as each one enters, so a long grid never
 		// waits on a single stagger from the top.
 		root.querySelectorAll<HTMLElement>('[data-reveal-group]').forEach((group) => {
-			const items = Array.from(group.children) as HTMLElement[];
+			const items = (Array.from(group.children) as HTMLElement[]).filter((el) => !(skipOnScreen && onScreen(el)));
 			if (reduce || !items.length) return;
-			gsap.set(items, { opacity: 0, y: 24 });
+			gsap.set(items, { opacity: 0, y: 16 });
 			ScrollTrigger.batch(items, {
-				start: 'top 92%',
+				start: 'top 94%',
 				once: true,
-				onEnter: (batch) => gsap.to(batch, { opacity: 1, y: 0, duration: 0.9, ease: EASE.out, stagger: 0.07, overwrite: true }),
+				onEnter: (batch) => gsap.to(batch, { opacity: 1, y: 0, duration: 0.7, ease: EASE.out, stagger: 0.06, overwrite: true }),
 			});
 		});
 
@@ -92,6 +107,7 @@ export function initPage(root: ParentNode = document) {
 	// Splash, accordions, the Studio sync
 	root.querySelectorAll<HTMLElement>('[data-splash]').forEach((el) => cleanups.push(initSplash(el)));
 	root.querySelectorAll<HTMLElement>('[data-accordion]').forEach((el) => cleanups.push(initAccordion(el)));
+	root.querySelectorAll<HTMLElement>('.gallery-wall').forEach((el) => cleanups.push(initLightbox(el)));
 	root.querySelectorAll<HTMLElement>('[data-cycle]').forEach((el) => cleanups.push(initCycle(el)));
 	root.querySelectorAll<HTMLElement>('[data-studio]').forEach((el) => cleanups.push(initStudio(el)));
 

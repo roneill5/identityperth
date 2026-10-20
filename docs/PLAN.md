@@ -1,6 +1,6 @@
 # identityperth.com rebuild: plan
 
-Status as of 19 October 2026. Written for Ross; share with Nick and Seth as needed.
+Status as of 20 October 2026. Written for Ross; share with Nick and Seth as needed.
 
 ## 1. What we are building
 
@@ -12,27 +12,26 @@ Four sections: Projects, Studio, Gallery, Thinking (a link to Substack until the
 
 | Layer | Choice | Notes |
 | --- | --- | --- |
-| Framework | Astro 7, fully static | Every page prerendered at build from published Sanity content |
+| Framework | Astro 7, static | Every public page prerendered at build from published Sanity content. The Cloudflare adapter is there only for `/backend/*` and `/preview/*` |
 | Styling | Tailwind 4 + tailwindcss-motion (Rombo) | Tokens in `web/src/styles/global.css` |
 | Page transitions | Swup 4 + JS plugin + preload plugin | Sidebar and menu persist outside `#swup` |
 | Motion | GSAP 3 (+ ScrollTrigger) | Reveals, slideshow, transitions. No Lenis: native scrolling, as on Forth & Back |
 | CMS | Sanity (project `t2bz0tb2`), Studio built into the site at `/backend` | `@sanity/client` directly, not `@sanity/astro`: the latter pulls the whole Studio into the front end as required peers. `/studio` is the agency page, so the CMS lives at `/backend` |
-| Hosting | Cloudflare Workers static assets, Worker `identityperth-web` | Free tier covers it; static requests are unlimited. A ten-line Worker runs only for `/backend/*` to serve the Studio's deep links |
-| Fonts | Figtree (bundled), Capraia + Hansief (files needed) | Fraunces and Bebas Neue stand in until the brand fonts arrive |
+| Hosting | Cloudflare Workers static assets plus a small Worker, `identityperth-web` | Free tier covers it; static requests are unlimited. The Worker runs only for the Studio's deep links and the draft preview |
+| Fonts | Figtree, Shippori Mincho (serif, Seth's free stand-in for Capraia, 19 Oct), Hansief | All bundled; Capraia only if a webfont licence is bought |
 
 Cost: $0 a month beyond the domain. Sanity free tier (20 seats, 100 GB bandwidth) and Cloudflare free tier.
 
 ## 3. Architecture
 
 ```
-Studio (served at /backend) --publish--> Content Lake --build--> Astro --> web/dist (+ /backend) --> Cloudflare Workers
-                                                     ^
-                                        webhook on publish (to set up)
+Studio (/backend) --publish--> Content Lake --webhook--> Workers Builds --build--> Astro --> static files + Worker (/backend, /preview)
+Studio Preview tab ----------> /preview/* on the Worker: the same page bodies rendered from drafts
 ```
 
 - `web/` fetches with `useCdn: false` and the `published` perspective, so a build always sees the latest published content.
-- A Sanity webhook will hit a Cloudflare Workers Builds deploy hook so edits go live a minute or two after publishing. Until that is wired, deploy by hand (`npm run build && npx wrangler deploy` in `web/`).
-- Preview for editors (seeing drafts before publishing) is a later phase: a second, server-rendered deployment of the same code with the `drafts` perspective and Sanity's Presentation tool pointed at it.
+- Publishing rebuilds the site: a Sanity webhook posts to a Workers Builds deploy hook (coded and documented 20 Oct, `backend/scripts/rebuild-webhook.mjs` and the README's Deploying steps; the dashboard side waits on the GitHub push and `wrangler login`). Until then, deploy by hand with `npm run build && npm run deploy` from the root.
+- Draft preview (done 20 Oct): the Studio's Presentation tool opens `/preview/enable` with a one-time secret, which sets a cookie; `web/src/middleware.ts` then serves `/preview/*` from the same page bodies (`web/src/views/`) with a drafts client and stega overlays, `no-store` and `noindex`. Needs `SANITY_READ_TOKEN` as a Worker secret. The public site stays static and stega-free.
 
 ## 4. Content model
 
@@ -66,6 +65,11 @@ Video rule: everything on Cloudflare Stream, nothing uploaded to Sanity. A `vide
 | `/studio` | Studio | Photo column beside a sticky accordion: About, Services, Team, Clients, Contact. The column follows the accordion's order; scrolling a photo through the middle opens its section, opening a section scrolls to its photo. The About heading cycles through its phrases |
 | Thinking | (external) | Links to Substack in a new tab until there is writing to publish (`THINKING_URL` in `web/src/lib/site.ts`). The article schema and queries stay for later |
 | `/404` | Not found | Copy and a link back to Projects (Pong lives on the `mini-games` branch) |
+| `/preview/*` | (Worker) | The Studio's Preview tab: every template above rendered from drafts, behind a cookie that only `/preview/enable` can set |
+
+## 5a. Phones and tablets (19 Oct)
+
+Forth and Back's phone experience was measured in depth (an agent teardown with screenshots and measurements, in the session scratchpad, 8,000 words) and the patterns worth keeping were rebuilt here: static 88px header with a 60px logo, fixed 45px bottom bar (Menu pill left, weather and clock right, safe-area aware), overlays above the bar with the page dimmed to 20% and blurred 24px, single-column tiles with always-visible caption rows (title left, client right) and 10px gaps inside 14px gutters, a 4:5 project hero, a three-across gallery with a tap-to-open image panel, and a one-screen Studio (swipeable 5:7 photo strip above an all-closed accordion that folds the strip while reading). Their defects were left out: the overflowing inline nav, no lazy loading, no safe-area insets, tablets as stretched phones (our tablets get two tile columns from 768px).
 
 ## 6. Motion spec
 
@@ -101,12 +105,12 @@ Live on `main`: Joondalup weather and a Perth clock beside the menu (Open-Meteo,
 | 1 Shell and templates | Sidebar, menu, ticker, all routes, image pipeline, Swup transitions, reveals | Done |
 | 2 Content | Schema deployed, Studio at `/backend`. Published content mirrors the Figma for review (three design projects, six design gallery tiles, Studio photos, grey placeholders elsewhere); the 22 v1 projects sit as drafts | Done, real content to come |
 | 3 Design pass | Brand fonts in, every page measured against the Figma (19 Oct) and corrected: Studio column widths, row pitch, hairlines, type; menu nav position and contact column; ticker sizes and gaps; tile hover wash and type; gallery captions; sidebar nav position. Still open: the clearer-Identity moment | Mostly done |
-| 4 Hosting | GitHub repo, Workers Builds, Sanity webhook, domain cut-over plan, Studio deploy | Not started |
+| 4 Hosting | GitHub repo, Workers Builds, Sanity webhook, draft preview, domain cut-over plan | Preview and the publish-to-deploy pipeline are coded and documented (README, Deploying). Waiting on Ross: GitHub push, `wrangler login`, the Worker and deploy hook in the dashboard, the preview token |
 | 5 Launch | SEO (sitemap, OG images), analytics (GA4 + GSC), redirects from old URLs, QA on devices, accessibility pass | Not started |
 
 ## 8. Open questions
 
-1. Fonts: Capraia and Hansief webfont files and licences from Seth.
+1. Fonts: settled for now. Shippori Mincho stands in for Capraia (Seth, 19 Oct); buy the Capraia webfont licence only if the team wants the original back.
 2. Home: splash, decided. The journey idea from Nick's email is parked; the schema for it was removed on 19 Oct.
 3. Video: Cloudflare Stream, decided 19 Oct. Upload the showreel there and paste its ID into Home.
 4. Domain: keep identityperth.com as primary, redirect .com.au and .au. Confirm.

@@ -12,7 +12,7 @@ const { projects, lead = true, class: className } = Astro.props;
 const wide = (i: number) => lead && i % 3 === 0;
 ---
 
-<div class:list={['grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6', className]} data-reveal-group>
+<div class:list={['grid grid-cols-1 gap-[10px] px-[14px] pt-5 md:grid-cols-2 lg:gap-6 lg:px-0 lg:pt-0', className]} data-reveal-group>
 	{projects.map((project, i) => (
 		<ProjectTile
 			project={project}

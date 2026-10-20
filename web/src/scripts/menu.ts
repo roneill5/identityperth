@@ -23,10 +23,10 @@ export function initMenu() {
 
 	const tl = gsap.timeline({ paused: true, defaults: { ease: EASE.out } });
 	tl.set(menu, { visibility: 'visible' })
-		.to(menu, { opacity: 1, duration: 0.35, ease: 'power2.out' }, 0)
-		.from(letters, { opacity: 0, x: -14, duration: 0.6, stagger: 0.055 }, 0.05)
-		.from(items, { yPercent: 110, opacity: 0, duration: 0.9, stagger: 0.06 }, 0.15)
-		.from(contact, { opacity: 0, y: 16, duration: 0.8 }, 0.35);
+		.to(menu, { opacity: 1, duration: 0.28, ease: 'power2.out' }, 0)
+		.from(letters, { opacity: 0, x: -12, duration: 0.45, stagger: 0.04 }, 0.04)
+		.from(items, { yPercent: 110, opacity: 0, duration: 0.6, stagger: 0.05 }, 0.1)
+		.from(contact, { opacity: 0, y: 12, duration: 0.5 }, 0.22);
 
 	const setState = (next: boolean) => {
 		open = next;
@@ -35,6 +35,7 @@ export function initMenu() {
 		labelsClosed.forEach((el) => (el.hidden = next));
 		labelsOpen.forEach((el) => (el.hidden = !next));
 		document.documentElement.style.overflow = next ? 'hidden' : '';
+		document.documentElement.classList.toggle('menu-open', next);
 		document.dispatchEvent(new CustomEvent('menu:toggle', { detail: { open: next } }));
 	};
 
@@ -55,7 +56,7 @@ export function initMenu() {
 			tl.pause(0);
 			finish();
 		} else {
-			tl.timeScale(1.8).reverse().eventCallback('onReverseComplete', finish);
+			tl.timeScale(2.4).reverse().eventCallback('onReverseComplete', finish);
 		}
 		lastFocus?.focus({ preventScroll: true });
 	};

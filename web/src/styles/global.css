@@ -4,28 +4,16 @@
 /*
  * Fonts. Figtree is the brand body face and is free (Google Fonts).
  * Hansief (condensed caps) is a free font whose EULA permits web use.
- * Capraia (serif, CAST) is commercial: its woff2 files live in public/fonts
- * but stay out of git until the MyFonts webfont licence is bought; when a
- * file is missing the browser falls back to Fraunces, which stands in.
+ * The serif is Shippori Mincho (Google Fonts, OFL), Seth's pick as the free
+ * stand-in for Capraia: it keeps more of Capraia's character than Petrona.
+ * Capraia itself (CAST, commercial) is not shipped; if its webfont licence
+ * is ever bought, add its @font-face here and put it first in --font-serif.
  */
 @import "@fontsource-variable/figtree";
-@import "@fontsource-variable/fraunces";
+@import "@fontsource/shippori-mincho/400.css";
+@import "@fontsource/shippori-mincho/500.css";
 @import "@fontsource/bebas-neue";
 
-@font-face {
-	font-family: "Capraia";
-	font-weight: 300;
-	font-style: normal;
-	font-display: swap;
-	src: url("/fonts/capraia-light.woff2") format("woff2");
-}
-@font-face {
-	font-family: "Capraia";
-	font-weight: 300;
-	font-style: italic;
-	font-display: swap;
-	src: url("/fonts/capraia-italic.woff2") format("woff2");
-}
 /* Hansief ships as the original OTF: its EULA allows @font-face use but not modified font files. */
 @font-face {
 	font-family: "Hansief";
@@ -44,7 +32,7 @@
 
 	/* Type families */
 	--font-sans: "Figtree Variable", Figtree, system-ui, sans-serif;
-	--font-serif: Capraia, "Fraunces Variable", Georgia, serif;
+	--font-serif: "Shippori Mincho", Georgia, serif;
 	--font-display: Hansief, "Bebas Neue", Impact, sans-serif;
 
 	/* Spacing. 25px gutters in the design. */
@@ -59,7 +47,6 @@
 	:root {
 		/* The sidebar is 415/1440 of the frame in the design. */
 		--sidebar-w: max(280px, 28.8vw);
-		--topbar-h: 64px;
 		--ticker-h: 82px;
 	}
 
@@ -97,39 +84,39 @@
 	/* Type scale. Sizes are the Figma values at 1440 wide, scaled fluidly. */
 	.type-nav {
 		font-family: var(--font-serif);
-		font-weight: 300;
+		font-weight: 400;
 		font-size: clamp(1.625rem, 2.08vw, 2.375rem);
 		line-height: 1.5;
 		letter-spacing: 0.02em;
 	}
 	.type-menu {
 		font-family: var(--font-serif);
-		font-weight: 300;
+		font-weight: 400;
 		font-size: clamp(2.25rem, 3.6vw, 4.75rem);
 		line-height: 1.2;
 		letter-spacing: 0.025em;
 	}
 	.type-h1 {
 		font-family: var(--font-serif);
-		font-weight: 300;
+		font-weight: 400;
 		font-size: clamp(2rem, 3.2vw, 4rem);
 		line-height: 1.1;
 	}
 	.type-h2 {
 		font-family: var(--font-serif);
-		font-weight: 300;
+		font-weight: 400;
 		font-size: clamp(1.625rem, 2.08vw, 2.5rem);
 		line-height: 1.2;
 	}
 	.type-h3 {
 		font-family: var(--font-serif);
-		font-weight: 300;
+		font-weight: 400;
 		font-size: clamp(1.25rem, 1.4vw, 1.75rem);
 		line-height: 1.25;
 	}
 	.type-accordion {
 		font-family: var(--font-serif);
-		font-weight: 300;
+		font-weight: 400;
 		font-size: clamp(0.9375rem, 1.05vw, 1.25rem);
 		line-height: 1.2;
 	}
@@ -166,17 +153,6 @@
 		white-space: nowrap;
 	}
 
-	/* Stand-in tuning: only matters when Fraunces is rendering instead of Capraia. */
-	.font-serif,
-	.type-nav,
-	.type-menu,
-	.type-h1,
-	.type-h2,
-	.type-h3,
-	.type-accordion {
-		font-variation-settings: "opsz" 144, "SOFT" 0, "WONK" 0;
-	}
-
 	.skip-link {
 		position: fixed;
 		top: 0;
@@ -204,7 +180,7 @@
 	}
 	.prose h2 {
 		font-family: var(--font-serif);
-		font-weight: 300;
+		font-weight: 400;
 		font-size: clamp(1.5rem, 1.8vw, 2.25rem);
 		line-height: 1.2;
 		margin-top: 2em;
@@ -212,7 +188,7 @@
 	}
 	.prose h3 {
 		font-family: var(--font-serif);
-		font-weight: 300;
+		font-weight: 400;
 		font-size: clamp(1.25rem, 1.4vw, 1.75rem);
 		line-height: 1.25;
 		margin-top: 1.6em;
@@ -220,7 +196,7 @@
 	}
 	.prose blockquote {
 		font-family: var(--font-serif);
-		font-weight: 300;
+		font-weight: 400;
 		font-size: clamp(1.25rem, 1.6vw, 2rem);
 		line-height: 1.3;
 		color: var(--color-lime);
@@ -264,7 +240,7 @@
 	/* Sanity images: blurred LQIP until the real pixels arrive */
 	img[data-img] {
 		clip-path: inset(0);
-		transition: filter 0.7s ease;
+		transition: filter 0.5s ease;
 	}
 	img[data-img]:not(.is-loaded) {
 		filter: blur(12px);
@@ -321,8 +297,9 @@
 		display: inline-block;
 		overflow: hidden;
 		vertical-align: top;
-		padding-bottom: 0.12em;
-		margin-bottom: -0.12em;
+		/* Room for Shippori's deeper descenders inside the clip */
+		padding-bottom: 0.24em;
+		margin-bottom: -0.24em;
 	}
 	.cycle__word > span {
 		display: inline-block;
@@ -336,12 +313,14 @@
 	.accordion > summary::-webkit-details-marker {
 		display: none;
 	}
-	.accordion > summary .icon-open,
-	.accordion[open] > summary .icon-closed {
-		display: none;
+	/* The plus turns into the cross by rotating its arms inside the ring */
+	.accordion__icon path {
+		transform-box: fill-box;
+		transform-origin: center;
+		transition: transform 0.35s var(--ease-out-expo);
 	}
-	.accordion[open] > summary .icon-open {
-		display: block;
+	.accordion[open] > summary .accordion__icon path {
+		transform: rotate(45deg);
 	}
 }
 
@@ -350,20 +329,151 @@
  * `flex` on the sidebar when the splash home page hides it.
  */
 .site-main {
-	padding-top: var(--topbar-h);
+	padding-bottom: calc(45px + env(safe-area-inset-bottom));
 }
 @media (width >= 64rem) {
 	.site-main {
-		padding-top: 0;
+		padding-bottom: 0;
 		margin-left: var(--sidebar-w);
 	}
 }
-body[data-page="splash"] [data-sidebar] {
+@media (width < 64rem) {
+	:root {
+		--ticker-h: 60px;
+	}
+}
+body[data-page="splash"] [data-sidebar],
+body[data-page="splash"] [data-bottom-bar] {
 	display: none;
 }
 body[data-page="splash"] .site-main {
-	padding-top: 0;
+	padding-bottom: 0;
 	margin-left: 0;
+}
+
+/* The fixed bar along the bottom on phones and tablets */
+.bottom-bar {
+	position: fixed;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 55;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: calc(45px + env(safe-area-inset-bottom));
+	padding: 0 10px env(safe-area-inset-bottom);
+	background: var(--color-ink);
+	color: var(--color-paper);
+}
+.bottom-bar__pill {
+	display: inline-flex;
+	align-items: center;
+	height: 25px;
+	padding: 1px 11px 0;
+	border: 1px solid var(--color-paper);
+	border-radius: 16px;
+	background: var(--color-ink);
+	color: var(--color-paper);
+	font-family: var(--font-display);
+	font-size: 12px;
+	letter-spacing: 1.35px;
+	text-transform: uppercase;
+	cursor: pointer;
+}
+html.menu-open .bottom-bar__pill {
+	background: transparent;
+}
+@media (width >= 64rem) {
+	.bottom-bar {
+		display: none;
+	}
+}
+
+/* The Studio photo strip on phones: swipes sideways, folds away while a section is open */
+@media (width < 64rem) {
+	.studio-strip {
+		scrollbar-width: none;
+		-webkit-overflow-scrolling: touch;
+		scroll-snap-type: x proximity;
+		scroll-padding-left: 14px;
+		transition:
+			opacity 0.5s ease,
+			height 0.4s var(--ease-out-expo) 0.5s,
+			padding 0.4s var(--ease-out-expo) 0.5s,
+			min-height 0.4s var(--ease-out-expo) 0.5s;
+	}
+	.studio-strip::-webkit-scrollbar {
+		display: none;
+	}
+	.studio-strip > * {
+		scroll-snap-align: start;
+	}
+	.studio-strip.is-folded {
+		height: 0;
+		min-height: 0;
+		padding-top: 0;
+		opacity: 0;
+		pointer-events: none;
+	}
+}
+
+/* The phone gallery panel: image and caption above the bottom bar */
+.lightbox {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 50;
+	height: calc(100dvh - 45px - env(safe-area-inset-bottom));
+	overflow-y: auto;
+	padding: 60px 10px 40px;
+	background: var(--color-ink);
+	color: var(--color-paper);
+}
+.lightbox__close {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	display: grid;
+	place-items: center;
+	width: 38px;
+	height: 38px;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--color-paper);
+	cursor: pointer;
+}
+.lightbox__image {
+	display: block;
+	width: 100%;
+	height: auto;
+	background: #2a292a;
+}
+.lightbox__caption {
+	margin-top: 16px;
+	font-family: var(--font-display);
+	font-size: 11px;
+	letter-spacing: 1px;
+	text-transform: uppercase;
+}
+
+/* While the menu (or a lightbox) is open the page behind dims at once and blurs over half a second */
+.site-main {
+	transition: filter 0.5s var(--ease-out-expo);
+}
+html.menu-open .site-main,
+html.lightbox-open .site-main {
+	opacity: 0.2;
+	filter: blur(24px);
+	pointer-events: none;
+}
+@media (width < 64rem) {
+	[data-menu] {
+		bottom: auto;
+		height: calc(100dvh - 45px - env(safe-area-inset-bottom));
+	}
 }
 
 /* ------------------------------------------------------------------ */
@@ -371,15 +481,19 @@ body[data-page="splash"] .site-main {
 /* ------------------------------------------------------------------ */
 
 /* Logo: ID grows into IDENTITY on hover, one letter at a time. On desktop the
-   lockup shrinks as it unfolds so the whole word stays inside the column. */
+   lockup shrinks as it unfolds so the whole word stays inside the column.
+   Leaving runs in order too: the letters fold away first, then the mark
+   grows back. */
 .logo__inner {
 	transform-origin: left top;
-	transition: transform 0.6s var(--ease-out-expo);
+	transition: transform 0.5s var(--ease-out-expo);
+	transition-delay: 0.22s; /* leaving: wait for the letters */
 }
 @media (width >= 64rem) {
 	.logo:hover .logo__inner,
 	.logo:focus-visible .logo__inner {
 		transform: scale(0.62);
+		transition-delay: 0s;
 	}
 }
 /* In the menu the letters are animated by menu.ts, not by hover. */
@@ -393,16 +507,19 @@ body[data-page="splash"] .site-main {
 	transform: translateX(-22%);
 	transform-box: fill-box;
 	transition:
-		opacity 0.28s ease-out,
-		transform 0.55s var(--ease-out-expo);
-	/* Leaving: the last letter goes first, so the word folds back into the mark. */
-	transition-delay: calc((5 - var(--i)) * 35ms);
+		opacity 0.16s ease-in,
+		transform 0.3s ease-in;
+	/* Leaving: the last letter goes first, quickly, so the word folds back into the mark. */
+	transition-delay: calc((5 - var(--i)) * 22ms);
 }
 .logo:hover .logo__letter,
 .logo:focus-visible .logo__letter {
 	opacity: 1;
 	transform: none;
-	transition-delay: calc(var(--i) * 60ms);
+	transition:
+		opacity 0.28s ease-out,
+		transform 0.55s var(--ease-out-expo);
+	transition-delay: calc(var(--i) * 60ms + 60ms);
 }
 @media (prefers-reduced-motion: reduce) {
 	.logo__letter,
@@ -471,17 +588,23 @@ body[data-page="splash"] .site-main {
 	text-transform: uppercase;
 	color: var(--color-paper);
 }
-/* Below the desktop breakpoint only the weather icon and temperature show. */
+/* In the bottom bar on phones: icons and figures only */
 @media (width < 64rem) {
-	.wx__label,
-	.wx [data-clock] {
+	.wx {
+		gap: 12px;
+	}
+	.wx__item {
+		gap: 6px;
+	}
+	.wx__label {
 		display: none;
 	}
-	.wx__icon {
-		width: 24px;
-		height: 24px;
+	.wx__icon,
+	.wx__clock {
+		width: 22px;
+		height: 22px;
 	}
 	.wx__big {
-		font-size: 0.9rem;
+		font-size: 0.8rem;
 	}
 }

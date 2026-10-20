@@ -120,7 +120,7 @@ const projects = [
       ...(p.client ? {client: {_type: 'reference', _ref: p.client}} : {}),
       tagline: p.tagline,
       summary: p.summary,
-      cover: p.cover,
+      cover: {_type: 'media', kind: 'image', image: p.cover},
       year: 2026,
       orderRank: rank(i),
     }),

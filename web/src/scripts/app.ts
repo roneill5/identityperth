@@ -5,7 +5,7 @@ import { gsap, reducedMotion } from './motion';
 import { initMenu } from './menu';
 import { initPage, destroyPage, markImages } from './page';
 import { initWeather } from './weather';
-import { armFlips, curtainIn, curtainOut, flipIn, flipOut } from './transitions';
+import { armFlips, curtainIn, curtainOut, flipIn, flipOut, unflipIn, unflipOut } from './transitions';
 
 /**
  * App entry. Runs once per full page load. Swup turns link clicks into
@@ -16,15 +16,22 @@ import { armFlips, curtainIn, curtainOut, flipIn, flipOut } from './transitions'
  *                             page is swapped in beneath it, and it keeps
  *                             going until it is gone (transitions.ts)
  *   project tile -> project   the cover grows into the hero (transitions.ts)
- *   everything else           0.3 s fade out, 0.5 s fade in with a short rise
+ *   project -> projects       the hero shrinks back into its tile, also on the
+ *                             back button
+ *   everything else           0.2 s fade out, 0.35 s fade in with a short rise
+ *
+ * History navigation animates too; scroll positions are remembered per URL
+ * and put back on the way back.
  */
 
 const container = '#swup';
+// Both containers are swapped; the ticker one is empty on inner pages.
+const containers = ['#swup', '#ticker'];
 const menu = initMenu();
 
 const fadeOut = async () => {
 	if (reducedMotion()) return;
-	await gsap.to(container, { opacity: 0, duration: 0.3, ease: 'power1.inOut' });
+	await gsap.to(container, { opacity: 0, duration: 0.2, ease: 'power1.in' });
 };
 
 const fadeIn = async () => {
@@ -33,25 +40,32 @@ const fadeIn = async () => {
 		return;
 	}
 	// No vertical movement on the splash: its ticker screen is fixed inside the container.
-	const rise = document.body.dataset.page === 'splash' ? 0 : 12;
-	await gsap.fromTo(container, { opacity: 0, y: rise }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out', clearProps: 'all' });
+	const rise = document.body.dataset.page === 'splash' ? 0 : 8;
+	await gsap.fromTo(container, { opacity: 0, y: rise }, { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out', clearProps: 'all' });
 };
 
 const swup = new Swup({
-	containers: [container],
+	containers,
 	// The JS plugin drives the transition, so Swup's CSS class timing is off.
 	animationSelector: false,
+	animateHistoryBrowsing: true,
 	plugins: [
-		new SwupPreloadPlugin({ preloadHoveredLinks: true }),
+		// Hovered links fetch early; links on screen fetch after a moment, so
+		// the next page is usually already here when it is clicked.
+		new SwupPreloadPlugin({ preloadHoveredLinks: true, preloadVisibleLinks: { delay: 400, threshold: 0.2 } }),
 		new SwupJsPlugin({
 			animations: [
 				{ from: '/', to: '(.*)', out: () => curtainOut(fadeOut), in: () => curtainIn(fadeIn) },
+				{ from: '/projects/:slug', to: '/projects', out: () => unflipOut(fadeOut), in: () => unflipIn(fadeIn) },
 				{ from: '(.*)', to: '/projects/:slug', out: () => flipOut(fadeOut), in: () => flipIn(fadeIn) },
 				{ from: '(.*)', to: '(.*)', out: fadeOut, in: fadeIn },
 			],
 		}),
 	],
 });
+
+// Scroll memory for the back and forward buttons.
+const scrollPositions = new Map<string, number>();
 
 /** Keep the sidebar's active link in step with the current URL. */
 function updateNav(pathname = location.pathname) {
@@ -70,16 +84,24 @@ function syncPageKind() {
 	else delete document.body.dataset.page;
 }
 
-swup.hooks.on('visit:start', () => menu.close(true));
+swup.hooks.on('visit:start', (visit) => {
+	menu.close(true);
+	scrollPositions.set(visit.from.url, window.scrollY);
+	if (visit.history.popstate) visit.scroll.reset = false;
+});
 swup.hooks.before('content:replace', () => destroyPage());
-swup.hooks.on('content:replace', () => {
+swup.hooks.on('content:replace', (visit) => {
 	syncPageKind();
 	markImages();
+	if (visit.history.popstate) window.scrollTo(0, scrollPositions.get(visit.to.url) ?? 0);
 });
 swup.hooks.on('page:view', () => {
 	updateNav();
 	initPage();
 });
+
+// Editors' preview: overlays and Studio sync, loaded only when the page says so.
+if (document.documentElement.hasAttribute('data-preview')) void import('./preview').then((m) => m.initPreview(swup));
 
 updateNav();
 syncPageKind();

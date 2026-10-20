@@ -35,8 +35,7 @@ export const PROJECTS_QUERY = defineQuery(`*[_type == "project"] | order(orderRa
   year,
   "client": client->{ name },
   "services": services[]->{ _id, title },
-  cover{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } },
-  coverVideo{ streamId, playback }
+  cover{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId, playback } }
 }`);
 
 export const PROJECT_SLUGS_QUERY = defineQuery(`*[_type == "project" && defined(slug.current)]{
@@ -53,8 +52,7 @@ export const PROJECT_QUERY = defineQuery(`*[_type == "project" && slug.current =
   orderRank,
   "client": client->{ name, website },
   "services": services[]->{ _id, title },
-  cover{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } },
-  coverVideo{ streamId, playback },
+  cover{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId, playback } },
   body[]{
     _key,
     _type,

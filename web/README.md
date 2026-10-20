@@ -1,13 +1,14 @@
-# Astro with Tailwind
+# web/
+
+The Astro site. Everything worth knowing is in the repository README one level up: commands, how content flows from the Studio, the draft preview, deploying, and where things live in `src/`.
+
+Quick reference:
 
 ```sh
-npm create astro@latest -- --template with-tailwindcss
+npm run dev       # http://localhost:4321 (needs SANITY_READ_TOKEN in .env and .dev.vars for the preview routes)
+npm run build     # dist/client (static files) and dist/server (the Worker for /backend and /preview)
+npm run deploy    # wrangler deploy with dist/server/wrangler.json
+npm run types     # regenerates worker-configuration.d.ts from wrangler.jsonc and .dev.vars (also runs on install)
 ```
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/with-tailwindcss)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/with-tailwindcss)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/with-tailwindcss/devcontainer.json)
-
-Astro comes with [Tailwind](https://tailwindcss.com) support out of the box. This example showcases how to style your Astro project with Tailwind.
-
-For complete setup instructions, please see our [Tailwind Styling Guide](https://docs.astro.build/en/guides/styling/#tailwind).
+`sanity.types.ts` is generated from the Studio's schema and the GROQ queries: `npm run typegen` from the repository root.

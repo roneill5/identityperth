@@ -1,54 +1,31 @@
-import { gsap, reducedMotion } from './motion';
-
 /**
- * Splash home page: scrolling (wheel, swipe, arrow keys) drags the ticker
- * screen up a little; past the threshold it commits and the page moves to
- * Projects through the normal wipe transition. Let go early and it settles
- * back. Clicking anywhere does the same through the full-page link.
+ * Splash home page: any scroll intent (wheel, swipe, arrow keys) goes to
+ * Projects through the ticker curtain, as does clicking anywhere. Nothing
+ * moves before the commit, so the curtain is the only motion and it starts
+ * from rest; scrolling never drags the ticker about first.
  */
 export function initSplash(section: HTMLElement): () => void {
 	const link = section.querySelector<HTMLAnchorElement>('[data-advance-link]');
-	const screen = document.querySelector<HTMLElement>('[data-ticker-screen]');
 	if (!link) return () => {};
 
-	const THRESHOLD = 180; // px of scroll intent before committing
-	const PEEK = 0.18; // how far up the ticker screen rises while dragging (fraction of viewport)
-	let progress = 0;
+	const WHEEL = 12; // px of downward wheel delta before it counts
+	const SWIPE = 28; // px of upward swipe
 	let committed = false;
 	let touchY: number | null = null;
-	let settle = 0;
-
-	const setY = screen && !reducedMotion() ? gsap.quickTo(screen, 'y', { duration: 0.35, ease: 'power2.out' }) : null;
-	const render = () => setY?.(-progress * window.innerHeight * PEEK);
 
 	const commit = () => {
 		if (committed) return;
 		committed = true;
-		window.clearTimeout(settle);
 		link.click();
 	};
 
-	const nudge = (delta: number) => {
-		if (committed || delta <= 0) return;
-		progress = Math.min(1, progress + delta / THRESHOLD);
-		render();
-		if (progress >= 1) commit();
-		else {
-			window.clearTimeout(settle);
-			settle = window.setTimeout(() => {
-				progress = 0;
-				render();
-			}, 450);
-		}
+	const onWheel = (e: WheelEvent) => {
+		if (e.deltaY >= WHEEL) commit();
 	};
-
-	const onWheel = (e: WheelEvent) => nudge(e.deltaY);
 	const onTouchStart = (e: TouchEvent) => (touchY = e.touches[0]?.clientY ?? null);
 	const onTouchMove = (e: TouchEvent) => {
 		const y = e.touches[0]?.clientY;
-		if (touchY == null || y == null) return;
-		nudge(touchY - y);
-		touchY = y;
+		if (touchY != null && y != null && touchY - y >= SWIPE) commit();
 	};
 	const onKey = (e: KeyboardEvent) => {
 		if ((e.target as HTMLElement | null)?.closest('input, textarea, [contenteditable]')) return;
@@ -68,6 +45,5 @@ export function initSplash(section: HTMLElement): () => void {
 		window.removeEventListener('touchstart', onTouchStart);
 		window.removeEventListener('touchmove', onTouchMove);
 		window.removeEventListener('keydown', onKey);
-		window.clearTimeout(settle);
 	};
 }

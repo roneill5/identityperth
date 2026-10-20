@@ -1,0 +1,34 @@
+---
+/**
+ * The editors' preview: the same views as the public pages, rendered on
+ * request with draft content. The middleware only lets requests through
+ * with the preview cookie the Studio sets via /preview/enable.
+ */
+import Home from '../../views/Home.astro';
+import Projects from '../../views/Projects.astro';
+import Project from '../../views/Project.astro';
+import Studio from '../../views/Studio.astro';
+import Gallery from '../../views/Gallery.astro';
+import NotFound from '../../views/NotFound.astro';
+
+export const prerender = false;
+
+const path = (Astro.params.path ?? '').replace(/\/+$/, '');
+const [section = '', slug = ''] = path.split('/');
+const known = path === '' || (section === 'projects') || (section === 'studio' && !slug) || (section === 'gallery' && !slug);
+if (!known) Astro.response.status = 404;
+---
+
+{path === '' ? (
+	<Home />
+) : section === 'projects' && !slug ? (
+	<Projects />
+) : section === 'projects' ? (
+	<Project slug={slug} />
+) : section === 'studio' && !slug ? (
+	<Studio />
+) : section === 'gallery' && !slug ? (
+	<Gallery />
+) : (
+	<NotFound />
+)}

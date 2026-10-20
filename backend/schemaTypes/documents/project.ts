@@ -58,18 +58,11 @@ export const project = defineType({
     }),
     defineField({
       name: 'cover',
-      title: 'Cover image',
-      type: 'figure',
-      description: 'Shown in the project tile and at the top of the project page. Set the hotspot: tiles are square, the page is wide.',
+      title: 'Cover',
+      type: 'media',
+      description: 'An image or a silent video loop. Shown in the project tile and at the top of the project page; it does not change on hover. For images, set the hotspot: tiles are square, the page is wide.',
       group: 'overview',
       validation: (rule) => rule.required(),
-    }),
-    defineField({
-      name: 'coverVideo',
-      title: 'Cover video',
-      type: 'video',
-      description: 'Optional silent loop that plays over the cover image on hover and at the top of the project page.',
-      group: 'overview',
     }),
     defineField({
       name: 'year',
@@ -112,7 +105,7 @@ export const project = defineType({
     defineField({name: 'seo', type: 'seo', group: 'seo'}),
   ],
   preview: {
-    select: {title: 'title', client: 'client.name', media: 'cover'},
+    select: {title: 'title', client: 'client.name', media: 'cover.image'},
     prepare({title, client, media}) {
       return {title, subtitle: client, media}
     },

@@ -21,3 +21,20 @@ export const client = createClient({
 	useCdn: false,
 	perspective: 'published',
 });
+
+/**
+ * Request-time client for the editors' preview (/preview): reads drafts
+ * with a Viewer token, skips the CDN, and stega-encodes strings so the
+ * Studio's Presentation tool can map what is on screen back to its field.
+ */
+export function previewClient(token: string) {
+	return createClient({
+		projectId,
+		dataset,
+		apiVersion,
+		useCdn: false,
+		token,
+		perspective: 'drafts',
+		stega: { enabled: true, studioUrl: '/backend' },
+	});
+}

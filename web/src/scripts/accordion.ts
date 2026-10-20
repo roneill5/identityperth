@@ -10,7 +10,7 @@ import { gsap, EASE, reducedMotion } from './motion';
  * where it is, so a fast scroll through the Studio column never leaves two
  * items lit. Other scripts open items through `openDetails` so they animate.
  */
-const DURATION = 0.45;
+const DURATION = 0.35;
 const CLEAR = 'height,opacity,overflow';
 
 const panelOf = (d: HTMLDetailsElement) => d.querySelector<HTMLElement>(':scope > :not(summary)');
@@ -85,7 +85,11 @@ export function initAccordion(root: HTMLElement): () => void {
 		if (!summary || !d || !items.includes(d)) return;
 		e.preventDefault();
 		if (d.open && !d.dataset.closing) closeDetails(d);
-		else openDetails(d);
+		else {
+			openDetails(d);
+			// Listeners that react to people (not to scripts) opening an item.
+			d.dispatchEvent(new CustomEvent('accordion:open', { bubbles: true }));
+		}
 	};
 	root.addEventListener('click', onClick);
 	return () => {
