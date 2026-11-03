@@ -227,7 +227,7 @@ export function initPage(root: ParentNode = document) {
 			const hls = new Hls({
 				capLevelToPlayerSize: true,
 				// An adaptive showreel assumes a phone connection until it has measured one; the rest assume broadband.
-				abrEwmaDefaultEstimate: adaptive ? 3_000_000 : 25_000_000,
+				abrEwmaDefaultEstimate: adaptive ? 2_000_000 : 25_000_000,
 				abrBandWidthUpFactor: 0.9,
 				maxBufferLength: 30,
 				backBufferLength: 10,
@@ -237,8 +237,8 @@ export function initPage(root: ParentNode = document) {
 				// Start on the best rendition the box can show (capLevelToPlayerSize takes over once playing).
 				const limit = Math.max(video.clientWidth, video.clientHeight) * (window.devicePixelRatio || 1);
 				const fit = hls.levels.map((l, i) => ({ i, size: Math.max(l.width, l.height) })).filter((l) => l.size <= limit * 1.2);
-				// An adaptive showreel starts no sharper than 720p, so the first frames arrive at once, and steps up from there.
-				const start = adaptive ? fit.filter((l) => l.size <= 1280) : fit;
+				// An adaptive showreel starts no sharper than 480p, so the first frames arrive at once (720p took twice as long), and steps up from there.
+				const start = adaptive ? fit.filter((l) => l.size <= 854) : fit;
 				hls.startLevel = start.length ? start[start.length - 1].i : fit.length ? fit[0].i : hls.levels.length - 1;
 			});
 			hls.on(Hls.Events.ERROR, (_event, data) => {
