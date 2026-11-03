@@ -342,17 +342,22 @@ export function initPage(root: ParentNode = document) {
 }
 
 /**
- * Adds `is-loaded` to every Sanity image once it has pixels. Called before
- * first paint of new content as well as from initPage, so cached images
- * never flash from blurred to sharp.
+ * Adds `is-loaded` to every Sanity image once it has pixels: once it has
+ * decoded, not merely loaded. A cached image counts as complete before it
+ * has decoded, and lifting the blur then let a large JPEG paint its early
+ * progressive scans as blocks for a few frames on a page arriving from the
+ * back button (Ross, 3 Nov). Decoding a cached image takes a moment at most,
+ * and the transitions wait for the pictures on screen before fading a page
+ * in (transitions.ts decoded), so the blur is not seen.
  */
 export function markImages(root: ParentNode = document) {
 	root.querySelectorAll<HTMLImageElement>('img[data-img]').forEach((img) => {
 		if (img.classList.contains('is-loaded')) return;
 		const done = () => img.classList.add('is-loaded');
-		if (img.complete && img.naturalWidth > 0) done();
+		const decoded = () => img.decode().then(done, done);
+		if (img.complete && img.naturalWidth > 0) void decoded();
 		else {
-			img.addEventListener('load', done, { once: true });
+			img.addEventListener('load', () => void decoded(), { once: true });
 			img.addEventListener('error', done, { once: true });
 		}
 	});

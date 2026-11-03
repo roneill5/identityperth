@@ -243,7 +243,7 @@ export async function flipIn(fallback: () => Promise<void>) {
 		.to(c, { left: r.left, top: r.top, width: r.width, height: r.height, duration: 0.9, ease: 'expo.inOut' }, 0)
 		.to(copies, { scale: 1, duration: 0.9, ease: 'expo.inOut' }, 0);
 	// The page fades in from 0.4 s, or a touch later if its pictures are still decoding.
-	await Promise.all([decoded(), new Promise((resolve) => window.setTimeout(resolve, 400))]);
+	await Promise.all([decoded(500), new Promise((resolve) => window.setTimeout(resolve, 400))]);
 	await Promise.all([grow, gsap.to(CONTAINER, { opacity: 1, duration: 0.5, ease: 'power1.inOut', clearProps: 'all' })]);
 	// The copy sits exactly over the hero: a carried cover steps across into it, frame for frame,
 	// and the copy (now only its poster) goes at once rather than fading over the live video.
@@ -325,7 +325,7 @@ export async function unflipIn(fallback: () => Promise<void>) {
 	const resumed = r.time == null ? Promise.resolve() : resumeVideoAt(`a[data-flip][href="/projects/${r.slug}"]`, r.time);
 	const shrink = gsap.to(r.clone, { left: box.left, top: box.top, width: box.width, height: box.height, duration: 0.7, ease: 'expo.inOut' });
 	// The list fades in from 0.25 s, or a touch later if its pictures are still decoding.
-	await Promise.all([decoded(), new Promise((resolve) => window.setTimeout(resolve, 250))]);
+	await Promise.all([decoded(500), new Promise((resolve) => window.setTimeout(resolve, 250))]);
 	await Promise.all([shrink, gsap.to(CONTAINER, { opacity: 1, duration: 0.4, ease: 'power1.inOut', clearProps: 'all' })]);
 	const handedOver = adoptVideo();
 	await resumed;
