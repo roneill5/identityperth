@@ -4,7 +4,7 @@ import { initMenu } from './menu';
 import { initPage, destroyPage, markImages } from './page';
 import { initCursor } from './cursor';
 import { initAnalytics } from './analytics';
-import { armFlips, slideIn, slideOut, flipIn, flipOut, unflipIn, unflipOut } from './transitions';
+import { armFlips, slideIn, slideOut, flipIn, flipOut, unflipIn, unflipOut, decoded } from './transitions';
 
 /**
  * App entry. Runs once per full page load. Astro's client router (the
@@ -59,6 +59,8 @@ const fadeIn = async () => {
 	}
 	// No vertical movement on the splash: its ticker screen is fixed inside the page.
 	const rise = document.body.dataset.page === 'splash' ? 0 : 8;
+	// Its pictures first, briefly, so the fade shows them rather than their placeholders.
+	await decoded(300);
 	await gsap.fromTo(PAGE, { opacity: 0, y: rise }, { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out', clearProps: 'all' });
 };
 
@@ -122,7 +124,8 @@ function syncPageKind() {
 const SCROLL_KEYS = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' ']);
 const swallow = (e: Event) => {
 	if (e instanceof KeyboardEvent && !SCROLL_KEYS.has(e.key)) return;
-	e.preventDefault();
+	// A touch move the browser is already scrolling on cannot be cancelled; trying logs a console warning on every one.
+	if (e.cancelable) e.preventDefault();
 };
 const MOMENTUM = 450; // ms after the finger lifts before the hold can end
 const BACKSTOP = 2500; // ms after which a finger-held page is let go regardless

@@ -25,6 +25,25 @@ import { arriveSettled, resumeVideoAt, carryVideo, adoptVideo, carrying } from '
 
 const CONTAINER = '#page';
 
+/**
+ * Resolves once the page's pictures on screen have decoded, or after `cap` ms.
+ * A page that fades in while its pictures are still decoding shows their
+ * blurred placeholders for a few frames, which reads as a glitch when the
+ * page was on screen seconds ago (Ross, 3 Nov); a short wait costs nothing
+ * when they are cached and is capped when they are not.
+ */
+export function decoded(cap = 350): Promise<void> {
+	const height = window.innerHeight;
+	const waits = Array.from(document.querySelectorAll<HTMLImageElement>(`${CONTAINER} img`))
+		.filter((img) => {
+			const r = img.getBoundingClientRect();
+			return r.bottom > -height && r.top < height * 2 && img.currentSrc;
+		})
+		.map((img) => img.decode().catch(() => {}));
+	if (!waits.length) return Promise.resolve();
+	return Promise.race([Promise.all(waits).then(() => {}), new Promise<void>((r) => window.setTimeout(r, cap))]);
+}
+
 // ---------- leaving home ----------
 
 let leaving: HTMLElement | null = null;
@@ -173,12 +192,16 @@ export async function flipOut(fallback: () => Promise<void>) {
 	clone.className = 'flip';
 	clone.style.cssText = `left:${p.rect.left}px;top:${p.rect.top}px;width:${p.rect.width}px;height:${p.rect.height}px`;
 	const img = new Image();
-	img.src = p.src.replace(/([?&]w=)\d+/, '$11440');
+	// The copy starts as the tile's own picture, already on screen. The hero-sized one replaces it once it
+	// has decoded in full: swapped in earlier, its progressive scans painted as a blocky band mid-flip.
+	img.src = p.src;
 	img.alt = '';
 	img.style.objectPosition = p.position;
-	img.style.backgroundImage = `url("${p.src}")`;
 	img.style.transform = `scale(${p.zoom})`;
 	clone.appendChild(img);
+	const big = new Image();
+	big.src = p.src.replace(/([?&]w=)\d+/, '$11440');
+	void big.decode().then(() => img.isConnected && (img.src = big.src)).catch(() => {});
 	if (p.frame) {
 		p.frame.style.transform = `scale(${p.zoom})`;
 		clone.appendChild(p.frame);
@@ -209,22 +232,24 @@ export async function flipIn(fallback: () => Promise<void>) {
 	gsap.set(CONTAINER, { opacity: 0 });
 	const r = target.getBoundingClientRect();
 	const copies = c.querySelectorAll('img, canvas, video');
-	// While a video is on its way in, the hero's own box (its first-frame poster) stays out of sight
-	// around the growing copy; it would show a different moment of the same video.
-	const videoBox = target.querySelector<HTMLElement>('[data-video]');
-	if (videoBox && (carrying() || time != null)) videoBox.style.visibility = 'hidden';
+	// The hero's own cover stays out of sight while the copy grows over it: the page fades in from
+	// 0.4 s, and the cover would otherwise show round the copy's edges, a second image under the one
+	// still moving (Ross, 3 Nov). A video cover would also show a different moment of the same video.
+	target.style.visibility = 'hidden';
 	// The hero's video starts picking up from the frozen moment as the frame flies.
 	const resumed = time == null ? Promise.resolve() : resumeVideoAt('[data-flip-target]', time);
-	await gsap
+	const grow = gsap
 		.timeline()
 		.to(c, { left: r.left, top: r.top, width: r.width, height: r.height, duration: 0.9, ease: 'expo.inOut' }, 0)
-		.to(copies, { scale: 1, duration: 0.9, ease: 'expo.inOut' }, 0)
-		.to(CONTAINER, { opacity: 1, duration: 0.5, ease: 'power1.inOut', clearProps: 'all' }, 0.4);
+		.to(copies, { scale: 1, duration: 0.9, ease: 'expo.inOut' }, 0);
+	// The page fades in from 0.4 s, or a touch later if its pictures are still decoding.
+	await Promise.all([decoded(), new Promise((resolve) => window.setTimeout(resolve, 400))]);
+	await Promise.all([grow, gsap.to(CONTAINER, { opacity: 1, duration: 0.5, ease: 'power1.inOut', clearProps: 'all' })]);
 	// The copy sits exactly over the hero: a carried cover steps across into it, frame for frame,
 	// and the copy (now only its poster) goes at once rather than fading over the live video.
 	const handedOver = adoptVideo();
 	await resumed;
-	if (videoBox) videoBox.style.visibility = '';
+	target.style.visibility = '';
 	if (handedOver) {
 		c.remove();
 		return;
@@ -287,8 +312,10 @@ export async function unflipIn(fallback: () => Promise<void>) {
 	}
 	gsap.set(CONTAINER, { opacity: 0 });
 	const cover = tile.querySelector<HTMLElement>('[data-flip-box]') ?? tile;
-	const videoBox = tile.querySelector<HTMLElement>('[data-video]');
-	if (videoBox && (carrying() || r.time != null)) videoBox.style.visibility = 'hidden';
+	// The tile's own cover stays out of sight while the copy shrinks onto it: the page fades in from
+	// 0.25 s, and the cover showed through under the still-moving copy, then the copy vanished with a
+	// jump (Ross, 3 Nov). The caption beside it fades in with the page as before.
+	cover.style.visibility = 'hidden';
 	// Bring the tile into view first if it is below the fold.
 	let box = cover.getBoundingClientRect();
 	if (box.bottom > window.innerHeight || box.top < 0) {
@@ -296,12 +323,15 @@ export async function unflipIn(fallback: () => Promise<void>) {
 		box = cover.getBoundingClientRect();
 	}
 	const resumed = r.time == null ? Promise.resolve() : resumeVideoAt(`a[data-flip][href="/projects/${r.slug}"]`, r.time);
-	await gsap
-		.timeline()
-		.to(r.clone, { left: box.left, top: box.top, width: box.width, height: box.height, duration: 0.7, ease: 'expo.inOut' }, 0)
-		.to(CONTAINER, { opacity: 1, duration: 0.4, ease: 'power1.inOut', clearProps: 'all' }, 0.25);
-	adoptVideo();
+	const shrink = gsap.to(r.clone, { left: box.left, top: box.top, width: box.width, height: box.height, duration: 0.7, ease: 'expo.inOut' });
+	// The list fades in from 0.25 s, or a touch later if its pictures are still decoding.
+	await Promise.all([decoded(), new Promise((resolve) => window.setTimeout(resolve, 250))]);
+	await Promise.all([shrink, gsap.to(CONTAINER, { opacity: 1, duration: 0.4, ease: 'power1.inOut', clearProps: 'all' })]);
+	const handedOver = adoptVideo();
 	await resumed;
-	if (videoBox) videoBox.style.visibility = '';
+	cover.style.visibility = '';
+	// A carried video is now in the tile and the copy holds only its poster: it goes at once. An image copy
+	// fades over the tile's own picture, which is the same picture at the same size, so nothing jumps.
+	if (!handedOver) await gsap.to(r.clone, { opacity: 0, duration: 0.25, ease: 'power1.inOut' });
 	r.clone.remove();
 }
