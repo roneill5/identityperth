@@ -19,6 +19,10 @@ export default defineConfig({
 	// Studio's deep links under /backend and the editors' draft preview
 	// under /preview.
 	output: 'static',
+	// The stylesheet goes inline in every page: one request fewer before paint, and Microsoft Clarity's
+	// recordings keep their styling. Clarity rebuilds a page at playback and fetches its stylesheet then,
+	// and a hashed file is gone after the next deploy (Ross, 3 Nov: recordings played back unstyled).
+	build: { inlineStylesheets: 'always' },
 	// No Astro sessions: stops the Cloudflare adapter adding a SESSION KV binding
 	// (which would need a KV namespace before `wrangler deploy` works).
 	session: false,

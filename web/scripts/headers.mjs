@@ -27,7 +27,9 @@ const robots = production ? [] : ['X-Robots-Tag: noindex, nofollow'];
 const block = (path, lines) => [path, ...lines.map((line) => `  ${line}`)].join('\n');
 const text = [
 	block('/*', [...security, ...robots]),
-	block('/fonts/*', ['Cache-Control: public, max-age=31536000, immutable']),
+	// Clarity's player, on microsoft.com, fetches the fonts and any remaining hashed files at playback.
+	block('/fonts/*', ['Cache-Control: public, max-age=31536000, immutable', 'Access-Control-Allow-Origin: *']),
+	block('/_astro/*', ['Access-Control-Allow-Origin: *']),
 	block('/og/*', ['Cache-Control: public, max-age=86400']),
 	block('/icons/*', ['Cache-Control: public, max-age=604800']),
 	block('/favicon.svg', ['Cache-Control: public, max-age=604800']),
