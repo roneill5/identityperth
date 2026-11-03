@@ -14,6 +14,10 @@ export default defineConfig({
   // path is set once, in sanity.cli.ts (`project.basePath`), which the build
   // and the dev server both apply; setting it here as well would double it.
 
+  // Token login (not the default cookie-or-token): the video input sends the editor's session token to the site's
+  // Worker, which checks it against the project before touching Stream (components/StreamVideoInput.tsx).
+  auth: {loginMethod: 'token'},
+
   plugins: [
     structureTool({structure}),
     // Presentation: the site inside the Studio, draft content included, with

@@ -207,8 +207,11 @@ export function initPage(root: ParentNode = document) {
 			if (attached.has(video) || awaitingCarry(video)) return;
 			attached.add(video);
 			video.addEventListener(isLoop(video) ? 'playing' : 'loadedmetadata', () => video.classList.add('is-playing'), { once: true });
-			// A cover plays its MP4 file, so the flip can carry the element between pages.
-			if (video.dataset.mp4) {
+			// A cover plays its MP4 file, so the flip can carry the element between pages. The home showreel does
+			// too on desktop; on phones and tablets (data-adaptive) it streams, since one file cannot adapt to a
+			// weak connection: at 2.5 Mbps the 32 MB phone cut stalled 22 times in its first half minute (3 Nov).
+			const adaptive = 'adaptive' in video.dataset && !matchMedia('(min-width: 64rem)').matches;
+			if (video.dataset.mp4 && !adaptive) {
 				video.src = video.dataset.mp4;
 				return;
 			}
@@ -223,7 +226,8 @@ export function initPage(root: ParentNode = document) {
 			}
 			const hls = new Hls({
 				capLevelToPlayerSize: true,
-				abrEwmaDefaultEstimate: 25_000_000,
+				// An adaptive showreel assumes a phone connection until it has measured one; the rest assume broadband.
+				abrEwmaDefaultEstimate: adaptive ? 3_000_000 : 25_000_000,
 				abrBandWidthUpFactor: 0.9,
 				maxBufferLength: 30,
 				backBufferLength: 10,
@@ -233,7 +237,9 @@ export function initPage(root: ParentNode = document) {
 				// Start on the best rendition the box can show (capLevelToPlayerSize takes over once playing).
 				const limit = Math.max(video.clientWidth, video.clientHeight) * (window.devicePixelRatio || 1);
 				const fit = hls.levels.map((l, i) => ({ i, size: Math.max(l.width, l.height) })).filter((l) => l.size <= limit * 1.2);
-				hls.startLevel = fit.length ? fit[fit.length - 1].i : hls.levels.length - 1;
+				// An adaptive showreel starts no sharper than 720p, so the first frames arrive at once, and steps up from there.
+				const start = adaptive ? fit.filter((l) => l.size <= 1280) : fit;
+				hls.startLevel = start.length ? start[start.length - 1].i : fit.length ? fit[0].i : hls.levels.length - 1;
 			});
 			hls.on(Hls.Events.ERROR, (_event, data) => {
 				if (!data.fatal) return;

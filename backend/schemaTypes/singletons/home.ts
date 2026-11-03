@@ -1,5 +1,6 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
 import {HomeIcon} from '@sanity/icons/Home'
+import {StreamVideoInput} from '../../components/StreamVideoInput'
 
 /**
  * The home page: a full-screen hero (the showreel; the wordmark stands in
@@ -22,7 +23,8 @@ export const home = defineType({
       group: 'content',
       title: 'Hero video',
       type: 'string',
-      description: 'Cloudflare Stream video ID for the showreel. It plays silently on a loop.',
+      description: 'The showreel, on Cloudflare Stream. It plays silently on a loop.',
+      components: {input: StreamVideoInput},
       validation: (rule) => rule.regex(/^[a-f0-9]{32}$/i).error('A Stream ID is 32 hex characters'),
     }),
     defineField({
@@ -30,7 +32,8 @@ export const home = defineType({
       group: 'content',
       title: 'Hero video for phones',
       type: 'string',
-      description: 'Cloudflare Stream video ID for the portrait (9:16) cut of the showreel. Screens taller than they are wide play this one instead. Leave empty to use the hero video everywhere.',
+      description: 'The portrait (9:16) cut of the showreel. Screens taller than they are wide play this one instead. Leave empty to use the hero video everywhere.',
+      components: {input: StreamVideoInput},
       validation: (rule) => rule.regex(/^[a-f0-9]{32}$/i).error('A Stream ID is 32 hex characters'),
     }),
     defineField({

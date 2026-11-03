@@ -10,7 +10,7 @@ const sanity = Astro.locals.sanity ?? client;
 const projects = await sanity.fetch(PROJECTS_QUERY);
 ---
 
-<Base title="Projects" description="Selected brand, campaign, digital and print work by Identity, Perth.">
+<Base title="Projects" metaTitle="Branding, Campaign & Digital Projects | Identity Perth" description="Selected work by Identity, Perth: brand identities, campaigns, websites and packaging for hospitality, property, government and tourism clients across WA.">
 	<h1 class="sr-only">Projects</h1>
 	{projects.length ? (
 		<ProjectGrid projects={projects} />

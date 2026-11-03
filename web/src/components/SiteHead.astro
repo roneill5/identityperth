@@ -72,8 +72,9 @@ const graph = JSON.stringify({ '@context': 'https://schema.org', '@graph': [orga
 // numbers are real visits (README, Analytics). GA4 goes through Cloudflare Zaraz when PUBLIC_ZARAZ is
 // true, set up in the Cloudflare dashboard with auto-inject off so it loads here and on no other
 // subdomain; PUBLIC_GA_ID loads Google's own tag instead, never both. PUBLIC_CLARITY_ID adds Microsoft
-// Clarity's recordings and heatmaps. Events: scripts/analytics.ts. Zaraz's tag is deferred: it still runs
-// before the site's own scripts, so track() finds it, without holding up the first paint.
+// Clarity's recordings and heatmaps. Events: scripts/analytics.ts. Both loaders stay off when the visitor has
+// turned analytics off on the privacy page (the idp_analytics cookie, views/LegalPage.astro). Zaraz's tag is
+// added in order: it still runs before the site's own scripts, so track() finds it, without holding up the first paint.
 const zaraz = !noindex && import.meta.env.PUBLIC_ZARAZ === 'true';
 const gaId = /^G-[A-Z0-9]{6,12}$/.test(import.meta.env.PUBLIC_GA_ID ?? '') ? import.meta.env.PUBLIC_GA_ID : null;
 const analytics = gaId && !noindex && !zaraz ? gaId : null;
@@ -130,11 +131,23 @@ const clarity = clarityId && !noindex ? clarityId : null;
 		});
 	</script>
 )}
-{zaraz && <script is:inline src="/cdn-cgi/zaraz/i.js" referrerpolicy="origin" defer></script>}
+{zaraz && (
+	<script is:inline>
+		// Cloudflare's tag, served from this domain, unless the visitor has turned analytics off on the privacy page (the idp_analytics cookie).
+		if (!/(^|; )idp_analytics=off(;|$)/.test(document.cookie)) {
+			var z = document.createElement('script');
+			z.src = '/cdn-cgi/zaraz/i.js';
+			z.referrerPolicy = 'origin';
+			z.async = false;
+			document.head.appendChild(z);
+		}
+	</script>
+)}
 {clarity && (
 	<script is:inline define:vars={{ clarityId: clarity }}>
 		// The queue exists at once, so the event tags from analytics.ts are kept; the recorder loads after the page has.
 		// Clarity follows the client router's navigations itself.
+		if (!/(^|; )idp_analytics=off(;|$)/.test(document.cookie)) {
 		window.clarity = window.clarity || function () { (window.clarity.q = window.clarity.q || []).push(arguments); };
 		addEventListener('load', function () {
 			setTimeout(function () {
@@ -144,5 +157,6 @@ const clarity = clarityId && !noindex ? clarityId : null;
 				document.head.appendChild(s);
 			}, 1500);
 		});
+		}
 	</script>
 )}

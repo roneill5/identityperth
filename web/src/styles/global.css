@@ -425,13 +425,12 @@
 	.accordion > summary::-webkit-details-marker {
 		display: none;
 	}
-	/* The plus turns into the cross by rotating its arms inside the ring */
-	.accordion__icon path {
-		transform-box: fill-box;
-		transform-origin: center;
+	/* The plus turns into the cross: the whole icon turns, the ring being round, rather than the arms
+	   inside it, which iOS turned about the wrong point (Ross, 3 Nov). */
+	.accordion__icon {
 		transition: transform 0.35s var(--ease-out-expo);
 	}
-	.accordion[open] > summary .accordion__icon path {
+	.accordion[open] > summary .accordion__icon {
 		transform: rotate(45deg);
 	}
 }
@@ -543,24 +542,12 @@ html.menu-open .bottom-bar__pill::before {
 		-webkit-overflow-scrolling: touch;
 		scroll-snap-type: x proximity;
 		scroll-padding-left: 14px;
-		transition:
-			opacity 0.5s ease,
-			height 0.4s var(--ease-out-expo) 0.5s,
-			padding 0.4s var(--ease-out-expo) 0.5s,
-			min-height 0.4s var(--ease-out-expo) 0.5s;
 	}
 	.studio-strip::-webkit-scrollbar {
 		display: none;
 	}
 	.studio-strip > * {
 		scroll-snap-align: start;
-	}
-	.studio-strip.is-folded {
-		height: 0;
-		min-height: 0;
-		padding-top: 0;
-		opacity: 0;
-		pointer-events: none;
 	}
 }
 

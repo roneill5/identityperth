@@ -46,9 +46,10 @@ web/worker-configuration.d.ts
 # Capraia (CAST) needs a webfont licence from MyFonts before it can ship. Hansief is free for web use (see research/fonts/hansief-eula.pdf)
 web/public/fonts/capraia-*.woff2
 
-# Cloudflare API tokens, one line each, never commit: Stream (backend/scripts/stream-videos.mjs) and the account master token
+# Cloudflare API tokens, one line each, never commit: Stream (backend/scripts/stream-videos.mjs), the account master token, and a user token for Workers Builds
 .stream-token
 .cloudflare-token
+.cloudflare-user-token
 
 # TypeScript incremental build state
 *.tsbuildinfo

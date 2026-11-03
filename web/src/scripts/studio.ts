@@ -9,11 +9,11 @@ import { openDetails } from './accordion';
  * scrolls their portrait to the middle of the screen beside the list, and
  * scrolling the portraits past the middle of the screen opens the person
  * each one belongs to. Sections open only when clicked. Phones: every
- * section starts closed under a swipeable strip of the photos; opening one
- * folds the strip away so the text has the screen, closing the last brings
- * it back, and each person's portrait sits inside their bio. The strip never
- * swaps to the portraits: it did so as it folded, and they flashed (Ross,
- * 30 Oct).
+ * section starts closed under a swipeable strip of the photos, which stays
+ * put whatever is open (Ross, 3 Nov: until then it folded away while
+ * reading, and the fold made the accordion's lines jump), and each person's
+ * portrait sits inside their bio. The strip never swaps to the portraits
+ * (Ross, 30 Oct).
  */
 const DESKTOP = '(min-width: 64rem)';
 
@@ -27,9 +27,8 @@ export function initStudio(root: HTMLElement): () => void {
 	if (!images.length || !sections.length) return () => {};
 	const isOpen = (d?: HTMLDetailsElement) => Boolean(d?.open && !d.dataset.closing);
 
-	// Phones: nothing open to start with, and the strip folds while reading.
+	// Phones: nothing open to start with.
 	const strip = root.querySelector<HTMLElement>('[data-studio-images]');
-	const fold = () => strip?.classList.toggle('is-folded', !mq.matches && sections.some(isOpen));
 	if (!mq.matches) {
 		sections.forEach((d) => {
 			if (d.open) d.open = false;
@@ -76,18 +75,11 @@ export function initStudio(root: HTMLElement): () => void {
 		// The portraits were hidden when their triggers were measured.
 		ScrollTrigger.refresh();
 	};
-	const onSectionToggle = () =>
-		window.setTimeout(() => {
-			fold();
-			sync();
-		}, 0);
+	const onSectionToggle = () => window.setTimeout(sync, 0);
 	sections.forEach((d) => d.addEventListener('toggle', onSectionToggle));
 	sync();
-	// Turning a tablet, or a desktop window shrinking: the strip and the column follow.
-	const onMq = () => {
-		fold();
-		sync();
-	};
+	// Turning a tablet, or a desktop window shrinking: the column follows.
+	const onMq = () => sync();
 	mq.addEventListener('change', onMq);
 
 	// Scrolling a portrait through the middle of the screen opens that person.
@@ -128,7 +120,6 @@ export function initStudio(root: HTMLElement): () => void {
 		triggers.forEach((t) => t.kill());
 		sections.forEach((d) => d.removeEventListener('toggle', onSectionToggle));
 		mq.removeEventListener('change', onMq);
-		strip?.classList.remove('is-folded');
 		root.classList.remove('is-ready');
 		ScrollTrigger.removeEventListener('refreshInit', onRefreshInit);
 		ScrollTrigger.removeEventListener('refresh', onRefresh);

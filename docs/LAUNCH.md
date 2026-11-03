@@ -9,7 +9,7 @@ The site goes live on identityperth.com in place of the WordPress site that is t
 3. **Analytics.** Set up on 2 Nov (README, Analytics): GA4 G-4YFE37WMQN through Zaraz, Clarity project z77zmahlca, `PUBLIC_ZARAZ=true` and `PUBLIC_CLARITY_ID` in `web/.env`. Still to do: register `area` and `label` as event-scoped custom dimensions in GA4 (Admin, Custom definitions), and put the two variables in the Worker's Builds variables when Builds is set up. (Ross)
 4. **Search Console.** Neither connected Google account has identityperth.com in Search Console. Add it as a domain property (DNS TXT record in the Cloudflare zone) so the sitemap can be submitted on launch day. (Ross)
 5. **Worker secret.** `cd web && npx wrangler login && npx wrangler secret bulk .dev.vars` puts `SANITY_READ_TOKEN` on the Worker. Confirm the token in `.dev.vars` is the Viewer robot token "Site preview" from sanity.io/manage, not a personal CLI token. The preview cookie is signed with it. (Ross)
-6. **Builds.** README, Deploying, steps 1 to 5: push to GitHub, connect the Worker to the repository, create the deploy hook, run `rebuild-webhook.mjs`. Leave `SITE_URL` unset in the production build variables; set it to the workers.dev address only for a staging build. (Ross)
+6. **Builds.** Done 3 Nov: the Worker builds from `main` and from every Studio publish (README, Deploying). Commit and push anything deployed by hand, or the next build reverts it.
 7. **Sanity CORS.** Already allows `https://identityperth.com`, `https://www.identityperth.com` and the workers.dev address (checked 28 Oct). Nothing to do.
 8. **Stream.** Optional: in the Stream dashboard, restrict each video's allowed origins to identityperth.com and the workers.dev address so other sites cannot embed them. (Ross)
 9. **Rehearse on staging.** `npm run build:staging && npm run deploy:staging` in `web/`, and test on real phones: home video both ways round, a project page, the Studio accordion, the gallery panel, the menu, the terms page. (Ross, then Nick and Belinda for sign-off)
@@ -26,7 +26,7 @@ The site goes live on identityperth.com in place of the WordPress site that is t
     - The Studio at `https://identityperth.com/backend/` logs in, the Preview tab shows drafts, and publishing a change rebuilds the site within a few minutes.
     - A phone on mobile data plays the home video and a project video.
     - `https://identityperth.com/cdn-cgi/zaraz/i.js` is 200. GA4's Realtime report shows the visit's page views and a `select_content` after clicking a project card, and Clarity lists the session within a few minutes.
-13. **Search Console.** Submit `https://identityperth.com/sitemap-index.xml` and request indexing of the home, Projects and Studio pages. (Ross)
+13. **Search Console.** Done 3 Nov: the domain property exists and the sitemap is submitted. Request indexing of the home, Projects and Studio pages once it has processed. (Ross)
 14. **Close the staging copy.** Done 3 Nov: the live Worker's workers.dev address is off, and staging is its own password-protected Worker, identityperth-staging (README, Deploying).
 
 ## After

@@ -13,6 +13,7 @@ import {getCliClient} from 'sanity/cli'
 
 const PROJECT_ID = 't2bz0tb2'
 const NAME = 'Rebuild site on publish'
+const SITE_TYPES = `_type in ${JSON.stringify(['home', 'studio', 'siteSettings', 'project', 'client', 'service', 'teamMember', 'galleryItem', 'legalPage'])}`
 const client = getCliClient({apiVersion: '2025-08-04'})
 const hooks = (opts = {}) => client.request({url: `/hooks/projects/${PROJECT_ID}`, ...opts})
 
@@ -56,9 +57,10 @@ if (args.includes('--list')) {
       includeDrafts: false,
       includeAllVersions: false,
       headers: {},
-      // Every document type ends up on the site, so no filter. The deploy hook
-      // ignores the body, so send the smallest possible one.
-      rule: {on: ['create', 'update', 'delete'], filter: '', projection: '{_id, _type}'},
+      // The site's own document types (Sanity requires a filter, and the preview's
+      // secret documents must not start builds). The deploy hook ignores the body,
+      // so send the smallest possible one.
+      rule: {on: ['create', 'update', 'delete'], filter: SITE_TYPES, projection: '{_id, _type}'},
       isDisabledByUser: false,
     },
   })

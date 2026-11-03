@@ -22,7 +22,9 @@ const home = await sanity.fetch(HOME_QUERY);
 const firstTiles = (await sanity.fetch(PROJECTS_QUERY)).slice(0, 3);
 const video = home?.heroVideo ? { streamId: stegaClean(home.heroVideo) } : null;
 // The portrait (9:16) cut, for screens taller than they are wide. Each cut loads only while it is the one displayed.
-// Both play from their MP4 file, so the showreel keeps playing while the page slides away to Projects (transitions.ts).
+// On desktop both play from their MP4 file, so the showreel keeps playing while the page slides away to Projects
+// (transitions.ts). Phones and tablets stream adaptively instead (page.ts): the 32 MB file stalled on anything
+// slower than about 4 Mbps (Ross, 3 Nov).
 const tallVideo = video && home?.heroVideoMobile ? { streamId: stegaClean(home.heroVideoMobile) } : null;
 const phrases = (home?.ticker ?? []).filter((p): p is string => Boolean(p));
 // The showreel covers the space above the ticker at every window shape, like
@@ -46,11 +48,11 @@ const tallBox = [...coverBox, 'landscape:hidden'];
 			{video ? (
 				<>
 					<div class:list={videoBox}>
-						<VideoEmbed video={video} fill loading="eager" fetchpriority="high" preload preloadMedia={tallVideo ? '(orientation: landscape)' : undefined} file />
+						<VideoEmbed video={video} fill loading="eager" fetchpriority="high" preload preloadMedia={tallVideo ? '(orientation: landscape)' : undefined} file adaptive />
 					</div>
 					{tallVideo ? (
 						<div class:list={tallBox}>
-							<VideoEmbed video={tallVideo} fill loading="eager" fetchpriority="high" preload preloadMedia="(orientation: portrait)" file />
+							<VideoEmbed video={tallVideo} fill loading="eager" fetchpriority="high" preload preloadMedia="(orientation: portrait)" file adaptive />
 						</div>
 					) : null}
 				</>

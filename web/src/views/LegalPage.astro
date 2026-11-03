@@ -77,6 +77,16 @@ const row = 'type-accordion block border-b border-slate py-3 lg:pt-2 lg:pb-[7px]
 
 				<RichText value={body} class="prose-legal mt-12 lg:mt-16" />
 
+				{slug === 'privacy' && (
+					<section class="mt-16 border-t border-slate pt-5" id="analytics-choice" data-analytics-choice>
+						<p class="type-label text-lime">Your analytics choice</p>
+						<p class="type-body mt-4 text-paper/85">
+							Analytics and session recordings on this site are <strong data-analytics-state>on</strong> for you.
+							<button type="button" class="text-link cursor-pointer text-lime hover:text-paper" data-analytics-toggle>Turn them off</button>.
+						</p>
+					</section>
+				)}
+
 				{email && (
 					<footer class="mt-16 border-t border-slate pt-5">
 						<p class="type-label text-lime">Questions</p>
@@ -93,6 +103,22 @@ const row = 'type-accordion block border-b border-slate py-3 lg:pt-2 lg:pb-[7px]
 )}
 
 <script>
+	// The analytics choice (privacy policy, clause 10): a cookie the loaders in SiteHead check. The page reloads so it takes effect at once.
+	const choice = document.querySelector<HTMLElement>('[data-analytics-choice]');
+	if (choice) {
+		const off = /(^|; )idp_analytics=off(;|$)/.test(document.cookie);
+		const state = choice.querySelector<HTMLElement>('[data-analytics-state]');
+		const toggle = choice.querySelector<HTMLButtonElement>('[data-analytics-toggle]');
+		if (state) state.textContent = off ? 'off' : 'on';
+		if (toggle) {
+			toggle.textContent = off ? 'Turn them on' : 'Turn them off';
+			toggle.addEventListener('click', () => {
+				document.cookie = `idp_analytics=${off ? 'on' : 'off'}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax; Secure`;
+				location.reload();
+			});
+		}
+	}
+
 	// The contents row for the part being read turns lime: the last part whose heading has passed a line 30% down the screen, the first before any has, and the last once the page is scrolled to the end.
 	const nav = document.querySelector<HTMLElement>('[data-legal-contents]');
 	if (nav) {

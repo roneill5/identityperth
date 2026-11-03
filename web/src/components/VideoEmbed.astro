@@ -31,9 +31,11 @@ interface Props {
 	preloadMedia?: string;
 	/** Play the whole video from its MP4 file (Stream makes one on request) instead of the stream: a file element keeps playing when a transition moves it, a stream resets. Covers and the home hero. */
 	file?: boolean;
+	/** On phones and tablets, stream adaptively instead of the file: a long video starts at once and never stalls on a weak connection (the home showreel; Ross, 3 Nov). */
+	adaptive?: boolean;
 }
 
-const { video, aspect = 16 / 9, portraitAspect, fill = false, sizes = '100vw', class: className, loading = 'lazy', fetchpriority, preload = false, preloadMedia, file = false } = Astro.props;
+const { video, aspect = 16 / 9, portraitAspect, fill = false, sizes = '100vw', class: className, loading = 'lazy', fetchpriority, preload = false, preloadMedia, file = false, adaptive = false } = Astro.props;
 const src = hlsUrl(video);
 const widths = [480, 960, 1440, 1920];
 const poster = src ? posterUrl(video, 960) : null;
@@ -52,6 +54,7 @@ const posterSet = src ? widths.map((w) => `${posterUrl(video, w)} ${w}w`).join('
 			class="absolute inset-0 h-full w-full object-cover"
 			data-hls={src}
 			data-mp4={file ? mp4Url(video) : undefined}
+			data-adaptive={adaptive ? '' : undefined}
 			data-loop
 			muted
 			loop
