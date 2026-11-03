@@ -10,6 +10,8 @@ import { ClientRouter } from 'astro:transitions';
 
 interface Props {
 	title?: string;
+	/** A title from the SEO tab, used as it is (SiteHead). */
+	metaTitle?: string | null;
 	description?: string | null;
 	image?: string | null;
 	/**
@@ -33,7 +35,7 @@ import PreviewEditing from '../components/PreviewEditing.astro';
 <!doctype html>
 <html lang="en-AU" data-preview={preview ? '' : undefined} transition:animate="none">
 	<head>
-		<SiteHead title={Astro.props.title} description={Astro.props.description} image={Astro.props.image} notFound={page === 'notfound'} schema={Astro.props.schema} />
+		<SiteHead title={Astro.props.title} metaTitle={Astro.props.metaTitle} description={Astro.props.description} image={Astro.props.image} notFound={page === 'notfound'} schema={Astro.props.schema} />
 		<!-- Client-side navigation; scripts/app.ts swaps #page and #ticker and animates. -->
 		<ClientRouter fallback="swap" />
 		<slot name="head" />

@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "sanity dev",
     "start": "sanity start",
-    "build": "sanity build ../web/public/backend -y",
+    "build": "sanity build ../web/public/backend -y && node scripts/studio-light.mjs",
     "deploy": "sanity deploy",
     "typegen": "sanity schemas extract --force --enforce-required-fields && sanity typegen generate",
     "seed:build": "node scripts/seed-from-v1.mjs",

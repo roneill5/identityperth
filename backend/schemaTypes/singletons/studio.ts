@@ -13,9 +13,16 @@ export const studio = defineType({
   title: 'Studio',
   type: 'document',
   icon: PresentationIcon,
+  groups: [
+    {name: 'about', title: 'About', default: true},
+    {name: 'clients', title: 'Clients'},
+    {name: 'photos', title: 'Photos'},
+    {name: 'seo', title: 'SEO'},
+  ],
   fields: [
     defineField({
       name: 'aboutHeading',
+      group: 'about',
       title: 'About heading',
       type: 'string',
       description: 'e.g. Connected capability. Shown to screen readers and when motion is reduced.',
@@ -23,6 +30,7 @@ export const studio = defineType({
     }),
     defineField({
       name: 'aboutHeadings',
+      group: 'about',
       title: 'Heading phrases',
       type: 'array',
       description: 'Optional. The heading cycles through these, one word at a time, starting with the About heading.',
@@ -30,12 +38,14 @@ export const studio = defineType({
     }),
     defineField({
       name: 'aboutBody',
+      group: 'about',
       title: 'About text',
       type: 'blockContent',
       validation: (rule) => rule.required(),
     }),
     defineField({
       name: 'aboutHighlights',
+      group: 'about',
       title: 'Highlights',
       type: 'array',
       description: 'Short lines shown in lime after the About text, e.g. The relationship stays close.',
@@ -43,6 +53,7 @@ export const studio = defineType({
     }),
     defineField({
       name: 'clientsIntro',
+      group: 'clients',
       title: 'Clients intro',
       type: 'text',
       rows: 2,
@@ -50,6 +61,7 @@ export const studio = defineType({
     }),
     defineField({
       name: 'clients',
+      group: 'clients',
       title: 'Clients',
       type: 'array',
       description: 'The names shown under Clients, in this order. Just names: the Clients documents are what projects point at.',
@@ -57,6 +69,7 @@ export const studio = defineType({
     }),
     defineField({
       name: 'images',
+      group: 'photos',
       title: 'Studio photos',
       type: 'array',
       description:
@@ -64,7 +77,7 @@ export const studio = defineType({
       of: [defineArrayMember({type: 'figure'})],
       validation: (rule) => rule.min(1).warning('Add at least one photo'),
     }),
-    defineField({name: 'seo', type: 'seo'}),
+    defineField({name: 'seo', title: 'SEO', type: 'seo', group: 'seo'}),
   ],
   preview: {
     prepare() {

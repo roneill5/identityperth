@@ -35,13 +35,15 @@ export default defineConfig({
           {route: '/studio', filter: '_id == "studio"'},
           {route: '/projects/:slug', filter: '_type == "project" && slug.current == $slug'},
           {route: '/:slug', filter: '_type == "legalPage" && slug.current == $slug'},
+          // Lists with no document of their own open Site settings: their menu, contact details and sharing defaults.
+          {route: '/projects', filter: '_id == "siteSettings"'},
+          {route: '/gallery', filter: '_id == "siteSettings"'},
         ]),
         locations: {
-          home: defineLocations({resolve: () => ({locations: [{title: 'Home', href: '/'}]})}),
-          studio: defineLocations({resolve: () => ({locations: [{title: 'Studio', href: '/studio'}]})}),
-          siteSettings: defineLocations({
-            resolve: () => ({locations: [{title: 'Home', href: '/'}, {title: 'Studio', href: '/studio'}]}),
-          }),
+          // Every resolver needs a `select`, or the Studio says the document is not used on any page.
+          home: defineLocations({select: {id: '_id'}, resolve: () => ({locations: [{title: 'Home', href: '/'}]})}),
+          studio: defineLocations({select: {id: '_id'}, resolve: () => ({locations: [{title: 'Studio', href: '/studio'}]})}),
+          siteSettings: defineLocations({message: 'Used on every page: the menu, contact details and search defaults', tone: 'positive'}),
           project: defineLocations({
             select: {title: 'title', slug: 'slug.current'},
             resolve: (doc) => ({
@@ -51,10 +53,10 @@ export default defineConfig({
               ],
             }),
           }),
-          galleryItem: defineLocations({resolve: () => ({locations: [{title: 'Gallery', href: '/gallery'}]})}),
-          service: defineLocations({resolve: () => ({locations: [{title: 'Studio', href: '/studio'}]})}),
-          teamMember: defineLocations({resolve: () => ({locations: [{title: 'Studio', href: '/studio'}]})}),
-          client: defineLocations({resolve: () => ({locations: [{title: 'Studio', href: '/studio'}]})}),
+          galleryItem: defineLocations({select: {id: '_id'}, resolve: () => ({locations: [{title: 'Gallery', href: '/gallery'}]})}),
+          service: defineLocations({select: {id: '_id'}, resolve: () => ({locations: [{title: 'Studio', href: '/studio'}]})}),
+          teamMember: defineLocations({select: {id: '_id'}, resolve: () => ({locations: [{title: 'Studio', href: '/studio'}]})}),
+          client: defineLocations({select: {id: '_id'}, resolve: () => ({locations: [{title: 'Projects', href: '/projects'}]})}),
           legalPage: defineLocations({
             select: {title: 'title', slug: 'slug.current'},
             resolve: (doc) => ({locations: [{title: doc?.title || 'Legal page', href: `/${doc?.slug}`}]}),

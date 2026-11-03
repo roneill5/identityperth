@@ -64,7 +64,7 @@ const sections = [
 ] as const;
 ---
 
-<Base title="Studio" description={page?.seo?.description ?? 'Identity is a connected strategic and creative partner in Perth, Western Australia.'}>
+<Base title="Studio" metaTitle={page?.seo?.title} description={page?.seo?.description ?? 'Identity is a connected strategic and creative partner in Perth, Western Australia.'}>
 	<div class="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,calc(31.02vw+var(--spacing-gutter)))] lg:gap-x-gutter" data-studio>
 		<div
 			class="studio-strip flex h-[calc(100dvh-370px)] min-h-[220px] gap-[10px] overflow-x-auto px-[14px] lg:order-1 lg:h-auto lg:min-h-0 lg:flex-col lg:gap-4 lg:overflow-visible lg:px-0 lg:pt-0"

@@ -39,7 +39,7 @@ const videoBox = [...coverBox, tallVideo && 'portrait:hidden'];
 const tallBox = [...coverBox, 'landscape:hidden'];
 ---
 
-<Base page="splash" description={home?.seo?.description} image={home?.seo?.image?.asset?.url}>
+<Base page="splash" metaTitle={home?.seo?.title} description={home?.seo?.description}>
 	<section class="relative flex h-dvh flex-col" data-hero data-splash>
 		<h1 class="sr-only">Identity Perth. Brand, creative and digital agency.</h1>
 		<div class="relative flex-1 overflow-hidden bg-ink">

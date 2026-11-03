@@ -7,15 +7,22 @@ export const siteSettings = defineType({
   title: 'Site settings',
   type: 'document',
   icon: CogIcon,
+  groups: [
+    {name: 'menu', title: 'Menu', default: true},
+    {name: 'contact', title: 'Contact'},
+    {name: 'seo', title: 'SEO'},
+  ],
   fields: [
     defineField({
       name: 'tagline',
+      group: 'menu',
       title: 'Tagline',
       type: 'string',
       description: 'Shown in the menu, e.g. Great branding isn’t magic, it’s method.',
     }),
     defineField({
       name: 'menuText',
+      group: 'menu',
       title: 'Menu text',
       type: 'text',
       rows: 2,
@@ -23,29 +30,34 @@ export const siteSettings = defineType({
     }),
     defineField({
       name: 'email',
+      group: 'contact',
       title: 'Enquiries email',
       type: 'string',
       validation: (rule) => rule.email().required(),
     }),
     defineField({
       name: 'careersEmail',
+      group: 'contact',
       title: 'Join us email',
       type: 'string',
       validation: (rule) => rule.email(),
     }),
     defineField({
       name: 'phone',
+      group: 'contact',
       title: 'Phone',
       type: 'string',
     }),
     defineField({
       name: 'address',
+      group: 'contact',
       title: 'Address',
       type: 'text',
       rows: 3,
     }),
     defineField({
       name: 'socials',
+      group: 'contact',
       title: 'Social links',
       type: 'array',
       of: [
@@ -62,6 +74,7 @@ export const siteSettings = defineType({
     }),
     defineField({
       name: 'seo',
+      group: 'seo',
       title: 'Search defaults',
       type: 'seo',
       description: 'Used by pages that have no description of their own.',

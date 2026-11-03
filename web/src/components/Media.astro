@@ -3,6 +3,7 @@
 import SanityImage, { type Figure } from './SanityImage.astro';
 import VideoEmbed from './VideoEmbed.astro';
 import { hasVideo, type VideoData } from '../lib/video';
+import { stegaClean } from '@sanity/client/stega';
 
 export interface MediaData {
 	kind?: 'image' | 'video' | null;
@@ -26,7 +27,8 @@ interface Props {
 }
 
 const { media, aspect, portraitAspect, fill, sizes, loading, fetchpriority, preload, file, class: className } = Astro.props;
-const showVideo = media.kind === 'video' && hasVideo(media.video);
+// stegaClean: in the preview the kind may carry invisible edit markers (the preview client also leaves it unmarked).
+const showVideo = stegaClean(media.kind) === 'video' && hasVideo(media.video);
 ---
 
 {showVideo ? (

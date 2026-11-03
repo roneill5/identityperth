@@ -4,8 +4,10 @@
 	"name": "identityperth",
 	// Ross's Identity account (the zone identityperth.com lives there too).
 	"account_id": "52679bd17ed4c9b4f19165dd37d76f7d",
-	// Staging address: https://identityperth.ross-o-neill.workers.dev
-	"workers_dev": true,
+	// Live on identityperth.com only (custom domains, 3 Nov). The workers.dev address is
+	// off so the live site has one address; staging is its own Worker (staging/).
+	"workers_dev": false,
+	"preview_urls": false,
 	// Astro's Cloudflare adapter provides the Worker. It only answers the routes
 	// that are not prerendered (the Studio's deep links and the draft preview).
 	"main": "@astrojs/cloudflare/entrypoints/server",

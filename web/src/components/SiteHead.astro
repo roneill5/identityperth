@@ -16,6 +16,8 @@ import shippori from '@fontsource/shippori-mincho/files/shippori-mincho-latin-50
 
 interface Props {
 	title?: string;
+	/** A title from the SEO tab, used as it is; otherwise the page title with the site name after it. */
+	metaTitle?: string | null;
 	description?: string | null;
 	image?: string | null;
 	/** The 404 shares the default card; every other page has its own. */
@@ -28,11 +30,11 @@ const settings = await getSettings(Astro.locals.sanity ?? client);
 const preview = Boolean(Astro.locals.preview);
 // Preview pages carry invisible stega characters in their strings; metadata must not.
 const defaultTitle = stegaClean(settings?.seo?.title ?? `${SITE_NAME} | Brand, Creative & Digital Agency`);
-const title = Astro.props.title ? `${stegaClean(Astro.props.title)} | ${SITE_NAME}` : defaultTitle;
+const title = Astro.props.metaTitle ? stegaClean(Astro.props.metaTitle) : Astro.props.title ? `${stegaClean(Astro.props.title)} | ${SITE_NAME}` : defaultTitle;
 const description = stegaClean(Astro.props.description ?? settings?.seo?.description ?? '');
 const site = Astro.site ?? Astro.url;
 const abs = (path: string) => new URL(path, site).href;
-// Every page has a rendered share card (scripts/og.mjs) unless the CMS sets a share image.
+// Every page has a rendered share card (scripts/og.mjs); a page can pass its own image instead.
 const sitePath = Astro.url.pathname.replace(/^\/preview(?=\/|$)/, '') || '/';
 const ogKey =
 	Astro.props.notFound ? 'default'

@@ -42,9 +42,9 @@ Live content: 20 projects built from the design team's export folders (see Proje
 The sidebar follows the site's pages: Home, Projects, Studio (the Studio page with Services, Team and Clients nested under it), Gallery, then Legal pages and Site settings. `backend/structure.ts` lays it out with Sanity's structure builder.
 
 
-Home (hero video and its portrait cut, ticker phrases, SEO), Studio (About copy and headings, highlights, Clients intro, the photo column, SEO), Projects (title, client, URL, cover, tagline, summary, services, the exports in order), Gallery (an image per tile), Services (title and description), Team, Clients (a name), Legal pages (title, URL, text; unlisted pages that nothing links to, shared by address) and Site settings (tagline, menu text, emails, phone, address, socials, search defaults). Nothing else: every field is rendered somewhere.
+The main documents are in tabs (Ross, 3 Nov). Home: Content (hero video and its portrait cut, ticker phrases) and SEO. Studio: About (copy, headings, highlights), Clients (intro and the list), Photos (the photo column) and SEO. Projects: Details (title, client, URL, tagline, summary, services), Media (cover and the exports in order) and SEO. Site settings: Menu (tagline, menu text), Contact (emails, phone, address, socials) and SEO (the search defaults). An SEO tab holds a search title and a description, both optional: left empty, the page's own title and opening words are used. Gallery (an image per tile), Services (title and description), Team, Clients (a name) and Legal pages (title, URL, text; unlisted pages that nothing links to, shared by address) have no tabs. Nothing else: every field is rendered somewhere.
 
-The Studio's Preview tab shows the site with unpublished changes and click-to-edit overlays; how that works is under Previewing drafts.
+The Studio's Preview tab shows the site with unpublished changes and click-to-edit overlays, re-rendering as edits are saved; how that works is under Previewing drafts. The Studio opens in light mode (`backend/scripts/studio-light.mjs`, run by its build) unless the editor picks Dark in its Appearance menu.
 
 ## How content flows
 
@@ -112,7 +112,7 @@ Project pages follow the design team's exports in their numbered order (Ross, 28
 
 ## Staging, search engines and headers
 
-Only a build whose site URL is `https://identityperth.com` (or `www`) is indexable. Build staging with `SITE_URL=https://identityperth.ross-o-neill.workers.dev npm run build`: that gets `Disallow: /` in `robots.txt`, a `noindex, nofollow` tag on every page and `X-Robots-Tag: noindex` on every response. A build with `SITE_URL` unset is a production build, canonical to identityperth.com, and must not be left on an address people can find.
+Only a build whose site URL is `https://identityperth.com` (or `www`) is indexable. Build staging with `npm run build:staging` in `web/` (the site URL is the staging Worker's): that gets `Disallow: /` in `robots.txt`, a `noindex, nofollow` tag on every page and `X-Robots-Tag: noindex` on every response. A build with `SITE_URL` unset is a production build, canonical to identityperth.com, and must not be left on an address people can find.
 
 `web/scripts/headers.mjs` writes `public/_headers` before every build: `Content-Security-Policy: frame-ancestors 'self'` (the Studio's preview pane may frame the site, nobody else may), `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, HSTS, and cache lifetimes for the unhashed files in `public/`. `web/src/middleware.ts` sets the same on the Worker-rendered preview pages.
 
@@ -132,7 +132,7 @@ In GA4, register `area` and `label` once as event-scoped custom dimensions (Admi
 
 ## Share images
 
-Every page gets its own 1200 x 630 card for links shared on social media and in chat: the ID mark, a label, the title in Shippori Mincho and a line under it on the left half, the page's picture full bleed on the right half (the project cover, or for a video cover a frame two seconds in from Stream; the showreel's first frame; four Studio or Gallery photos) and the lime ticker bar along the bottom. A share image cannot be a video: Slack, iMessage, LinkedIn and the rest show `og:image`, a still. `web/scripts/og.mjs` renders them with satori and resvg before every build into the gitignored `web/public/og/` (`npm run og` in `web/` renders them on their own). A share image set in the CMS on a page or in Site settings takes precedence over the generated card.
+Every page gets its own 1200 x 630 card for links shared on social media and in chat: the ID mark, a label, the title in Shippori Mincho and a line under it on the left half, the page's picture full bleed on the right half (the project cover, or for a video cover a frame two seconds in from Stream; the showreel's first frame; four Studio or Gallery photos) and the lime ticker bar along the bottom. A share image cannot be a video: Slack, iMessage, LinkedIn and the rest show `og:image`, a still. `web/scripts/og.mjs` renders them with satori and resvg before every build into the gitignored `web/public/og/` (`npm run og` in `web/` renders them on their own). There is no share image field in the CMS: every card is generated (Ross, 3 Nov).
 
 ## Fonts
 
@@ -140,10 +140,15 @@ The design was drawn in Capraia (serif), Hansief (condensed caps) and Figtree (b
 
 ## Deploying
 
+Live and staging are two Workers, so a staging deploy can never touch identityperth.com (3 Nov). Both are deployed from `web/`; keep them in step after every change.
+
+- **Live:** `npm run build && npm run deploy` (no `SITE_URL`) deploys the Worker `identityperth`, which answers identityperth.com and www only. Its workers.dev address and preview URLs are off.
+- **Staging:** `npm run build:staging && npm run deploy:staging` deploys the Worker `identityperth-staging` at https://identityperth-staging.ross-o-neill.workers.dev, behind a password (`web/staging/gate.mjs`; username "identity", the password is the Worker's `STAGING_PASSWORD` secret). Staging is static only: the Studio and the draft preview are on the live site.
+
 Production is Cloudflare Workers Builds: every push to `main` on GitHub builds the Studio and the site and deploys the Worker `identityperth`, and every publish in the Studio starts the same build through a deploy hook. One-time setup, in order:
 
 1. **GitHub.** Push this repository to GitHub; `main` is the production branch.
-2. **Connect the Worker.** The Worker `identityperth` exists in the Identity account (created 20 Oct) and the site deploys to it by hand with `npm run deploy`; its staging address is https://identityperth.ross-o-neill.workers.dev. To make pushes deploy it: open the Worker, Settings, Builds, Connect to Git, pick the repo. Settings: production branch `main`, root directory `/`, build command `npm run install:all && npm run build`, deploy command `npm run deploy`. Leave the Node version alone: Builds reads the root `.nvmrc`.
+2. **Connect the Worker.** The Worker `identityperth` exists in the Identity account (created 20 Oct) and the site deploys to it by hand with `npm run deploy`. To make pushes deploy it: open the Worker, Settings, Builds, Connect to Git, pick the repo. Settings: production branch `main`, root directory `/`, build command `npm run install:all && npm run build`, deploy command `npm run deploy`. Leave the Node version alone: Builds reads the root `.nvmrc`.
 3. **Preview token.** The Sanity token already exists (sanity.io/manage, project Identity Perth, API, Tokens: "Site preview", Viewer role, created 20 Oct) and sits in the gitignored `web/.dev.vars` and `web/.env`. Put it on the Worker with `cd web && npx wrangler login && npx wrangler secret bulk .dev.vars` (the login opens a browser, so run it in your own terminal). Until it is set, the Studio's Preview tab answers "SANITY_READ_TOKEN is not set on the server". If the token is ever lost, make a new Viewer token in sanity.io/manage and put it in both files.
 4. **Deploy hook.** On the Worker: Settings, Builds, Deploy Hooks. Create one named "Sanity publish" for branch `main` and copy its URL. Treat it like a password: anyone holding it can start builds.
 5. **Sanity webhook.** From `backend/`: `npx sanity exec scripts/rebuild-webhook.mjs --with-user-token -- <deploy hook URL>`. That creates the "Rebuild site on publish" webhook (publish, unpublish and delete of any document; drafts ignored). `--list` shows what exists and `--delete <id>` removes one. The same can be done by hand under API, Webhooks in sanity.io/manage.

@@ -22,6 +22,9 @@ export const client = createClient({
 	perspective: 'published',
 });
 
+/** Fields never stega-encoded in the preview. */
+const EXACT_FIELDS = new Set(['kind', 'streamId', 'style', 'listItem']);
+
 /**
  * Request-time client for the editors' preview (/preview): reads drafts
  * with a Viewer token, skips the CDN, and stega-encodes strings so the
@@ -35,6 +38,12 @@ export function previewClient(token: string) {
 		useCdn: false,
 		token,
 		perspective: 'drafts',
-		stega: { enabled: true, studioUrl: '/backend' },
+		stega: {
+			enabled: true,
+			studioUrl: '/backend',
+			// Values the site compares or builds addresses from stay exact: the invisible edit markers would
+			// break them (a video's kind stopped matching 'video', so the preview drew no videos; Ross, 3 Nov).
+			filter: (props) => (EXACT_FIELDS.has(String(props.sourcePath.at(-1))) ? false : props.filterDefault(props)),
+		},
 	});
 }

@@ -1,0 +1,19 @@
+{
+	"$schema": "../node_modules/wrangler/config-schema.json",
+	// Staging, password protected (gate.mjs). Separate from the live Worker
+	// "identityperth" so a staging deploy never touches identityperth.com.
+	// Build with `npm run build:staging`, deploy with `npm run deploy:staging`.
+	"name": "identityperth-staging",
+	"account_id": "52679bd17ed4c9b4f19165dd37d76f7d",
+	"workers_dev": true,
+	"main": "gate.mjs",
+	"compatibility_date": "2026-10-16",
+	"assets": {
+		"directory": "../dist/client",
+		"binding": "ASSETS",
+		"html_handling": "auto-trailing-slash",
+		"not_found_handling": "404-page",
+		// Every request, static files included, goes through the password check.
+		"run_worker_first": true
+	}
+}

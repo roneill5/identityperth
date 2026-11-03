@@ -12,7 +12,7 @@ The site goes live on identityperth.com in place of the WordPress site that is t
 6. **Builds.** README, Deploying, steps 1 to 5: push to GitHub, connect the Worker to the repository, create the deploy hook, run `rebuild-webhook.mjs`. Leave `SITE_URL` unset in the production build variables; set it to the workers.dev address only for a staging build. (Ross)
 7. **Sanity CORS.** Already allows `https://identityperth.com`, `https://www.identityperth.com` and the workers.dev address (checked 28 Oct). Nothing to do.
 8. **Stream.** Optional: in the Stream dashboard, restrict each video's allowed origins to identityperth.com and the workers.dev address so other sites cannot embed them. (Ross)
-9. **Rehearse on staging.** Build with `SITE_URL=https://identityperth.ross-o-neill.workers.dev` so staging is noindexed, deploy, and test on real phones: home video both ways round, a project page, the Studio accordion, the gallery panel, the menu, the terms page. (Ross, then Nick and Belinda for sign-off)
+9. **Rehearse on staging.** `npm run build:staging && npm run deploy:staging` in `web/`, and test on real phones: home video both ways round, a project page, the Studio accordion, the gallery panel, the menu, the terms page. (Ross, then Nick and Belinda for sign-off)
 
 ## Cut-over
 
@@ -27,7 +27,7 @@ The site goes live on identityperth.com in place of the WordPress site that is t
     - A phone on mobile data plays the home video and a project video.
     - `https://identityperth.com/cdn-cgi/zaraz/i.js` is 200. GA4's Realtime report shows the visit's page views and a `select_content` after clicking a project card, and Clarity lists the session within a few minutes.
 13. **Search Console.** Submit `https://identityperth.com/sitemap-index.xml` and request indexing of the home, Projects and Studio pages. (Ross)
-14. **Close the staging copy.** With the custom domain live, the same Worker still answers on identityperth.ross-o-neill.workers.dev with the production build, which search engines could index as a duplicate (the canonical tags point at identityperth.com, which limits the harm). Either set `"workers_dev": false` in `web/wrangler.jsonc` and redeploy, or keep deploying staging builds (`SITE_URL` set) there and production only through Workers Builds. (Ross)
+14. **Close the staging copy.** Done 3 Nov: the live Worker's workers.dev address is off, and staging is its own password-protected Worker, identityperth-staging (README, Deploying).
 
 ## After
 

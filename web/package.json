@@ -11,6 +11,8 @@
 		"og": "node scripts/og.mjs",
 		"preview": "astro preview",
 		"deploy": "wrangler deploy --config dist/server/wrangler.json",
+		"build:staging": "SITE_URL=https://identityperth-staging.ross-o-neill.workers.dev npm run build",
+		"deploy:staging": "wrangler deploy --config staging/wrangler.jsonc",
 		"types": "wrangler types",
 		"postinstall": "wrangler types",
 		"astro": "astro"

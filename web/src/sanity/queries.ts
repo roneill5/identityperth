@@ -15,14 +15,14 @@ export const SETTINGS_QUERY = defineQuery(`*[_id == "siteSettings"][0]{
   phone,
   address,
   socials[]{ _key, label, url },
-  seo{ title, description, image{ asset->{ url } } }
+  seo{ title, description }
 }`);
 
 export const HOME_QUERY = defineQuery(`*[_id == "home"][0]{
   heroVideo,
   heroVideoMobile,
   ticker,
-  seo{ title, description, image{ asset->{ url } } }
+  seo{ title, description }
 }`);
 
 export const PROJECTS_QUERY = defineQuery(`*[_type == "project"] | order(orderRank){
@@ -46,6 +46,7 @@ export const PROJECT_QUERY = defineQuery(`*[_type == "project" && slug.current =
   "slug": slug.current,
   tagline,
   summary,
+  seo{ title, description },
   "client": client->{ name },
   "services": services[]->{ _id, title },
   cover{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId } },
@@ -88,7 +89,7 @@ export const STUDIO_QUERY = defineQuery(`{
     clientsIntro,
     clients,
     images[]{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } },
-    seo{ title, description, image{ asset->{ url } } }
+    seo{ title, description }
   },
   "services": *[_type == "service"] | order(orderRank){ _id, title, description },
   "team": *[_type == "teamMember"] | order(orderRank){

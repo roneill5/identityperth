@@ -12,9 +12,14 @@ export const home = defineType({
   title: 'Home',
   type: 'document',
   icon: HomeIcon,
+  groups: [
+    {name: 'content', title: 'Content', default: true},
+    {name: 'seo', title: 'SEO'},
+  ],
   fields: [
     defineField({
       name: 'heroVideo',
+      group: 'content',
       title: 'Hero video',
       type: 'string',
       description: 'Cloudflare Stream video ID for the showreel. It plays silently on a loop.',
@@ -22,6 +27,7 @@ export const home = defineType({
     }),
     defineField({
       name: 'heroVideoMobile',
+      group: 'content',
       title: 'Hero video for phones',
       type: 'string',
       description: 'Cloudflare Stream video ID for the portrait (9:16) cut of the showreel. Screens taller than they are wide play this one instead. Leave empty to use the hero video everywhere.',
@@ -29,13 +35,14 @@ export const home = defineType({
     }),
     defineField({
       name: 'ticker',
+      group: 'content',
       title: 'Ticker phrases',
       type: 'array',
       description: 'The phrases that scroll along the bar under the hero, e.g. Thinking made real. "Perth, Western Australia" follows each one.',
       of: [defineArrayMember({type: 'string'})],
       validation: (rule) => rule.min(1).warning('Add at least one phrase so the ticker has something to show'),
     }),
-    defineField({name: 'seo', type: 'seo'}),
+    defineField({name: 'seo', title: 'SEO', type: 'seo', group: 'seo'}),
   ],
   preview: {
     prepare() {

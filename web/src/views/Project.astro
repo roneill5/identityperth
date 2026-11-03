@@ -57,7 +57,7 @@ const schema = project
 ---
 
 {project ? (
-<Base title={project.title ?? 'Project'} description={summary[0] ? snippet(summary[0]) : undefined} schema={schema}>
+<Base title={project.title ?? 'Project'} metaTitle={project.seo?.title} description={project.seo?.description || (summary[0] ? snippet(summary[0]) : undefined)} schema={schema}>
 	<article>
 		<header>
 			<div class="px-[14px] lg:px-0">
