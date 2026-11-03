@@ -15,12 +15,14 @@ import RingIcon from '../components/icons/RingIcon.astro';
 import { client } from '../sanity/client';
 import { STUDIO_QUERY } from '../sanity/queries';
 import { getSettings } from '../sanity/fetch';
+import { paragraphs } from '../lib/text';
+import { safeHref } from '../lib/site';
 import { stegaClean } from '@sanity/client/stega';
 
 /** The draft client on /preview, the build-time one everywhere else. */
 const sanity = Astro.locals.sanity ?? client;
 
-const [{ page, services, team, clients, testimonials }, settings] = await Promise.all([
+const [{ page, services, team }, settings] = await Promise.all([
 	sanity.fetch(STUDIO_QUERY),
 	getSettings(),
 ]);
@@ -32,21 +34,27 @@ const headings = [page?.aboutHeading, ...(page?.aboutHeadings ?? [])].filter(
 
 interface ColumnImage {
 	image: Figure;
-	opens: string;
+	/** Which set the photo belongs to: the studio's, or the portraits shown while Team is open. */
+	group: 'about' | 'team';
 	aspect: number;
 	mono?: boolean;
 	alt?: string;
+	/** On a portrait, the person it opens: `team:<id>` (scripts/studio.ts). */
+	opens?: string;
 }
-// Studio photos crop to 5:7 (528 x 740 in the design), portraits to 528 x 612.
+// The column is the studio's photos whatever is open, except Team, which
+// shows the portraits instead (Ross, 21 Oct); the photos on services and on
+// the Clients and Contact sections stay in the CMS unused. Studio photos
+// and portraits both crop to 5:7 (528 x 740 in the design; the portraits
+// were 528 x 612 until Seth supplied them at 5:7 on 29 Oct).
 const column: ColumnImage[] = [
-	...(page?.images ?? []).map((image) => ({ image, opens: 'about', aspect: 5 / 7 })),
-	...services.flatMap((s) => (s.image?.asset ? [{ image: s.image, opens: `services:${s._id}`, aspect: 5 / 7, alt: s.title ?? undefined }] : [])),
-	...team.flatMap((m) => (m.portrait?.asset ? [{ image: m.portrait, opens: `team:${m._id}`, aspect: 528 / 612, mono: true, alt: m.name ?? undefined }] : [])),
-	...(page?.clientsImages ?? []).map((image) => ({ image, opens: 'clients', aspect: 5 / 7 })),
-	...(page?.contactImages ?? []).map((image) => ({ image, opens: 'contact', aspect: 5 / 7 })),
+	...(page?.images ?? []).map((image) => ({ image, group: 'about' as const, aspect: 5 / 7 })),
+	...team.flatMap((m) =>
+		m.portrait?.asset ? [{ image: m.portrait, group: 'team' as const, aspect: 5 / 7, mono: true, alt: m.name ?? undefined, opens: `team:${m._id}` }] : [],
+	),
 ];
 
-const summaryClass = 'type-accordion flex items-center justify-between border-b border-slate pt-2 pb-[7px]';
+const summaryClass = 'type-accordion flex items-center justify-between border-b border-slate py-3 lg:pt-2 lg:pb-[7px]';
 const sections = [
 	{ id: 'about', label: 'About' },
 	{ id: 'services', label: 'Services' },
@@ -59,12 +67,12 @@ const sections = [
 <Base title="Studio" description={page?.seo?.description ?? 'Identity is a connected strategic and creative partner in Perth, Western Australia.'}>
 	<div class="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,calc(31.02vw+var(--spacing-gutter)))] lg:gap-x-gutter" data-studio>
 		<div
-			class="studio-strip flex h-[calc(100dvh-370px)] min-h-[220px] gap-[10px] overflow-x-auto px-[14px] pt-5 lg:order-1 lg:h-auto lg:min-h-0 lg:flex-col lg:gap-4 lg:overflow-visible lg:px-0 lg:pt-0"
+			class="studio-strip flex h-[calc(100dvh-370px)] min-h-[220px] gap-[10px] overflow-x-auto px-[14px] lg:order-1 lg:h-auto lg:min-h-0 lg:flex-col lg:gap-4 lg:overflow-visible lg:px-0 lg:pt-0"
 			data-studio-images
 		>
 			{column.map((item, i) => (
-				<div class:list={['relative h-full shrink-0 overflow-hidden bg-ink lg:h-auto lg:w-auto lg:shrink', item.mono && 'grayscale']} style={`aspect-ratio:${item.aspect}`} data-opens={item.opens}>
-					<SanityImage image={{ ...item.image, alt: item.image.alt ?? item.alt ?? null }} aspect={item.aspect} fill sizes="(min-width: 1024px) 37vw, 100vw" loading={i < 2 ? 'eager' : 'lazy'} />
+				<div class:list={['relative h-full shrink-0 overflow-hidden bg-ink lg:h-auto lg:w-auto lg:shrink', item.mono && 'grayscale', item.group !== 'about' && 'hidden']} style={`aspect-ratio:${item.aspect}`} data-group={item.group} data-opens={item.opens}>
+					<SanityImage image={{ ...item.image, alt: item.image.alt ?? item.alt ?? null }} aspect={item.aspect} fill sizes="(min-width: 1024px) 37vw, 100vw" loading={i < 2 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : undefined} preload={i === 0} />
 				</div>
 			))}
 		</div>
@@ -75,7 +83,7 @@ const sections = [
 			<details class="accordion" data-section="about" open>
 				<summary class={summaryClass}>
 					<span>{sections[0].label}</span>
-					<RingIcon kind="plus" class="accordion__icon h-[14.4px] w-[14.4px]" />
+					<RingIcon kind="plus" class="accordion__icon h-5 w-5 lg:h-[14.4px] lg:w-[14.4px]" />
 				</summary>
 				<div class="pt-[19px] pb-[5px]">
 					{headings.length ? (
@@ -85,9 +93,9 @@ const sections = [
 							))}
 						</h2>
 					) : null}
-					<RichText value={page?.aboutBody} class="type-small max-w-[400px] leading-[16.31px] [&_p+p]:mt-4" />
+					<RichText value={page?.aboutBody} class="type-small max-w-[400px] leading-[1.45] [&_p+p]:mt-4 lg:max-w-[500px] lg:text-[16.5px] lg:leading-[1.35] lg:[&_p+p]:mt-5" />
 					{page?.aboutHighlights?.length ? (
-						<ul class="type-small mt-2 leading-[16.31px] text-lime">
+						<ul class="type-small mt-4 leading-[1.45] text-lime lg:mt-5 lg:text-[16.5px] lg:leading-[1.35]">
 							{page.aboutHighlights.map((line) => (
 								<li>{line}</li>
 							))}
@@ -99,14 +107,16 @@ const sections = [
 			<details class="accordion" data-section="services">
 				<summary class={summaryClass}>
 					<span>{sections[1].label}</span>
-					<RingIcon kind="plus" class="accordion__icon h-[14.4px] w-[14.4px]" />
+					<RingIcon kind="plus" class="accordion__icon h-5 w-5 lg:h-[14.4px] lg:w-[14.4px]" />
 				</summary>
 				<ul class="pt-[14px]">
 					{services.map((service) => (
 						<li>
 							<details class="accordion group" data-item={`services:${service._id}`}>
-								<summary class="type-h2 py-[4.75px] text-paper transition-colors duration-300 group-open:text-lime hover:text-lime">{service.title}</summary>
-								{service.description && <p class="type-small max-w-[414px] pt-1 pb-1 leading-[16.31px] text-paper">{service.description}</p>}
+								<summary class="type-h2 py-2 text-paper transition-colors duration-300 group-open:text-lime hover:text-lime lg:py-[4.75px]">{service.title}</summary>
+								{paragraphs(service.description).map((p, i) => (
+									<p class:list={['type-small max-w-[414px] pb-1 leading-[1.45] text-paper lg:max-w-[500px] lg:text-[16.5px] lg:leading-[1.35]', i === 0 ? 'pt-1' : 'pt-2']}>{p}</p>
+								))}
 							</details>
 						</li>
 					))}
@@ -116,19 +126,19 @@ const sections = [
 			<details class="accordion" data-section="team">
 				<summary class={summaryClass}>
 					<span>{sections[2].label}</span>
-					<RingIcon kind="plus" class="accordion__icon h-[14.4px] w-[14.4px]" />
+					<RingIcon kind="plus" class="accordion__icon h-5 w-5 lg:h-[14.4px] lg:w-[14.4px]" />
 				</summary>
 				<ul class="pt-[15px] pb-3">
 					{team.map((member) => (
 						<li>
 							<details class="accordion group" data-item={`team:${member._id}`}>
-								<summary class="type-h2 py-[4.75px] text-paper transition-colors duration-300 group-open:text-lime hover:text-lime">{member.name}</summary>
+								<summary class="type-h2 py-2 text-paper transition-colors duration-300 group-open:text-lime hover:text-lime lg:py-[4.75px]">{member.name}</summary>
 								<div class="pb-2">
 									{member.role && <p class="font-display -mt-0.5 text-[17px] uppercase leading-[21px] tracking-[1px] text-lime">{member.role}</p>}
-									{member.bio && <p class="type-small mt-2.5 max-w-[410px] leading-[16.8px] text-paper">{member.bio}</p>}
+									{member.bio && <p class="type-small mt-2.5 max-w-[410px] leading-[1.45] text-paper lg:max-w-[500px] lg:text-[16.5px] lg:leading-[1.35]">{member.bio}</p>}
 									{member.portrait?.asset && (
 										<div class="mt-4 max-w-[240px] grayscale lg:hidden">
-											<SanityImage image={member.portrait} aspect={528 / 612} sizes="240px" />
+											<SanityImage image={member.portrait} aspect={5 / 7} sizes="240px" />
 										</div>
 									)}
 								</div>
@@ -141,55 +151,41 @@ const sections = [
 			<details class="accordion" data-section="clients">
 				<summary class={summaryClass}>
 					<span>{sections[3].label}</span>
-					<RingIcon kind="plus" class="accordion__icon h-[14.4px] w-[14.4px]" />
+					<RingIcon kind="plus" class="accordion__icon h-5 w-5 lg:h-[14.4px] lg:w-[14.4px]" />
 				</summary>
 				<div class="pt-[15px] pb-3">
-					{page?.clientsIntro && <p class="type-small mb-4 max-w-[400px] leading-[16.31px]">{page.clientsIntro}</p>}
-					<ul class="type-h3 columns-2 gap-6">
-						{clients.map((c) => (
-							<li class="break-inside-avoid py-0.5 text-paper">{c.name}</li>
+					{page?.clientsIntro && <p class="type-h3 mb-4 max-w-[400px] lg:max-w-[500px]">{page.clientsIntro}</p>}
+					<ul class="type-small leading-[1.45] lg:text-[16.5px] lg:leading-[1.35]">
+						{(page?.clients ?? []).map((name) => (
+							<li class="py-0.5 text-paper">{name}</li>
 						))}
 					</ul>
-					{testimonials.length ? (
-						<ul class="mt-6 flex flex-col gap-5">
-							{testimonials.map((t) => (
-								<li>
-									<blockquote class="type-small max-w-[400px] leading-[16.31px] text-paper">“{t.quote}”</blockquote>
-									<p class="type-small mt-1.5 leading-[16.31px] text-lime">
-										{t.name}
-										{t.role && `, ${t.role}`}
-										{t.client?.name && `, ${t.client.name}`}
-									</p>
-								</li>
-							))}
-						</ul>
-					) : null}
 				</div>
 			</details>
 
 			<details class="accordion" data-section="contact" id="contact">
 				<summary class={summaryClass}>
 					<span>{sections[4].label}</span>
-					<RingIcon kind="plus" class="accordion__icon h-[14.4px] w-[14.4px]" />
+					<RingIcon kind="plus" class="accordion__icon h-5 w-5 lg:h-[14.4px] lg:w-[14.4px]" />
 				</summary>
 				<div class="type-body flex flex-col gap-5 pt-[15px] pb-3">
 					{settings?.menuText && <p class="max-w-[22em]">{settings.menuText}</p>}
 					{settings?.email && (
 						<p>
-							<span class="block text-lime">inquiries:</span>
-							<a href={`mailto:${stegaClean(settings.email)}`} class="hover:text-lime">{settings.email}</a>
+							<span class="block text-lime">enquiries:</span>
+							<a href={`mailto:${stegaClean(settings.email)}`} class="text-link inline-block py-1 hover:text-lime lg:py-0">{settings.email}</a>
 						</p>
 					)}
 					{settings?.careersEmail && (
 						<p>
-							<span class="block text-lime">careers:</span>
-							<a href={`mailto:${stegaClean(settings.careersEmail)}`} class="hover:text-lime">{settings.careersEmail}</a>
+							<span class="block text-lime">join us:</span>
+							<a href={`mailto:${stegaClean(settings.careersEmail)}`} data-track="careers_email" class="text-link inline-block py-1 hover:text-lime lg:py-0">{settings.careersEmail}</a>
 						</p>
 					)}
 					{settings?.phone && (
 						<p>
 							<span class="block text-lime">phone:</span>
-							<a href={`tel:${stegaClean(settings.phone).replace(/\s+/g, '')}`} class="hover:text-lime">{settings.phone}</a>
+							<a href={`tel:${stegaClean(settings.phone).replace(/\s+/g, '')}`} class="text-link inline-block py-1 hover:text-lime lg:py-0">{settings.phone}</a>
 						</p>
 					)}
 					{settings?.socials?.length ? (
@@ -198,7 +194,7 @@ const sections = [
 							<ul class="leading-[1.6]">
 								{settings.socials.map((s) => (
 									<li>
-										<a href={s.url ?? '#'} class="hover:text-lime" rel="noopener" target="_blank">{s.label}</a>
+										<a href={safeHref(s.url) ?? '#'} class="text-link inline-block py-1 hover:text-lime lg:py-0" rel="noopener" target="_blank">{s.label}</a>
 									</li>
 								))}
 							</ul>

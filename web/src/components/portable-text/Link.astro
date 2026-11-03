@@ -1,8 +1,10 @@
 ---
 /** `link` marks inside rich text. External links open in a new tab. */
+import { safeHref } from '../../lib/site';
+
 const { node } = Astro.props;
-const href: string = node?.markDef?.href ?? '#';
-const external = /^https?:\/\//.test(href) && !href.startsWith('https://identityperth.com');
+const href = safeHref(node?.markDef?.href) ?? '#';
+const external = /^https?:\/\//.test(href) && !/^https?:\/\/(www\.)?identityperth\.com(\/|$)/.test(href);
 ---
 
 <a href={href} target={external ? '_blank' : undefined} rel={external ? 'noopener' : undefined}><slot /></a>

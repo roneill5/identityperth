@@ -15,7 +15,16 @@ export function initCycle(el: HTMLElement): () => void {
 
 	phrases.forEach((p) => {
 		const words = (p.textContent ?? '').trim().split(/\s+/);
-		p.innerHTML = words.map((w) => `<span class="cycle__word"><span>${w}</span></span>`).join(' ');
+		p.replaceChildren(
+			...words.flatMap((word, i) => {
+				const outer = document.createElement('span');
+				outer.className = 'cycle__word';
+				const inner = document.createElement('span');
+				inner.textContent = word;
+				outer.appendChild(inner);
+				return i ? [' ', outer] : [outer];
+			}),
+		);
 	});
 	const inner = (p: HTMLElement) => Array.from(p.querySelectorAll<HTMLElement>('.cycle__word > span'));
 

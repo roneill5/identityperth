@@ -1,18 +1,18 @@
 ---
 /**
  * Site chrome. On desktop (1024 and up) a fixed left column: logo, primary
- * nav 36.5% down, and a bottom row with the menu button and the weather and
- * clock widgets. On phones and tablets the header is a plain 88px strip
- * with the logo that scrolls away with the page, and a fixed 45px bar along
- * the bottom carries the Menu pill and the widgets (the pattern from Forth
- * and Back's phone layout). Both live outside the Swup container so they
+ * nav 36.5% down, and the menu button at the bottom. On phones and tablets
+ * the header is a slim strip with the logo that scrolls away, and a fixed
+ * bar along the bottom carries the Menu pill (the pattern from Forth and
+ * Back's phone layout). Both strips keep 13px above and below their contents,
+ * and on phones the mark is the height of the menu's IDENTITY lockup and in
+ * the same spot, so opening the menu reads as the ID unfolding (Ross, 30 Oct). Both live outside the swapped page so they
  * never re-render between pages; app.ts keeps the active link in sync.
  * Hovering the ID mark unfolds IDENTITY one letter at a time.
  */
 import IdMark from '../assets/brand/id-mark.svg';
-import EntityLetters from '../assets/brand/entity-letters.svg';
-import SidebarWidgets from './SidebarWidgets.astro';
 import { NAV, isActive } from '../lib/site';
+import Roundel from './Roundel.astro';
 
 interface Props {
 	pathname: string;
@@ -21,15 +21,13 @@ const { pathname } = Astro.props;
 ---
 
 <header
-	class="relative z-40 flex h-[88px] items-center px-[14px] lg:fixed lg:inset-y-0 lg:left-0 lg:h-auto lg:w-(--sidebar-w) lg:flex-col lg:items-start lg:justify-between lg:px-gutter lg:py-gutter"
+	class="relative z-40 flex items-center px-[14px] py-[13px] lg:fixed lg:inset-y-0 lg:left-0 lg:w-(--sidebar-w) lg:flex-col lg:items-start lg:justify-between lg:px-gutter lg:py-gutter"
 	data-sidebar
 >
-	<a href="/" class="logo relative z-50 block h-[60px] text-lime lg:h-[clamp(64px,6.9vw,99px)]" aria-label="Identity, home" data-logo>
+	<a href="/" class="logo relative z-50 block h-[min(60px,calc((100vw-110px)*0.181))] text-lime lg:h-[clamp(64px,6.9vw,99px)]" aria-label="Identity, home" data-logo>
 		<span class="logo__inner relative block h-full">
-			<IdMark class="h-full w-auto" aria-hidden="true" />
-			<span class="logo__entity pointer-events-none absolute left-full top-0 flex h-full items-center" aria-hidden="true">
-				<span class="h-full aspect-[21/99]"></span>
-				<EntityLetters class="h-full w-auto" />
+			<span class="logo__mark relative block h-full">
+				<IdMark class="h-full w-auto" aria-hidden="true" />
 			</span>
 		</span>
 	</a>
@@ -44,6 +42,7 @@ const { pathname } = Astro.props;
 						aria-current={isActive(pathname, item.href) ? 'page' : undefined}
 						target={item.external ? '_blank' : undefined}
 						rel={item.external ? 'noopener' : undefined}
+						data-astro-prefetch={item.prefetch ? undefined : 'false'}
 						data-nav-link
 					>
 						{item.label}
@@ -64,7 +63,6 @@ const { pathname } = Astro.props;
 			<span data-menu-label-closed>Menu</span>
 			<span data-menu-label-open hidden>Close</span>
 		</button>
-		<SidebarWidgets />
 	</div>
 </header>
 
@@ -74,5 +72,4 @@ const { pathname } = Astro.props;
 		<span data-menu-label-closed>Menu</span>
 		<span data-menu-label-open hidden>Close</span>
 	</button>
-	<SidebarWidgets />
 </div>

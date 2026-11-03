@@ -18,15 +18,19 @@ interface Props {
 	sizes?: string;
 	loading?: 'lazy' | 'eager';
 	fetchpriority?: 'high' | 'low' | 'auto';
+	/** This is the page's first picture: add a preload hint. */
+	preload?: boolean;
+	/** Play a video from its MP4 file (VideoEmbed `file`): covers, which the flip carries between pages. */
+	file?: boolean;
 	class?: string;
 }
 
-const { media, aspect, portraitAspect, fill, sizes, loading, fetchpriority, class: className } = Astro.props;
+const { media, aspect, portraitAspect, fill, sizes, loading, fetchpriority, preload, file, class: className } = Astro.props;
 const showVideo = media.kind === 'video' && hasVideo(media.video);
 ---
 
 {showVideo ? (
-	<VideoEmbed video={media.video!} aspect={aspect} fill={fill} class={className} loading={loading} />
+	<VideoEmbed video={media.video!} aspect={aspect} portraitAspect={portraitAspect} fill={fill} sizes={sizes} class={className} loading={loading} fetchpriority={fetchpriority} preload={preload} file={file} />
 ) : media.image?.asset ? (
 	<SanityImage
 		image={media.image}
@@ -36,6 +40,7 @@ const showVideo = media.kind === 'video' && hasVideo(media.video);
 		sizes={sizes}
 		loading={loading}
 		fetchpriority={fetchpriority}
+		preload={preload}
 		class={className}
 	/>
 ) : null}

@@ -9,10 +9,10 @@
  * Capraia itself (CAST, commercial) is not shipped; if its webfont licence
  * is ever bought, add its @font-face here and put it first in --font-serif.
  */
-@import "@fontsource-variable/figtree";
-@import "@fontsource/shippori-mincho/400.css";
-@import "@fontsource/shippori-mincho/500.css";
-@import "@fontsource/bebas-neue";
+@import "@fontsource-variable/figtree/wght.css";
+@import "@fontsource/shippori-mincho/latin-400.css";
+@import "@fontsource/shippori-mincho/latin-500.css";
+@import "@fontsource/bebas-neue/latin-400.css";
 
 /* Hansief ships as the original OTF: its EULA allows @font-face use but not modified font files. */
 @font-face {
@@ -53,13 +53,37 @@
 	html {
 		background-color: var(--color-ink);
 		color: var(--color-paper);
+		/* No native scrollbar (its width made pages with and without one jump against each other, and every
+		   transition with it): a thin line along the top of the viewport shows how far down the page is instead
+		   (.scroll-line, scripts/app.ts). Wheel, keys and touch scroll as ever. */
+		scrollbar-width: none;
 		font-family: var(--font-sans);
+		/* One weight up across the site (Ross, 21 Oct): Figtree at 500, the serif at 500, bold at 700. Hansief has one weight. */
+		font-weight: 500;
 		-webkit-font-smoothing: antialiased;
 		text-rendering: optimizeLegibility;
 	}
 
 	body {
 		min-height: 100dvh;
+	}
+	html::-webkit-scrollbar {
+		display: none;
+	}
+
+	/* How far down the page is: a lime line from the left edge, scaled by progress. */
+	.scroll-line {
+		position: fixed;
+		top: 0;
+		left: 0;
+		z-index: 70;
+		height: 2px;
+		width: 100%;
+		background: var(--color-lime);
+		transform: scaleX(0);
+		transform-origin: left center;
+		pointer-events: none;
+		will-change: transform;
 	}
 
 	::selection {
@@ -82,43 +106,48 @@
 
 @layer components {
 	/* Type scale. Sizes are the Figma values at 1440 wide, scaled fluidly. */
+	/* The serif headings are tracked tight (Ross, 21 Oct): Shippori Mincho's Latin sits wide on its own. */
 	.type-nav {
 		font-family: var(--font-serif);
-		font-weight: 400;
+		font-weight: 500;
 		font-size: clamp(1.625rem, 2.08vw, 2.375rem);
 		line-height: 1.5;
-		letter-spacing: 0.02em;
+		letter-spacing: -0.01em;
 	}
 	.type-menu {
 		font-family: var(--font-serif);
-		font-weight: 400;
+		font-weight: 500;
 		font-size: clamp(2.25rem, 3.6vw, 4.75rem);
 		line-height: 1.2;
-		letter-spacing: 0.025em;
+		letter-spacing: -0.01em;
 	}
 	.type-h1 {
 		font-family: var(--font-serif);
-		font-weight: 400;
+		font-weight: 500;
 		font-size: clamp(2rem, 3.2vw, 4rem);
 		line-height: 1.1;
+		letter-spacing: -0.015em;
 	}
 	.type-h2 {
 		font-family: var(--font-serif);
-		font-weight: 400;
+		font-weight: 500;
 		font-size: clamp(1.625rem, 2.08vw, 2.5rem);
 		line-height: 1.2;
+		letter-spacing: -0.015em;
 	}
 	.type-h3 {
 		font-family: var(--font-serif);
-		font-weight: 400;
+		font-weight: 500;
 		font-size: clamp(1.25rem, 1.4vw, 1.75rem);
 		line-height: 1.25;
+		letter-spacing: -0.01em;
 	}
 	.type-accordion {
 		font-family: var(--font-serif);
-		font-weight: 400;
+		font-weight: 500;
 		font-size: clamp(0.9375rem, 1.05vw, 1.25rem);
 		line-height: 1.2;
+		letter-spacing: -0.01em;
 	}
 	.type-body {
 		font-family: var(--font-sans);
@@ -129,6 +158,19 @@
 		font-family: var(--font-sans);
 		font-size: 0.8125rem;
 		line-height: 1.4;
+	}
+	/* Phones read and tap a size up (Ross, 29 Oct: 13 and 15 px were small on his). */
+	@media (width < 64rem) {
+		.type-small {
+			font-size: 0.9375rem;
+			line-height: 1.45;
+		}
+		.type-accordion {
+			font-size: 1.0625rem;
+		}
+		.type-body {
+			font-size: 1rem;
+		}
 	}
 	.type-label {
 		font-family: var(--font-display);
@@ -168,10 +210,24 @@
 	}
 
 	/* Links in running text */
+	/* Text links carry a faint dotted rule so they read as links, solid on hover (Ross, 21 Oct). */
+	.text-link,
+	.prose a {
+		text-decoration: underline;
+		text-decoration-style: dotted;
+		text-decoration-thickness: 1px;
+		text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+		text-underline-offset: 0.2em;
+		transition:
+			color 0.2s ease,
+			text-decoration-color 0.2s ease;
+	}
+	.text-link:hover,
+	.prose a:hover {
+		text-decoration-color: currentColor;
+	}
 	.prose a {
 		color: var(--color-lime);
-		text-decoration: underline;
-		text-underline-offset: 0.15em;
 	}
 	.prose p + p,
 	.prose p + ul,
@@ -180,7 +236,7 @@
 	}
 	.prose h2 {
 		font-family: var(--font-serif);
-		font-weight: 400;
+		font-weight: 500;
 		font-size: clamp(1.5rem, 1.8vw, 2.25rem);
 		line-height: 1.2;
 		margin-top: 2em;
@@ -188,7 +244,7 @@
 	}
 	.prose h3 {
 		font-family: var(--font-serif);
-		font-weight: 400;
+		font-weight: 500;
 		font-size: clamp(1.25rem, 1.4vw, 1.75rem);
 		line-height: 1.25;
 		margin-top: 1.6em;
@@ -196,7 +252,7 @@
 	}
 	.prose blockquote {
 		font-family: var(--font-serif);
-		font-weight: 400;
+		font-weight: 500;
 		font-size: clamp(1.25rem, 1.6vw, 2rem);
 		line-height: 1.3;
 		color: var(--color-lime);
@@ -219,6 +275,72 @@
 		color: color-mix(in srgb, var(--color-paper) 70%, transparent);
 	}
 
+	/* Legal pages (layouts/Plain.astro), in the site's colours: each part (h2)
+	   is a lime label over a slate hairline, as elsewhere on the site, its
+	   numbered clauses (h3) in the serif, sub-clauses in bold sans, and
+	   lettered items hanging from their (a), (b) labels instead of bullets. */
+	.prose-legal {
+		font-size: 1rem;
+		line-height: 1.6;
+		color: color-mix(in srgb, var(--color-paper) 85%, transparent);
+	}
+	@media (min-width: 1024px) {
+		.prose-legal {
+			font-size: 16.5px;
+		}
+	}
+	.prose-legal > :first-child {
+		margin-top: 0;
+	}
+	.prose-legal h2 {
+		font-family: var(--font-display);
+		font-weight: 400;
+		font-size: 1.125rem;
+		line-height: 1;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--color-lime);
+		border-top: 1px solid var(--color-slate);
+		padding-top: 1.25rem;
+		margin-top: 4rem;
+		margin-bottom: 0;
+		scroll-margin-top: 1.5rem;
+	}
+	.prose-legal h3 {
+		color: var(--color-paper);
+		margin-top: 2em;
+		margin-bottom: 0.6em;
+	}
+	.prose-legal h2 + h3 {
+		margin-top: 1.5rem;
+	}
+	.prose-legal h4 {
+		font-family: var(--font-sans);
+		font-weight: 700;
+		line-height: 1.4;
+		color: var(--color-paper);
+		margin-top: 1.6em;
+		margin-bottom: 0.4em;
+	}
+	.prose-legal strong {
+		color: var(--color-paper);
+		font-weight: 700;
+	}
+	.prose-legal p + ul {
+		margin-top: 0.6em;
+	}
+	.prose-legal ul {
+		list-style: none;
+		padding-left: 0;
+	}
+	.prose-legal li {
+		padding-left: 1.6em;
+		text-indent: -1.6em;
+	}
+	.prose-legal li + li {
+		margin-top: 0.4em;
+	}
+
 	/* Ticker marquee. will-change keeps the moving layer rasterised at full
 	   device resolution so the wordmark and roundel stay crisp while moving. */
 	.ticker-track {
@@ -227,9 +349,6 @@
 		will-change: transform;
 		backface-visibility: hidden;
 		animation: ticker var(--ticker-duration, 40s) linear infinite;
-	}
-	.ticker:hover .ticker-track {
-		animation-play-state: paused;
 	}
 	@keyframes ticker {
 		to {
@@ -246,26 +365,11 @@
 		filter: blur(12px);
 	}
 
-	/* Project tiles: a slow zoom in, a quicker settle out */
+	/* Project tiles: the cover holds still; only the wash and text come in on hover. */
 	.tile .tile__media {
-		transition: transform 0.7s var(--ease-out-expo), opacity 0.4s ease;
-	}
-	.tile:hover .tile__media,
-	.tile:focus-visible .tile__media {
-		transform: scale(1.05);
-		transition-duration: 1.6s, 0.4s;
-		transition-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1), ease;
+		transition: opacity 0.4s ease;
 	}
 
-	/* Gallery tiles: something to look into, nothing to click. A magnifier,
-	   SVG first, PNGs for browsers that cannot use an SVG cursor. */
-	.gallery-wall figure {
-		cursor:
-			url("/cursors/magnify.svg") 10 10,
-			-webkit-image-set(url("/cursors/magnify.png") 1x, url("/cursors/magnify@2x.png") 2x) 10 10,
-			url("/cursors/magnify.png") 10 10,
-			auto;
-	}
 
 	/* A cover growing into the project page hero (transitions.ts) */
 	.flip {
@@ -275,12 +379,20 @@
 		pointer-events: none;
 		background: var(--color-ink);
 	}
-	.flip img {
+	.flip img,
+	.flip canvas,
+	.flip video {
 		display: block;
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
 		transform-origin: center;
+	}
+	.flip canvas,
+	.flip video {
+		position: absolute;
+		inset: 0;
+		opacity: 1;
 	}
 
 	/* A heading that cycles its phrases: all stacked in one cell, words clipped for the swap */
@@ -329,7 +441,7 @@
  * `flex` on the sidebar when the splash home page hides it.
  */
 .site-main {
-	padding-bottom: calc(45px + env(safe-area-inset-bottom));
+	padding-bottom: calc(var(--bar-h) + env(safe-area-inset-bottom));
 }
 @media (width >= 64rem) {
 	.site-main {
@@ -340,11 +452,23 @@
 @media (width < 64rem) {
 	:root {
 		--ticker-h: 60px;
+		/* The bottom bar: the 30px Menu pill with 13px above and below (Ross, 30 Oct: slimmer). */
+		--bar-h: 56px;
 	}
 }
 body[data-page="splash"] [data-sidebar],
 body[data-page="splash"] [data-bottom-bar] {
 	display: none;
+}
+/* iOS draws a hairline of the box's background down each side of the cover
+   video on phones (Ross, 30 Oct): the picture overscans the box by a pixel. */
+@media (width < 64rem) {
+	[data-splash] [data-video] > :is(img, video) {
+		inset: -1px;
+		width: calc(100% + 2px);
+		max-width: none; /* the preflight's img/video max-width would clamp it */
+		height: calc(100% + 2px);
+	}
 }
 body[data-page="splash"] .site-main {
 	padding-bottom: 0;
@@ -361,27 +485,40 @@ body[data-page="splash"] .site-main {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	height: calc(45px + env(safe-area-inset-bottom));
-	padding: 0 10px env(safe-area-inset-bottom);
+	/* Inset from the corner so the pill clears an iPhone's rounded edge and home indicator (Ross, 29 and 30 Oct). */
+	height: calc(var(--bar-h) + env(safe-area-inset-bottom));
+	padding: 0 20px env(safe-area-inset-bottom);
 	background: var(--color-ink);
 	color: var(--color-paper);
 }
 .bottom-bar__pill {
+	position: relative;
+	isolation: isolate;
 	display: inline-flex;
 	align-items: center;
-	height: 25px;
-	padding: 1px 11px 0;
-	border: 1px solid var(--color-paper);
-	border-radius: 16px;
-	background: var(--color-ink);
+	/* The thumb target stays 44px tall; the pill itself is drawn 30px tall, tight around the word (Ross, 30 Oct). */
+	height: 44px;
+	padding: 1px 14px 0;
+	border: 0;
+	background: none;
 	color: var(--color-paper);
 	font-family: var(--font-display);
-	font-size: 12px;
-	letter-spacing: 1.35px;
+	font-size: 20px;
+	line-height: 1;
+	letter-spacing: 1.8px;
 	text-transform: uppercase;
 	cursor: pointer;
 }
-html.menu-open .bottom-bar__pill {
+.bottom-bar__pill::before {
+	content: '';
+	position: absolute;
+	inset: 7px 0;
+	z-index: -1;
+	border: 1.5px solid var(--color-paper);
+	border-radius: 999px;
+	background: var(--color-ink);
+}
+html.menu-open .bottom-bar__pill::before {
 	background: transparent;
 }
 @media (width >= 64rem) {
@@ -392,6 +529,15 @@ html.menu-open .bottom-bar__pill {
 
 /* The Studio photo strip on phones: swipes sideways, folds away while a section is open */
 @media (width < 64rem) {
+	/* Phones start with every section closed (scripts/studio.ts). The page
+	   arrives with About open for desktop, so until the script has closed it
+	   the panel is hidden here: otherwise everything below jumps up when it
+	   closes, a second after the page shows. */
+	@media (width < 64rem) {
+		[data-studio]:not(.is-ready) .accordion[open] > :not(summary) {
+			display: none;
+		}
+	}
 	.studio-strip {
 		scrollbar-width: none;
 		-webkit-overflow-scrolling: touch;
@@ -418,53 +564,11 @@ html.menu-open .bottom-bar__pill {
 	}
 }
 
-/* The phone gallery panel: image and caption above the bottom bar */
-.lightbox {
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	z-index: 50;
-	height: calc(100dvh - 45px - env(safe-area-inset-bottom));
-	overflow-y: auto;
-	padding: 60px 10px 40px;
-	background: var(--color-ink);
-	color: var(--color-paper);
-}
-.lightbox__close {
-	position: absolute;
-	top: 10px;
-	right: 10px;
-	display: grid;
-	place-items: center;
-	width: 38px;
-	height: 38px;
-	padding: 0;
-	border: 0;
-	background: none;
-	color: var(--color-paper);
-	cursor: pointer;
-}
-.lightbox__image {
-	display: block;
-	width: 100%;
-	height: auto;
-	background: #2a292a;
-}
-.lightbox__caption {
-	margin-top: 16px;
-	font-family: var(--font-display);
-	font-size: 11px;
-	letter-spacing: 1px;
-	text-transform: uppercase;
-}
-
-/* While the menu (or a lightbox) is open the page behind dims at once and blurs over half a second */
+/* While the menu is open the page behind dims at once and blurs over half a second */
 .site-main {
 	transition: filter 0.5s var(--ease-out-expo);
 }
-html.menu-open .site-main,
-html.lightbox-open .site-main {
+html.menu-open .site-main {
 	opacity: 0.2;
 	filter: blur(24px);
 	pointer-events: none;
@@ -472,7 +576,7 @@ html.lightbox-open .site-main {
 @media (width < 64rem) {
 	[data-menu] {
 		bottom: auto;
-		height: calc(100dvh - 45px - env(safe-area-inset-bottom));
+		height: calc(100dvh - var(--bar-h) - env(safe-area-inset-bottom));
 	}
 }
 
@@ -480,50 +584,114 @@ html.lightbox-open .site-main {
 /* Widgets. Unlayered so they beat utility classes.                   */
 /* ------------------------------------------------------------------ */
 
-/* Logo: ID grows into IDENTITY on hover, one letter at a time. On desktop the
-   lockup shrinks as it unfolds so the whole word stays inside the column.
-   Leaving runs in order too: the letters fold away first, then the mark
-   grows back. */
-.logo__inner {
-	transform-origin: left top;
-	transition: transform 0.5s var(--ease-out-expo);
-	transition-delay: 0.22s; /* leaving: wait for the letters */
-}
-@media (width >= 64rem) {
-	.logo:hover .logo__inner,
-	.logo:focus-visible .logo__inner {
-		transform: scale(0.62);
-		transition-delay: 0s;
-	}
-}
-/* In the menu the letters are animated by menu.ts, not by hover. */
-[data-menu] .logo__letter {
-	opacity: 1;
-	transform: none;
-	transition: none;
-}
-.logo__letter {
+/* Videos (components/VideoEmbed.astro): Stream's still sits behind the
+   <video>, which fades in once it is playing (scripts/page.ts). */
+[data-video] video {
 	opacity: 0;
-	transform: translateX(-22%);
-	transform-box: fill-box;
-	transition:
-		opacity 0.16s ease-in,
-		transform 0.3s ease-in;
-	/* Leaving: the last letter goes first, quickly, so the word folds back into the mark. */
-	transition-delay: calc((5 - var(--i)) * 22ms);
+	transition: opacity 0.15s ease;
 }
-.logo:hover .logo__letter,
-.logo:focus-visible .logo__letter {
+[data-video] video.is-playing {
 	opacity: 1;
-	transform: none;
+}
+
+/* Logo (scripts/logo.ts): the sidebar shows the ID mark alone; in the menu,
+   ENTITY types itself out after the mark as it opens, the roundel last
+   (29 Oct; the hover reveal went on 21 Oct, Ross). The letters start hidden;
+   nothing ever shrinks. */
+.logo__letter,
+.logo__roundel {
+	opacity: 0;
+}
+
+/* Cursor (scripts/cursor.ts, markup in Base.astro): the ID roundel on the
+   pointer, inverting in solid lime and ink, doubling over anything
+   clickable. The native arrow is hidden while it runs; text fields get it
+   back. */
+html.has-cursor,
+html.has-cursor * {
+	cursor: none !important;
+}
+html.has-cursor input,
+html.has-cursor textarea,
+html.has-cursor [contenteditable] {
+	cursor: text !important;
+}
+/* Eight layers cut to the roundel's shape (its SVG as a mask, set in
+   Base.astro), each blending with everything beneath it, in DOM order:
+   grey takes the page behind to black and white; white flips it, so dark
+   becomes light; two rounds of burn then dodge with a 62% grey push every
+   value away from the middle until it is all but pure black or white (each
+   round steepens the curve about four times around 50%); lime multiplied
+   over that turns the white to lime; ink lightened over that turns the
+   black to ink. So the roundel is exactly lime over anything dark and
+   exactly ink over anything light, with nothing of the page showing
+   through (Ross, 22 Oct). Blend modes only, no backdrop-filter: they render
+   the same in Safari and Chrome. The layers must be separate top-level
+   elements so each blends with the page, not inside a shared group. */
+.cursor {
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 10000;
+	width: 18px;
+	height: 18px;
+	pointer-events: none;
+	will-change: transform;
+	-webkit-mask: var(--cursor-mask) center / 100% 100% no-repeat;
+	mask: var(--cursor-mask) center / 100% 100% no-repeat;
 	transition:
-		opacity 0.28s ease-out,
-		transform 0.55s var(--ease-out-expo);
-	transition-delay: calc(var(--i) * 60ms + 60ms);
+		width 0.3s cubic-bezier(0, 0, 0.2, 1),
+		height 0.3s cubic-bezier(0, 0, 0.2, 1);
+}
+.cursor--grey {
+	background: #808080;
+	mix-blend-mode: saturation;
+}
+.cursor--invert {
+	background: #fff;
+	mix-blend-mode: difference;
+}
+.cursor--burn {
+	background: rgb(158 158 158);
+	mix-blend-mode: color-burn;
+}
+.cursor--dodge {
+	background: rgb(158 158 158);
+	mix-blend-mode: color-dodge;
+}
+.cursor--lime {
+	background: var(--color-lime);
+	mix-blend-mode: multiply;
+}
+.cursor--ink {
+	background: var(--color-ink);
+	mix-blend-mode: lighten;
+}
+.cursor.is-link {
+	width: 36px;
+	height: 36px;
+}
+.cursor.is-down {
+	width: 15px;
+	height: 15px;
+}
+.cursor.is-link.is-down {
+	width: 32px;
+	height: 32px;
+}
+.cursor.is-hidden {
+	visibility: hidden;
+}
+
+/* Pong on the 404 (scripts/pong.ts) */
+.pong {
+	position: relative;
+	width: 100%;
+	overflow: hidden;
+	border: 1px solid color-mix(in srgb, var(--color-paper) 25%, transparent);
+	background: var(--color-ink);
 }
 @media (prefers-reduced-motion: reduce) {
-	.logo__letter,
-	.logo__inner,
 	img[data-img],
 	.tile .tile__media {
 		transition-duration: 0s;
@@ -606,5 +774,71 @@ html.lightbox-open .site-main {
 	}
 	.wx__big {
 		font-size: 0.8rem;
+	}
+}
+
+/* While a page transition runs nothing scrolls (scripts/app.ts). */
+html.is-transitioning {
+	overflow: hidden;
+	touch-action: none;
+}
+/* A move a finger started (the swipe off the home video): the body is pinned
+   too, since iOS scrolls on under an unscrollable root and carries the swipe's
+   momentum into the new page (app.ts, Ross, 30 Oct). */
+html.is-held body {
+	position: fixed;
+	inset: 0;
+	overflow: hidden;
+}
+
+/* The home page as it leaves (scripts/transitions.ts): lifted into this
+   layer, fixed over all the chrome, then slid off the top. Unlayered, like
+   the .site-main rules it overrides: the leaving page keeps its splash
+   layout, no sidebar gap. */
+.leave {
+	position: fixed;
+	inset: 0;
+	z-index: 90;
+	overflow: hidden;
+	background: var(--color-ink);
+	pointer-events: none;
+}
+.leave .site-main {
+	margin-left: 0;
+	padding-bottom: 0;
+	min-height: 100dvh;
+}
+
+/* Printing: the page alone, black on white. */
+@media print {
+	body {
+		background: #fff;
+		color: #000;
+	}
+	.site-main {
+		margin-left: 0;
+		padding-bottom: 0;
+	}
+	[data-sidebar],
+	.bottom-bar,
+	[data-menu],
+	.skip-link {
+		display: none !important;
+	}
+	.legal nav,
+	.legal details,
+	body > header,
+	body > footer {
+		display: none !important;
+	}
+	.legal,
+	.legal * {
+		color: #000 !important;
+	}
+	.legal {
+		display: block !important;
+	}
+	.legal a {
+		text-decoration: none;
 	}
 }

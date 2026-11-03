@@ -1,12 +1,31 @@
-/** Where Thinking lives until there is enough writing to publish here. */
-export const THINKING_URL = 'https://substack.com';
+import { stegaClean } from '@sanity/client/stega';
 
-/** Fixed site navigation. The menu order comes from the design, not the CMS. */
+/** The name in page titles, share cards and structured data. */
+export const SITE_NAME = 'Identity Perth';
+
+/** Only the production domain is indexable and gets no staging headers. */
+export const isProductionHost = (hostname: string): boolean => /^(www\.)?identityperth\.com$/.test(hostname);
+
+/**
+ * A link typed into the CMS, or null when it is not a web, mail or phone
+ * address (the Studio checks this too, but only in the browser).
+ */
+export function safeHref(href?: string | null): string | null {
+	const value = stegaClean(href ?? '').trim();
+	return /^(https?:\/\/|mailto:|tel:|\/(?!\/)|#)/i.test(value) ? value : null;
+}
+
+/**
+ * Fixed site navigation. The menu order comes from the design, not the CMS.
+ * Thinking is hidden until stage two, after launch (Nick, 28 Oct); to bring
+ * it back, add { label: 'Thinking', href: '/thinking', ... } at the end, or
+ * an https:// address with `external: true` to open it in a new tab.
+ * `prefetch: false` keeps the router from fetching a link ahead of a click.
+ */
 export const NAV = [
-	{ label: 'Projects', href: '/projects', external: false },
-	{ label: 'Studio', href: '/studio', external: false },
-	{ label: 'Gallery', href: '/gallery', external: false },
-	{ label: 'Thinking', href: THINKING_URL, external: true },
+	{ label: 'Projects', href: '/projects', external: false, prefetch: true },
+	{ label: 'Studio', href: '/studio', external: false, prefetch: true },
+	{ label: 'Gallery', href: '/gallery', external: false, prefetch: true },
 ] as const;
 
 export type NavItem = (typeof NAV)[number];

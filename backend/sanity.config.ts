@@ -10,8 +10,9 @@ export default defineConfig({
 
   projectId: 't2bz0tb2',
   dataset: 'production',
-  // The site's own /studio is the agency page, so the CMS lives at /backend.
-  basePath: '/backend',
+  // The CMS lives at /backend (the site's own /studio is the agency page). That
+  // path is set once, in sanity.cli.ts (`project.basePath`), which the build
+  // and the dev server both apply; setting it here as well would double it.
 
   plugins: [
     structureTool({structure}),
@@ -20,9 +21,11 @@ export default defineConfig({
     // /preview/enable is where the Studio proves itself and gets a cookie.
     presentationTool({
       previewUrl: {
-        // The Studio ships inside the site at /backend, so the preview is same-origin
-        // everywhere except `sanity dev` (port 3333), which previews the Astro dev server.
-        origin: typeof location !== 'undefined' && location.port === '3333' ? 'http://localhost:4321' : 'same-origin',
+        // The Studio ships inside the site at /backend, so the preview origin is the
+        // Studio's own and is left unset (a literal like 'same-origin' crashes the tool
+        // with "Invalid base URL"). Only `sanity dev` on port 3333 previews elsewhere:
+        // the Astro dev server on 4321.
+        ...(typeof location !== 'undefined' && location.port === '3333' ? {origin: 'http://localhost:4321'} : {}),
         preview: '/',
         previewMode: {enable: '/preview/enable', disable: '/preview/disable'},
       },
@@ -31,6 +34,7 @@ export default defineConfig({
           {route: '/', filter: '_id == "home"'},
           {route: '/studio', filter: '_id == "studio"'},
           {route: '/projects/:slug', filter: '_type == "project" && slug.current == $slug'},
+          {route: '/:slug', filter: '_type == "legalPage" && slug.current == $slug'},
         ]),
         locations: {
           home: defineLocations({resolve: () => ({locations: [{title: 'Home', href: '/'}]})}),
@@ -51,7 +55,10 @@ export default defineConfig({
           service: defineLocations({resolve: () => ({locations: [{title: 'Studio', href: '/studio'}]})}),
           teamMember: defineLocations({resolve: () => ({locations: [{title: 'Studio', href: '/studio'}]})}),
           client: defineLocations({resolve: () => ({locations: [{title: 'Studio', href: '/studio'}]})}),
-          testimonial: defineLocations({resolve: () => ({locations: [{title: 'Studio', href: '/studio'}]})}),
+          legalPage: defineLocations({
+            select: {title: 'title', slug: 'slug.current'},
+            resolve: (doc) => ({locations: [{title: doc?.title || 'Legal page', href: `/${doc?.slug}`}]}),
+          }),
         },
       },
     }),

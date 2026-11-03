@@ -1,0 +1,15 @@
+---
+/** Legal pages from the CMS (Terms & Conditions, a privacy policy), each at its own top-level address. Unlisted: the menu does not link to them. */
+import LegalPage from '../views/LegalPage.astro';
+import { client } from '../sanity/client';
+import { LEGAL_PAGES_QUERY } from '../sanity/queries';
+
+export async function getStaticPaths() {
+	const pages = await client.fetch(LEGAL_PAGES_QUERY);
+	return pages.filter((p) => p.slug).map(({ slug }) => ({ params: { slug } }));
+}
+
+const { slug } = Astro.params;
+---
+
+<LegalPage slug={slug!} />

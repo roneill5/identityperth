@@ -1,7 +1,11 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	// Deliberately NOT "identity-perth": that Worker belongs to the archived v1 site.
-	"name": "identityperth-web",
+	"name": "identityperth",
+	// Ross's Identity account (the zone identityperth.com lives there too).
+	"account_id": "52679bd17ed4c9b4f19165dd37d76f7d",
+	// Staging address: https://identityperth.ross-o-neill.workers.dev
+	"workers_dev": true,
 	// Astro's Cloudflare adapter provides the Worker. It only answers the routes
 	// that are not prerendered (the Studio's deep links and the draft preview).
 	"main": "@astrojs/cloudflare/entrypoints/server",

@@ -9,6 +9,8 @@ import { gsap, EASE, reducedMotion } from './motion';
  * sliding open can be told to close (and the reverse) and continues from
  * where it is, so a fast scroll through the Studio column never leaves two
  * items lit. Other scripts open items through `openDetails` so they animate.
+ * A closing panel and an opening one share one duration and curve, so
+ * whatever sits below them moves once, smoothly (Ross, 29 Oct).
  */
 const DURATION = 0.35;
 const CLEAR = 'height,opacity,overflow';
@@ -35,7 +37,7 @@ export function openDetails(d: HTMLDetailsElement) {
 	gsap.fromTo(
 		panel,
 		{ height: from, opacity: from ? Number(panel.style.opacity || 1) : 0, overflow: 'hidden' },
-		{ height: 'auto', opacity: 1, duration: DURATION, ease: EASE.out, clearProps: CLEAR },
+		{ height: 'auto', opacity: 1, duration: DURATION, ease: EASE.inOut, clearProps: CLEAR },
 	);
 }
 
@@ -65,8 +67,8 @@ export function closeDetails(d: HTMLDetailsElement) {
 		{
 			height: 0,
 			opacity: 0,
-			duration: DURATION * 0.8,
-			ease: EASE.in,
+			duration: DURATION,
+			ease: EASE.inOut,
 			onComplete: () => {
 				d.open = false;
 				delete d.dataset.closing;

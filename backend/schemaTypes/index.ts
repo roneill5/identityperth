@@ -6,7 +6,7 @@ import {media} from './objects/media'
 import {blockContent} from './objects/blockContent'
 
 // Blocks
-import {mediaFull, mediaPair, textBlock, quote, projectBody} from './blocks/projectBlocks'
+import {mediaFull, mediaPair, projectBody} from './blocks/projectBlocks'
 
 // Documents
 import {project} from './documents/project'
@@ -14,7 +14,7 @@ import {galleryItem} from './documents/galleryItem'
 import {service} from './documents/service'
 import {teamMember} from './documents/teamMember'
 import {client} from './documents/client'
-import {testimonial} from './documents/testimonial'
+import {legalPage} from './documents/legalPage'
 
 // Singletons
 import {home} from './singletons/home'
@@ -31,8 +31,6 @@ export const schemaTypes = [
   // blocks
   mediaFull,
   mediaPair,
-  textBlock,
-  quote,
   projectBody,
   // documents
   project,
@@ -40,7 +38,7 @@ export const schemaTypes = [
   service,
   teamMember,
   client,
-  testimonial,
+  legalPage,
   // singletons
   home,
   studio,

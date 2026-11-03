@@ -1,0 +1,146 @@
+---
+/**
+ * The <head> metadata every page shares, for both layouts: title,
+ * description, canonical, share card, icons, font preloads, structured data
+ * and robots. Structured data is the studio as an organisation and the site,
+ * plus whatever the page adds through `schema` (a project's breadcrumb and
+ * work).
+ */
+import { stegaClean } from '@sanity/client/stega';
+import { getSettings } from '../sanity/fetch';
+import { client } from '../sanity/client';
+import { SITE_NAME, isProductionHost, safeHref } from '../lib/site';
+import { STREAM_HOST } from '../lib/video';
+import figtree from '@fontsource-variable/figtree/files/figtree-latin-wght-normal.woff2?url';
+import shippori from '@fontsource/shippori-mincho/files/shippori-mincho-latin-500-normal.woff2?url';
+
+interface Props {
+	title?: string;
+	description?: string | null;
+	image?: string | null;
+	/** The 404 shares the default card; every other page has its own. */
+	notFound?: boolean;
+	/** Extra schema.org nodes for this page, added to the graph. */
+	schema?: Record<string, unknown>[];
+}
+
+const settings = await getSettings(Astro.locals.sanity ?? client);
+const preview = Boolean(Astro.locals.preview);
+// Preview pages carry invisible stega characters in their strings; metadata must not.
+const defaultTitle = stegaClean(settings?.seo?.title ?? `${SITE_NAME} | Brand, Creative & Digital Agency`);
+const title = Astro.props.title ? `${stegaClean(Astro.props.title)} | ${SITE_NAME}` : defaultTitle;
+const description = stegaClean(Astro.props.description ?? settings?.seo?.description ?? '');
+const site = Astro.site ?? Astro.url;
+const abs = (path: string) => new URL(path, site).href;
+// Every page has a rendered share card (scripts/og.mjs) unless the CMS sets a share image.
+const sitePath = Astro.url.pathname.replace(/^\/preview(?=\/|$)/, '') || '/';
+const ogKey =
+	Astro.props.notFound ? 'default'
+	: sitePath === '/' ? 'home'
+	: sitePath.replace(/^\/|\/$/g, '');
+const image = Astro.props.image ?? abs(`/og/${ogKey}.png`);
+const canonical = abs(Astro.url.pathname);
+// Only the production domain is indexable: staging builds (a different site URL) and the preview are not.
+const noindex = preview || !isProductionHost(site.hostname);
+
+// The postal address from the three-line address in Site settings (street, suburb, "WA 6027"); left out when it reads differently.
+const addressLines = stegaClean(settings?.address ?? '').split('\n').map((line) => line.trim().replace(/,$/, '')).filter(Boolean);
+const regionLine = addressLines[addressLines.length - 1]?.match(/^([A-Z]{2,3})\s+(\d{4})$/);
+const address = addressLines.length >= 3 && regionLine
+	? { '@type': 'PostalAddress', streetAddress: addressLines[0], addressLocality: addressLines[1].split(',')[0].trim(), addressRegion: regionLine[1], postalCode: regionLine[2], addressCountry: 'AU' }
+	: null;
+const organisation = {
+	'@type': 'Organization',
+	'@id': abs('/#organization'),
+	name: SITE_NAME,
+	alternateName: 'Identity',
+	url: abs('/'),
+	logo: abs('/icons/icon-512.png'),
+	image: abs('/og/home.png'),
+	...(settings?.seo?.description ? { description: stegaClean(settings.seo.description) } : {}),
+	...(settings?.email ? { email: stegaClean(settings.email) } : {}),
+	...(settings?.phone ? { telephone: stegaClean(settings.phone) } : {}),
+	...(address ? { address } : {}),
+	areaServed: 'Perth, Western Australia',
+	sameAs: (settings?.socials ?? []).map((s) => safeHref(s.url)).filter((url): url is string => Boolean(url && url.startsWith('http'))),
+};
+const website = { '@type': 'WebSite', '@id': abs('/#website'), url: abs('/'), name: SITE_NAME, publisher: { '@id': abs('/#organization') }, inLanguage: 'en-AU' };
+const graph = JSON.stringify({ '@context': 'https://schema.org', '@graph': [organisation, website, ...(Astro.props.schema ?? [])] }).replace(/</g, '\\u003c');
+// Analytics run on identityperth.com only: never on staging, the preview or the Studio, so recordings and
+// numbers are real visits (README, Analytics). GA4 goes through Cloudflare Zaraz when PUBLIC_ZARAZ is
+// true, set up in the Cloudflare dashboard with auto-inject off so it loads here and on no other
+// subdomain; PUBLIC_GA_ID loads Google's own tag instead, never both. PUBLIC_CLARITY_ID adds Microsoft
+// Clarity's recordings and heatmaps. Events: scripts/analytics.ts. Zaraz's tag is deferred: it still runs
+// before the site's own scripts, so track() finds it, without holding up the first paint.
+const zaraz = !noindex && import.meta.env.PUBLIC_ZARAZ === 'true';
+const gaId = /^G-[A-Z0-9]{6,12}$/.test(import.meta.env.PUBLIC_GA_ID ?? '') ? import.meta.env.PUBLIC_GA_ID : null;
+const analytics = gaId && !noindex && !zaraz ? gaId : null;
+const clarityId = /^[a-z0-9]{8,12}$/i.test(import.meta.env.PUBLIC_CLARITY_ID ?? '') ? import.meta.env.PUBLIC_CLARITY_ID : null;
+const clarity = clarityId && !noindex ? clarityId : null;
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+<meta property="og:site_name" content={SITE_NAME} />
+<meta property="og:locale" content="en_AU" />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:type" content="website" />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={image} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content={title} />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content={image} />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="/icons/icon-32.png" type="image/png" sizes="32x32" />
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+<link rel="preconnect" href={STREAM_HOST} />
+<link rel="preload" href={figtree} as="font" type="font/woff2" crossorigin />
+<link rel="preload" href={shippori} as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/fonts/hansief.otf" as="font" type="font/otf" crossorigin />
+<meta name="theme-color" content="#1e1d1e" />
+<meta name="generator" content={Astro.generator} />
+{noindex && <meta name="robots" content="noindex, nofollow" />}
+<script is:inline type="application/ld+json" set:html={graph} />
+{analytics && (
+	<script is:inline define:vars={{ gaId: analytics }}>
+		// The queue exists at once, so nothing is lost; the tag itself loads after the page has, off the critical path.
+		// Page views are sent on astro:page-load, which also covers the client router's navigations.
+		window.dataLayer = window.dataLayer || [];
+		window.gtag = function () { window.dataLayer.push(arguments); };
+		window.gtag('js', new Date());
+		window.gtag('config', gaId, { send_page_view: false });
+		document.addEventListener('astro:page-load', function () {
+			window.gtag('event', 'page_view', { page_location: location.href, page_title: document.title });
+		});
+		addEventListener('load', function () {
+			setTimeout(function () {
+				var s = document.createElement('script');
+				s.async = true;
+				s.src = 'https://www.googletagmanager.com/gtag/js?id=' + gaId;
+				document.head.appendChild(s);
+			}, 1500);
+		});
+	</script>
+)}
+{zaraz && <script is:inline src="/cdn-cgi/zaraz/i.js" referrerpolicy="origin" defer></script>}
+{clarity && (
+	<script is:inline define:vars={{ clarityId: clarity }}>
+		// The queue exists at once, so the event tags from analytics.ts are kept; the recorder loads after the page has.
+		// Clarity follows the client router's navigations itself.
+		window.clarity = window.clarity || function () { (window.clarity.q = window.clarity.q || []).push(arguments); };
+		addEventListener('load', function () {
+			setTimeout(function () {
+				var s = document.createElement('script');
+				s.async = true;
+				s.src = 'https://www.clarity.ms/tag/' + clarityId;
+				document.head.appendChild(s);
+			}, 1500);
+		});
+	</script>
+)}

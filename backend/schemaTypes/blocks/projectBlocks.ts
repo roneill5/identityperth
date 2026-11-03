@@ -1,102 +1,49 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
 import {ImageIcon} from '@sanity/icons/Image'
 import {SplitHorizontalIcon} from '@sanity/icons/SplitHorizontal'
-import {TextIcon} from '@sanity/icons/Text'
-import {BlockquoteIcon} from '@sanity/icons/Blockquote'
 
-/** One image or video across the full width of the project page. */
+/** One wide image or video across the full width of the project page. */
 export const mediaFull = defineType({
   name: 'mediaFull',
-  title: 'Full width media',
+  title: 'Full width',
   type: 'object',
   icon: ImageIcon,
-  fields: [
-    defineField({name: 'media', type: 'media', validation: (rule) => rule.required()}),
-    defineField({name: 'caption', title: 'Caption', type: 'string'}),
-  ],
+  fields: [defineField({name: 'media', type: 'media', validation: (rule) => rule.required()})],
   preview: {
-    select: {caption: 'caption', image: 'media.image', poster: 'media.video.poster', kind: 'media.kind'},
-    prepare({caption, image, poster, kind}) {
-      return {title: caption || 'Full width media', subtitle: kind === 'video' ? 'Video' : 'Image', media: image ?? poster ?? ImageIcon}
+    select: {image: 'media.image', alt: 'media.image.alt', kind: 'media.kind'},
+    prepare({image, alt, kind}) {
+      return {title: alt || 'Full width', subtitle: kind === 'video' ? 'Video, full width' : 'Full width', media: image ?? ImageIcon}
     },
   },
 })
 
-/** Two images or videos side by side. */
+/** Two square images or videos side by side. */
 export const mediaPair = defineType({
   name: 'mediaPair',
-  title: 'Media pair',
+  title: 'Pair',
   type: 'object',
   icon: SplitHorizontalIcon,
   fields: [
-    defineField({
-      name: 'shape',
-      title: 'Tile shape',
-      type: 'string',
-      options: {
-        list: [
-          {title: 'Square', value: 'square'},
-          {title: 'Portrait', value: 'portrait'},
-          {title: 'Landscape', value: 'landscape'},
-        ],
-        layout: 'radio',
-        direction: 'horizontal',
-      },
-      initialValue: 'square',
-    }),
     defineField({name: 'left', title: 'Left', type: 'media', validation: (rule) => rule.required()}),
     defineField({name: 'right', title: 'Right', type: 'media', validation: (rule) => rule.required()}),
   ],
   preview: {
-    select: {left: 'left.image', right: 'right.image', shape: 'shape'},
-    prepare({left, right, shape}) {
-      return {title: 'Media pair', subtitle: shape ? `${shape} tiles` : undefined, media: left ?? right ?? SplitHorizontalIcon}
+    select: {left: 'left.image', right: 'right.image', leftAlt: 'left.image.alt', rightAlt: 'right.image.alt'},
+    prepare({left, right, leftAlt, rightAlt}) {
+      return {title: [leftAlt, rightAlt].filter(Boolean).join(' + ') || 'Pair', subtitle: 'Two squares', media: left ?? right ?? SplitHorizontalIcon}
     },
   },
 })
 
-/** A heading with a column of text. */
-export const textBlock = defineType({
-  name: 'textBlock',
-  title: 'Text',
-  type: 'object',
-  icon: TextIcon,
-  fields: [
-    defineField({name: 'heading', title: 'Heading', type: 'string'}),
-    defineField({name: 'body', title: 'Body', type: 'blockContent', validation: (rule) => rule.required()}),
-  ],
-  preview: {
-    select: {title: 'heading'},
-    prepare({title}) {
-      return {title: title || 'Text', subtitle: 'Text'}
-    },
-  },
-})
-
-/** A pull quote, usually from the client. */
-export const quote = defineType({
-  name: 'quote',
-  title: 'Quote',
-  type: 'object',
-  icon: BlockquoteIcon,
-  fields: [
-    defineField({name: 'text', title: 'Quote', type: 'text', rows: 4, validation: (rule) => rule.required()}),
-    defineField({name: 'attribution', title: 'Attribution', type: 'string', description: 'Name and role, e.g. Jane Smith, Marketing Manager'}),
-  ],
-  preview: {
-    select: {title: 'text', subtitle: 'attribution'},
-  },
-})
-
-/** The ordered blocks that make up a project page. */
+/**
+ * The ordered blocks that make up a project page: the exports in their
+ * numbered order, squares in pairs and wides full width, with no set rhythm
+ * (Ross, 28 Oct).
+ */
 export const projectBody = defineType({
   name: 'projectBody',
   title: 'Project content',
   type: 'array',
-  of: [
-    defineArrayMember({type: 'mediaFull'}),
-    defineArrayMember({type: 'mediaPair'}),
-    defineArrayMember({type: 'textBlock'}),
-    defineArrayMember({type: 'quote'}),
-  ],
+  description: 'The exports after the cover, in their numbered order: square ones side by side in a pair, wide ones full width.',
+  of: [defineArrayMember({type: 'mediaFull'}), defineArrayMember({type: 'mediaPair'})],
 })

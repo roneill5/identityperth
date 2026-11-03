@@ -1,0 +1,19 @@
+---
+/**
+ * The Studio's editing overlays (scripts/preview.ts), rendered on /preview
+ * pages only. Loaded from app.ts before, the overlays' stylesheet was linked,
+ * render-blocking, on every public page (2 Nov); rendered here, its script and
+ * styles exist only where an editor is looking.
+ */
+---
+
+<script>
+	import stylesheet from '@sanity/ui/styles.css?url';
+	import { initPreview } from '../scripts/preview';
+
+	const link = document.createElement('link');
+	link.rel = 'stylesheet';
+	link.href = stylesheet;
+	document.head.appendChild(link);
+	initPreview();
+</script>

@@ -1,4 +1,5 @@
 ---
+import { safeHref } from '../lib/site';
 /**
  * Full-screen menu from the design (Figma page 2): the IDENTITY lockup
  * top-left in the same spot and size as the sidebar's ID mark (so opening
@@ -8,7 +9,8 @@
  * top-right. On phones it sits above the
  * bottom bar: full-width wordmark, tagline, then a two-column block with the
  * links left and the contact details right, centred in the leftover space
- * (Forth and Back's phone menu). Hidden until menu.ts opens it.
+ * (Forth and Back's phone menu), spaced to fit an iPhone's Safari viewport
+ * without scrolling (Ross, 30 Oct). Hidden until menu.ts opens it.
  */
 import IdMark from '../assets/brand/id-mark.svg';
 import EntityLetters from '../assets/brand/entity-letters.svg';
@@ -43,28 +45,33 @@ const addressLines = settings?.address?.split('\n').filter(Boolean) ?? [];
 	aria-modal="true"
 	aria-label="Menu"
 >
-	<div class="relative flex h-full flex-col overflow-hidden p-[15px] pt-[10px] lg:block lg:p-gutter">
+	<div class="relative flex h-full flex-col overflow-y-auto overflow-x-hidden p-[14px] pt-[max(13px,env(safe-area-inset-top))] pb-3 lg:block lg:overflow-hidden lg:p-gutter">
 		<a href="/" class="inline-flex w-full items-start gap-[10px] text-lime lg:w-fit lg:gap-[13px]" aria-label="Identity, home" data-menu-link data-menu-brand>
-			<span class="inline-flex h-[calc((100vw-110px)*0.181)] items-center lg:h-[clamp(64px,6.9vw,99px)]" aria-hidden="true">
-				<IdMark class="h-full w-auto" />
-				<span class="h-full aspect-[21/99]"></span>
-				<EntityLetters class="h-full w-auto" />
+			<span class="logo__inner relative block h-[calc((100vw-110px)*0.181)] lg:h-[clamp(64px,6.9vw,99px)]" aria-hidden="true" data-menu-lockup>
+				<span class="logo__mark inline-flex h-full items-center">
+					<IdMark class="h-full w-auto" />
+					<span class="logo__entity relative inline-flex h-full items-center">
+						<span class="h-full aspect-[21/99]"></span>
+						<EntityLetters class="h-full w-auto" />
+					</span>
+				</span>
 			</span>
-			<Roundel class="h-5 w-5 text-slate lg:h-[2.2vw] lg:w-[2.2vw]" />
+			<Roundel class="logo__roundel mt-1 h-5 w-5 text-slate lg:mt-0 lg:h-[2.2vw] lg:w-[2.2vw] lg:-translate-y-1/2" />
 		</a>
 
-		{settings?.tagline && <p class="type-display mt-10 max-w-[12em] text-[16px] leading-[1.15] text-paper lg:hidden">{settings.tagline}</p>}
+		{settings?.tagline && <p class="type-display mt-3 max-w-[12em] text-[16px] leading-[1.15] text-paper lg:hidden">{settings.tagline}</p>}
 
-		<div class="my-auto grid grid-cols-2 gap-x-5 py-8 lg:contents">
+		<div class="my-auto grid grid-cols-[auto_minmax(0,1fr)] gap-x-6 py-3 lg:contents">
 		<nav class="lg:absolute lg:left-gutter lg:top-[45%]" aria-label="Menu">
 			<ul class="type-menu flex flex-col gap-y-2 text-[36px] leading-[1.2] lg:flex-row lg:flex-wrap lg:gap-x-[0.54em] lg:gap-y-0 lg:text-[clamp(2.25rem,3.6vw,4.75rem)]">
 				{NAV.map((item) => (
-					<li class="overflow-hidden">
+					<li class="overflow-hidden pb-[0.24em] -mb-[0.24em]">
 						<a
 							href={item.href}
 							class="inline-block text-paper transition-colors duration-200 hover:text-lime"
 							target={item.external ? '_blank' : undefined}
 							rel={item.external ? 'noopener' : undefined}
+							data-astro-prefetch={item.prefetch ? undefined : 'false'}
 							data-menu-item
 							data-menu-link
 						>
@@ -75,28 +82,28 @@ const addressLines = settings?.address?.split('\n').filter(Boolean) ?? [];
 			</ul>
 		</nav>
 
-		<div class="flex flex-col lg:absolute lg:top-gutter lg:right-gutter lg:bottom-gutter lg:w-[31vw] lg:gap-10 lg:pr-12" data-menu-contact>
+		<div class="flex min-w-0 flex-col lg:absolute lg:top-gutter lg:right-gutter lg:bottom-gutter lg:w-[31vw] lg:gap-10 lg:pr-12" data-menu-contact>
 			{settings?.tagline && <p class="type-display hidden max-w-[11em] text-paper lg:-mt-[5px] lg:block">{settings.tagline}</p>}
 
-			<div class="flex flex-col gap-4 text-[13px] leading-[17px] lg:absolute lg:top-[27.5vh] lg:left-0 lg:right-12 lg:gap-7 lg:text-[16.5px] lg:leading-[1.3]">
+			<div class="flex flex-col gap-2 text-[15px] leading-[1.3] [overflow-wrap:anywhere] lg:absolute lg:top-[27.5vh] lg:left-0 lg:right-12 lg:gap-7 lg:text-[16.5px] lg:leading-[1.3]">
 				{settings?.menuText && <p class="max-w-[18em]">{settings.menuText}</p>}
 
 				{settings?.email && (
 					<p>
-						<span class="block text-lime">inquiries:</span>
-						<a href={`mailto:${stegaClean(settings.email)}`} class="hover:text-lime">{settings.email}</a>
+						<span class="block text-lime">enquiries:</span>
+						<a href={`mailto:${stegaClean(settings.email)}`} class="text-link inline-block py-0.5 hover:text-lime lg:py-0">{settings.email}</a>
 					</p>
 				)}
 				{settings?.careersEmail && (
 					<p>
-						<span class="block text-lime">careers:</span>
-						<a href={`mailto:${stegaClean(settings.careersEmail)}`} class="hover:text-lime">{settings.careersEmail}</a>
+						<span class="block text-lime">join us:</span>
+						<a href={`mailto:${stegaClean(settings.careersEmail)}`} data-track="careers_email" class="text-link inline-block py-0.5 hover:text-lime lg:py-0">{settings.careersEmail}</a>
 					</p>
 				)}
 				{settings?.phone && (
 					<p>
 						<span class="block text-lime">phone:</span>
-						<a href={`tel:${stegaClean(settings.phone).replace(/\s+/g, '')}`} class="hover:text-lime">{settings.phone}</a>
+						<a href={`tel:${stegaClean(settings.phone).replace(/\s+/g, '')}`} class="text-link inline-block py-0.5 hover:text-lime lg:py-0">{settings.phone}</a>
 					</p>
 				)}
 				{settings?.socials?.length ? (
@@ -105,7 +112,7 @@ const addressLines = settings?.address?.split('\n').filter(Boolean) ?? [];
 						<ul class="leading-[1.6]">
 							{settings.socials.map((s) => (
 								<li>
-									<a href={s.url ?? '#'} class="hover:text-lime" rel="noopener" target="_blank">{s.label}</a>
+									<a href={safeHref(s.url) ?? '#'} class="text-link inline-block py-0.5 hover:text-lime lg:py-0" rel="noopener" target="_blank">{s.label}</a>
 								</li>
 							))}
 						</ul>
@@ -137,11 +144,11 @@ const addressLines = settings?.address?.split('\n').filter(Boolean) ?? [];
 
 		<button
 			type="button"
-			class="absolute right-[10px] top-[10px] z-10 grid h-[38px] w-[38px] cursor-pointer place-items-center text-paper transition-colors hover:text-lime lg:right-gutter lg:top-gutter lg:h-auto lg:w-auto"
+			class="absolute right-[8px] top-[max(14px,env(safe-area-inset-top))] z-10 grid h-[48px] w-[48px] cursor-pointer place-items-center text-paper transition-colors hover:text-lime lg:right-gutter lg:top-gutter lg:h-auto lg:w-auto"
 			data-menu-toggle
 			aria-label="Close menu"
 		>
-			<RingIcon kind="close" class="h-6 w-6" />
+			<RingIcon kind="close" class="h-8 w-8 lg:h-6 lg:w-6" />
 		</button>
 	</div>
 </div>

@@ -2,9 +2,11 @@
 import '../styles/global.css';
 import Sidebar from '../components/Sidebar.astro';
 import MenuOverlay from '../components/MenuOverlay.astro';
+import Cursor from '../components/Cursor.astro';
+import SiteHead from '../components/SiteHead.astro';
 import { getSettings } from '../sanity/fetch';
 import { client } from '../sanity/client';
-import { stegaClean } from '@sanity/client/stega';
+import { ClientRouter } from 'astro:transitions';
 
 interface Props {
 	title?: string;
@@ -18,56 +20,42 @@ interface Props {
 	page?: 'splash' | 'default' | 'notfound';
 	/** Extra classes on <main>. */
 	class?: string;
+	/** Extra schema.org nodes for this page (SiteHead). */
+	schema?: Record<string, unknown>[];
 }
 
 const settings = await getSettings(Astro.locals.sanity ?? client);
 const preview = Boolean(Astro.locals.preview);
-// Preview pages carry invisible stega characters in their strings; metadata must not.
-const siteName = stegaClean(settings?.siteName ?? 'Identity');
-const defaultTitle = stegaClean(settings?.seo?.title ?? `${siteName}, Perth`);
-const title = Astro.props.title ? `${stegaClean(Astro.props.title)} | ${siteName}` : defaultTitle;
-const description = stegaClean(Astro.props.description ?? settings?.seo?.description ?? '');
-const image = Astro.props.image ?? settings?.seo?.image?.asset?.url ?? null;
-const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : Astro.url.pathname;
 const page = Astro.props.page ?? 'default';
+import PreviewEditing from '../components/PreviewEditing.astro';
 ---
 
 <!doctype html>
-<html lang="en-AU" data-preview={preview ? '' : undefined}>
+<html lang="en-AU" data-preview={preview ? '' : undefined} transition:animate="none">
 	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>{title}</title>
-		<meta name="description" content={description} />
-		<link rel="canonical" href={canonical} />
-		<meta property="og:site_name" content={siteName} />
-		<meta property="og:title" content={title} />
-		<meta property="og:description" content={description} />
-		<meta property="og:type" content="website" />
-		<meta property="og:url" content={canonical} />
-		{image && <meta property="og:image" content={image} />}
-		<meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'} />
-		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-		<meta name="theme-color" content="#1e1d1e" />
-		<meta name="generator" content={Astro.generator} />
-		{preview && <meta name="robots" content="noindex, nofollow" />}
+		<SiteHead title={Astro.props.title} description={Astro.props.description} image={Astro.props.image} notFound={page === 'notfound'} schema={Astro.props.schema} />
+		<!-- Client-side navigation; scripts/app.ts swaps #page and #ticker and animates. -->
+		<ClientRouter fallback="swap" />
 		<slot name="head" />
 	</head>
 	<body class="bg-ink text-paper" data-page={page}>
 		<a href="#main" class="skip-link">Skip to content</a>
+		<div class="scroll-line" aria-hidden="true"></div>
 		<Sidebar pathname={Astro.url.pathname} />
-		<main id="swup" class:list={['site-main relative min-h-[calc(100dvh-88px)] lg:min-h-dvh', Astro.props.class]}>
+		<main id="page" class:list={['site-main relative min-h-[calc(100dvh-100px)] lg:min-h-dvh', Astro.props.class]}>
 			<div id="main" tabindex="-1" class="outline-none" data-page={page}>
 				<slot />
 			</div>
 		</main>
-		<!-- A second Swup container for the home page's ticker screen, so it
+		<!-- The home page's ticker screen, swapped along with #page so it
 		     arrives with the page on every visit; the curtain lifts it out of
 		     here before a swap. Empty everywhere else. -->
 		<div id="ticker"><slot name="ticker" /></div>
 		<MenuOverlay settings={settings} />
+		<Cursor />
 
 
 		<script src="../scripts/app.ts"></script>
+		{preview && <PreviewEditing />}
 	</body>
 </html>

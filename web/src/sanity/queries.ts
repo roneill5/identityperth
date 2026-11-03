@@ -8,7 +8,6 @@ import { defineQuery } from 'groq';
  */
 
 export const SETTINGS_QUERY = defineQuery(`*[_id == "siteSettings"][0]{
-  siteName,
   tagline,
   menuText,
   email,
@@ -21,7 +20,7 @@ export const SETTINGS_QUERY = defineQuery(`*[_id == "siteSettings"][0]{
 
 export const HOME_QUERY = defineQuery(`*[_id == "home"][0]{
   heroVideo,
-  heroImage{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } },
+  heroVideoMobile,
   ticker,
   seo{ title, description, image{ asset->{ url } } }
 }`);
@@ -32,10 +31,9 @@ export const PROJECTS_QUERY = defineQuery(`*[_type == "project"] | order(orderRa
   "slug": slug.current,
   tagline,
   summary,
-  year,
   "client": client->{ name },
   "services": services[]->{ _id, title },
-  cover{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId, playback } }
+  cover{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId } }
 }`);
 
 export const PROJECT_SLUGS_QUERY = defineQuery(`*[_type == "project" && defined(slug.current)]{
@@ -48,47 +46,37 @@ export const PROJECT_QUERY = defineQuery(`*[_type == "project" && slug.current =
   "slug": slug.current,
   tagline,
   summary,
-  year,
-  orderRank,
-  "client": client->{ name, website },
+  "client": client->{ name },
   "services": services[]->{ _id, title },
-  cover{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId, playback } },
+  cover{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId } },
   body[]{
     _key,
     _type,
     _type == "mediaFull" => {
-      caption,
       media{
         kind,
         image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } },
-        video{ streamId, playback }
+        video{ streamId }
       }
     },
     _type == "mediaPair" => {
-      shape,
       left{
         kind,
         image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } },
-        video{ streamId, playback }
+        video{ streamId }
       },
       right{
         kind,
         image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } },
-        video{ streamId, playback }
+        video{ streamId }
       }
-    },
-    _type == "textBlock" => { heading, body },
-    _type == "quote" => { text, attribution }
-  },
-  credits[]{ _key, role, name },
-  seo{ title, description, image{ asset->{ url } } }
+    }
+  }
 }`);
 
 export const GALLERY_QUERY = defineQuery(`*[_type == "galleryItem"] | order(orderRank){
   _id,
-  caption,
-  image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } },
-  "project": project->{ title, "slug": slug.current, "client": client->{ name } }
+  image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }
 }`);
 
 export const STUDIO_QUERY = defineQuery(`{
@@ -98,22 +86,25 @@ export const STUDIO_QUERY = defineQuery(`{
     aboutBody,
     aboutHighlights,
     clientsIntro,
+    clients,
     images[]{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } },
-    clientsImages[]{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } },
-    contactImages[]{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } },
     seo{ title, description, image{ asset->{ url } } }
   },
-  "services": *[_type == "service"] | order(orderRank){
-    _id, title, description,
-    "image": coalesce(
-      image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } },
-      *[_type == "project" && references(^._id)] | order(orderRank)[0].cover{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }
-    )
-  },
+  "services": *[_type == "service"] | order(orderRank){ _id, title, description },
   "team": *[_type == "teamMember"] | order(orderRank){
     _id, name, role, bio,
     portrait{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }
-  },
-  "clients": *[_type == "client"] | order(orderRank){ _id, name },
-  "testimonials": *[_type == "testimonial"] | order(orderRank){ _id, quote, name, role, "client": client->{ name } }
+  }
+}`);
+
+/** The legal pages, for the static paths. They are unlisted: nothing links to them. */
+export const LEGAL_PAGES_QUERY = defineQuery(`*[_type == "legalPage" && defined(slug.current)] | order(orderRank){
+  title,
+  "slug": slug.current
+}`);
+
+export const LEGAL_PAGE_QUERY = defineQuery(`*[_type == "legalPage" && slug.current == $slug][0]{
+  title,
+  "slug": slug.current,
+  body
 }`);

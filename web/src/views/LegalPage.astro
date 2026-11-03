@@ -1,0 +1,118 @@
+---
+/**
+ * A legal page from the CMS (Terms & Conditions, a privacy policy) on the
+ * Plain layout: a contents column listing the document's parts (its Heading
+ * blocks), kept in view while reading, beside the title and the text. The
+ * part being read lights up lime (the script below) and a click scrolls
+ * there smoothly (Ross, 28 Oct). On phones the contents fold into a
+ * Contents row above the text. Headings carry ids
+ * (components/portable-text/Heading.astro), which the links and shared
+ * links land on.
+ */
+import Plain from '../layouts/Plain.astro';
+import NotFound from './NotFound.astro';
+import RichText from '../components/RichText.astro';
+import RingIcon from '../components/icons/RingIcon.astro';
+import { client } from '../sanity/client';
+import { getSettings } from '../sanity/fetch';
+import { LEGAL_PAGE_QUERY } from '../sanity/queries';
+import { stegaClean } from '@sanity/client/stega';
+import { blockText, headingId, type TextBlock } from '../lib/portable-text';
+
+interface Props {
+	slug: string;
+}
+const { slug } = Astro.props;
+
+/** The draft client on /preview, the build-time one everywhere else. */
+const sanity = Astro.locals.sanity ?? client;
+const [page, settings] = await Promise.all([sanity.fetch(LEGAL_PAGE_QUERY, { slug }), getSettings(sanity)]);
+if (!page) Astro.response.status = 404;
+
+const body = page?.body ?? [];
+const isText = (b: (typeof body)[number]): b is (typeof body)[number] & TextBlock => b._type === 'block';
+const parts = body.filter(isText).filter((b) => b.style === 'h2').map((b) => ({ id: headingId(blockText(b)), title: blockText(b) }));
+const firstParagraph = body.filter(isText).find((b) => b.style === 'normal' && !b.listItem);
+const description = firstParagraph ? stegaClean(blockText(firstParagraph)).slice(0, 155) : null;
+const email = settings?.email ?? null;
+// Unnumbered, so the rows never read as the clause numbers (Nick, 28 Oct).
+const row = 'type-accordion block border-b border-slate py-3 lg:pt-2 lg:pb-[7px]';
+---
+
+{page ? (
+	<Plain title={page.title ?? 'Legal'} description={description}>
+		<div class="legal px-[14px] pb-24 lg:grid lg:grid-cols-[minmax(220px,280px)_minmax(0,1fr)] lg:gap-x-14 lg:px-gutter lg:pb-32">
+			{parts.length > 0 && (
+				<nav class="hidden lg:block lg:sticky lg:top-0 lg:max-h-dvh lg:self-start lg:overflow-y-auto lg:py-gutter" aria-label="Contents" data-legal-contents>
+					<p class="type-label text-lime">Contents</p>
+					<ol class="mt-4 border-t border-slate">
+						{parts.map((part) => (
+							<li>
+								<a href={`#${part.id}`} class:list={[row, 'text-paper/70 transition-colors duration-200 hover:text-lime aria-[current=true]:text-lime']}>{part.title}</a>
+							</li>
+						))}
+					</ol>
+				</nav>
+			)}
+
+			<article class="max-w-[46em] pt-8 lg:pt-gutter">
+				<p class="type-label text-lime">Legal</p>
+				<h1 class="type-h1 mt-4">{page.title}</h1>
+
+				{parts.length > 0 && (
+					<details class="accordion mt-8 lg:hidden">
+						<summary class="type-accordion flex items-center justify-between border-b border-slate pt-2 pb-[7px]">
+							<span>Contents</span>
+							<RingIcon kind="plus" class="accordion__icon h-5 w-5 lg:h-[14.4px] lg:w-[14.4px]" />
+						</summary>
+						<ol>
+							{parts.map((part) => (
+								<li>
+									<a href={`#${part.id}`} class:list={[row, 'text-paper/70']}>{part.title}</a>
+								</li>
+							))}
+						</ol>
+					</details>
+				)}
+
+				<RichText value={body} class="prose-legal mt-12 lg:mt-16" />
+
+				{email && (
+					<footer class="mt-16 border-t border-slate pt-5">
+						<p class="type-label text-lime">Questions</p>
+						<p class="type-body mt-4 text-paper/85">
+							Email <a href={`mailto:${stegaClean(email)}`} class="text-link text-lime hover:text-paper">{email}</a>.
+						</p>
+					</footer>
+				)}
+			</article>
+		</div>
+	</Plain>
+) : (
+	<NotFound />
+)}
+
+<script>
+	// The contents row for the part being read turns lime: the last part whose heading has passed a line 30% down the screen, the first before any has, and the last once the page is scrolled to the end.
+	const nav = document.querySelector<HTMLElement>('[data-legal-contents]');
+	if (nav) {
+		const links = Array.from(nav.querySelectorAll<HTMLAnchorElement>('a[href^="#"]'));
+		const heads = links.map((a) => document.getElementById(decodeURIComponent(a.hash.slice(1))));
+		let frame = 0;
+		const update = () => {
+			frame = 0;
+			const atEnd = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+			let current = atEnd ? links.length - 1 : 0;
+			if (!atEnd) heads.forEach((h, i) => h && h.getBoundingClientRect().top <= window.innerHeight * 0.3 && (current = i));
+			links.forEach((a, i) => (i === current ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
+			// Keep the lit row in view when the column is taller than the screen.
+			const lit = links[current]?.getBoundingClientRect();
+			const box = nav.getBoundingClientRect();
+			if (lit && (lit.top < box.top || lit.bottom > box.bottom)) nav.scrollTop += lit.top - box.top - box.height / 2;
+		};
+		const queue = () => (frame ||= requestAnimationFrame(update));
+		window.addEventListener('scroll', queue, { passive: true });
+		window.addEventListener('resize', queue);
+		update();
+	}
+</script>

@@ -1,0 +1,17 @@
+# Addresses from the old WordPress site (live until the cut-over), sent to
+# their nearest page here so old links and search results still land.
+/work /projects/ 301
+/work/* /projects/ 301
+/what-we-do /studio/ 301
+/what-we-do/* /studio/ 301
+/about-us /studio/ 301
+/about-us/* /studio/ 301
+/culture /studio/ 301
+/culture/* /studio/ 301
+/contact-us /studio/#contact 301
+/contact-us/* /studio/#contact 301
+/author/* / 301
+/feed / 301
+/feed/* / 301
+/wp-content/* / 301
+/wp-json/* / 301

@@ -2,10 +2,12 @@
 import Base from '../layouts/Base.astro';
 import NotFound from './NotFound.astro';
 import Media from '../components/Media.astro';
-import RichText from '../components/RichText.astro';
-import ProjectTile from '../components/ProjectTile.astro';
+import NextProject from '../components/NextProject.astro';
 import { client } from '../sanity/client';
 import { PROJECT_QUERY, PROJECTS_QUERY } from '../sanity/queries';
+import { paragraphs, snippet } from '../lib/text';
+import { SITE_NAME } from '../lib/site';
+import { stegaClean } from '@sanity/client/stega';
 
 /** The draft client on /preview, the build-time one everywhere else. */
 const sanity = Astro.locals.sanity ?? client;
@@ -19,25 +21,48 @@ if (!project) Astro.response.status = 404;
 
 const index = project ? all.findIndex((p) => p.slug === slug) : -1;
 const next = all.length > 1 ? all[(index + 1) % all.length] : null;
-const coverIsImage = project?.cover?.kind !== 'video';
+const summary = paragraphs(project?.summary);
 const meta = [
 	project?.client?.name && { label: 'Client', value: project.client.name },
-	project?.year && { label: 'Year', value: String(project.year) },
 	project?.services?.length && { label: 'Services', value: project.services.map((s) => s.title).join(', ') },
 ].filter(Boolean) as { label: string; value: string }[];
+
+// Structured data: where the page sits and the work itself, pictured by its share card.
+const site = Astro.site ?? Astro.url;
+const url = new URL(`/projects/${slug}/`, site).href;
+const title = stegaClean(project?.title ?? '');
+const schema = project
+	? [
+			{
+				'@type': 'BreadcrumbList',
+				itemListElement: [
+					{ '@type': 'ListItem', position: 1, name: 'Projects', item: new URL('/projects/', site).href },
+					{ '@type': 'ListItem', position: 2, name: title, item: url },
+				],
+			},
+			{
+				'@type': 'CreativeWork',
+				'@id': `${url}#work`,
+				name: title,
+				...(project.tagline ? { headline: stegaClean(project.tagline) } : {}),
+				...(summary[0] ? { description: stegaClean(summary[0]) } : {}),
+				url,
+				image: new URL(`/og/projects/${slug}.png`, site).href,
+				creator: { '@type': 'Organization', '@id': new URL('/#organization', site).href, name: SITE_NAME },
+				...(project.services?.length ? { keywords: project.services.map((s) => stegaClean(s.title ?? '')).filter(Boolean).join(', ') } : {}),
+				inLanguage: 'en-AU',
+			},
+		]
+	: [];
 ---
 
 {project ? (
-<Base
-	title={project.title ?? 'Project'}
-	description={project.seo?.description ?? project.summary}
-	image={project.seo?.image?.asset?.url ?? project.cover?.image?.asset?.url ?? null}
->
+<Base title={project.title ?? 'Project'} description={summary[0] ? snippet(summary[0]) : undefined} schema={schema}>
 	<article>
 		<header>
-			<div class="px-[14px] pt-5 lg:px-0 lg:pt-0">
-				<div class="relative aspect-[4/5] overflow-hidden bg-ink lg:aspect-[1025/475]" data-flip-target={coverIsImage ? '' : undefined} data-slug={slug}>
-					{project.cover && <Media media={project.cover} aspect={1025 / 475} fill sizes="(min-width: 1024px) 71vw, 100vw" loading="eager" fetchpriority="high" />}
+			<div class="px-[14px] lg:px-0">
+				<div class="relative aspect-square overflow-hidden bg-ink lg:aspect-[1025/475]" data-flip-target data-slug={slug}>
+					{project.cover && <Media media={project.cover} aspect={1025 / 475} fill sizes="(min-width: 1024px) 71vw, 100vw" loading="eager" fetchpriority="high" preload file />}
 				</div>
 			</div>
 
@@ -52,69 +77,33 @@ const meta = [
 				</dl>
 				<div data-reveal>
 					<h1 class="type-h1">{project.title}</h1>
-					{project.tagline && <p class="type-h3 mt-4 text-lime">{project.tagline}</p>}
-					{project.summary && <p class="type-body mt-6 max-w-[38em] text-paper/85">{project.summary}</p>}
+					{project.tagline && <p class="type-h3 font-sans font-normal mt-4 text-lime">{project.tagline}</p>}
+					{summary.map((p, i) => (
+						<p class:list={['type-body max-w-[38em] text-paper/85', i === 0 ? 'mt-6' : 'mt-4']}>{p}</p>
+					))}
 				</div>
 			</div>
 		</header>
 
 		{project.body?.length ? (
 			<div class="flex flex-col gap-[10px] px-[14px] lg:gap-6 lg:px-0">
-				{project.body.map((block) => {
-					switch (block._type) {
-						case 'mediaFull':
-							return (
-								<figure data-reveal>
-									{block.media && <Media media={block.media} sizes="(min-width: 1024px) 71vw, 100vw" />}
-									{block.caption && <figcaption class="type-small px-gutter pt-3 text-paper/60">{block.caption}</figcaption>}
-								</figure>
-							);
-						case 'mediaPair': {
-							// Tile shapes from the reference site: square, portrait (120%), landscape (60%).
-							const pairAspect = block.shape === 'portrait' ? 1 / 1.2 : block.shape === 'landscape' ? 1 / 0.6 : 1;
-							return (
-								<div class="grid grid-cols-1 gap-[10px] md:grid-cols-2 lg:gap-6" data-reveal-group>
-									{block.left && <Media media={block.left} aspect={pairAspect} sizes="(min-width: 768px) 35vw, 100vw" />}
-									{block.right && <Media media={block.right} aspect={pairAspect} sizes="(min-width: 768px) 35vw, 100vw" />}
-								</div>
-							);
-						}
-						case 'textBlock':
-							return (
-								<div class="grid gap-6 py-10 lg:grid-cols-[minmax(0,31vw)_minmax(0,1fr)] lg:px-gutter lg:py-12" data-reveal>
-									<h2 class="type-h2">{block.heading}</h2>
-									<RichText value={block.body} class="max-w-[38em]" />
-								</div>
-							);
-						case 'quote':
-							return (
-								<blockquote class="py-10 lg:px-gutter lg:py-12" data-reveal>
-									<p class="type-h2 max-w-[24em] text-lime">“{block.text}”</p>
-									{block.attribution && <footer class="type-small mt-4 text-paper/70">{block.attribution}</footer>}
-								</blockquote>
-							);
-						default:
-							return null;
-					}
-				})}
+				{project.body.map((block) =>
+					block._type === 'mediaFull' ? (
+						<figure data-reveal>
+							{block.media && <Media media={block.media} portraitAspect={1} sizes="(min-width: 1024px) 71vw, 100vw" />}
+						</figure>
+					) : block._type === 'mediaPair' ? (
+						<div class="grid grid-cols-1 gap-[10px] md:grid-cols-2 lg:gap-6" data-reveal-group>
+							{block.left && <Media media={block.left} aspect={1} sizes="(min-width: 768px) 35vw, 100vw" />}
+							{block.right && <Media media={block.right} aspect={1} sizes="(min-width: 768px) 35vw, 100vw" />}
+						</div>
+					) : null,
+				)}
 			</div>
 		) : null}
 
-		{project.credits?.length ? (
-			<dl class="type-small grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 px-[14px] py-10 text-paper/80 lg:px-gutter lg:py-12" data-reveal>
-				{project.credits.map((c) => (
-					<>
-						<dt class="text-lime">{c.role}</dt>
-						<dd>{c.name}</dd>
-					</>
-				))}
-			</dl>
-		) : null}
-
 		{next && (
-			<nav class="mt-6 px-[14px] lg:mt-12 lg:px-0" aria-label="Next project">
-				<ProjectTile project={next} variant="wide" eyebrow="Next project" />
-			</nav>
+			<NextProject project={next} />
 		)}
 	</article>
 </Base>

@@ -3,8 +3,8 @@
  * The scrolling strip under the home hero: wordmark, phrase, roundel,
  * location, repeated. Pure CSS marquee; the track is duplicated so the loop
  * is seamless. Sizes and gaps are from Figma page 6 (15 / 30 / 26 px between
- * items, 87 px before the next wordmark). Phrases break after the first
- * word and the location after the comma, as in the design.
+ * items, 87 px before the next wordmark). Phrases break into two lines of
+ * near equal length and the location after the comma, as in the design.
  */
 import Wordmark from './Wordmark.astro';
 import Roundel from './Roundel.astro';
@@ -19,9 +19,13 @@ interface Props {
 const { phrases, class: className } = Astro.props;
 // Short lists are repeated so the strip always fills the viewport.
 const filled = phrases.length ? Array.from({ length: Math.max(1, Math.ceil(6 / phrases.length)) }, () => phrases).flat() : [];
-const splitFirst = (text: string) => {
-	const i = text.indexOf(' ');
-	return i > 0 ? [text.slice(0, i), text.slice(i + 1)] : [text, ''];
+// Two lines of near equal length, which is how Nick set the phrases out (2 Nov): Thinking / made real., Insight & / strategy., Campaigns / & comms., One team. / Bigger ideas.
+const splitBalanced = (text: string) => {
+	let best = -1;
+	for (let i = text.indexOf(' '); i > 0; i = text.indexOf(' ', i + 1)) {
+		if (best < 0 || Math.abs(text.length - 2 * i - 1) < Math.abs(text.length - 2 * best - 1)) best = i;
+	}
+	return best > 0 ? [text.slice(0, best), text.slice(best + 1)] : [text, ''];
 };
 const splitComma = (text: string) => {
 	const i = text.indexOf(',');
@@ -35,14 +39,14 @@ const splitComma = (text: string) => {
 			{[0, 1].map((copy) => (
 				<ul class="flex h-full shrink-0 items-center" aria-hidden={copy === 1 ? 'true' : undefined}>
 					{filled.map((phrase) => {
-						const [first, rest] = splitFirst(phrase);
+						const [first, rest] = splitBalanced(phrase);
 						const [place, region] = splitComma(LOCATION);
 						return (
 							<li class="flex items-center pr-[87px]">
 								<Wordmark class="mr-[15px] h-[27.75px] text-lime" />
 								<span class="type-ticker mr-[30px]">{first}{rest && <><br />{rest}</>}</span>
 								<Roundel class="mr-[26px] h-[28px] w-[28px] text-paper" />
-								<span class="font-sans text-[11.3px] font-medium leading-[1.4]">{place}{region && <><br />{region}</>}</span>
+								<span class="font-sans text-[13px] lg:text-[11.3px] font-semibold leading-[1.4]">{place}{region && <><br />{region}</>}</span>
 							</li>
 						);
 					})}

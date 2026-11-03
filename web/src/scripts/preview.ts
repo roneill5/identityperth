@@ -1,16 +1,16 @@
 import { enableVisualEditing, type HistoryAdapterNavigate, type HistoryUpdate } from '@sanity/visual-editing';
-import type Swup from 'swup';
+import { navigate } from 'astro:transitions/client';
 
 /**
  * Loaded only on /preview pages (see app.ts). Turns on the Studio's visual
  * editing overlays, keeps the Studio's idea of the current URL in step with
- * Swup, and keeps every internal link inside the preview.
+ * the client router, and keeps every internal link inside the preview.
  */
 const PREFIX = '/preview';
 const toSite = (path: string) => path.replace(/^\/preview(?=\/|$)/, '') || '/';
 const toPreview = (path: string) => (path === '/' ? PREFIX : PREFIX + path);
 
-export function initPreview(swup: Swup) {
+export function initPreview() {
 	document.addEventListener(
 		'click',
 		(e) => {
@@ -25,16 +25,16 @@ export function initPreview(swup: Swup) {
 	enableVisualEditing({
 		zIndex: 1000,
 		history: {
-			subscribe: (navigate: HistoryAdapterNavigate) => {
-				const report = () => navigate({ type: 'push', url: toSite(location.pathname) + location.search });
-				swup.hooks.on('page:view', report);
-				report();
-				return () => swup.hooks.off('page:view', report);
+			subscribe: (report: HistoryAdapterNavigate) => {
+				const tell = () => report({ type: 'push', url: toSite(location.pathname) + location.search });
+				document.addEventListener('astro:page-load', tell);
+				tell();
+				return () => document.removeEventListener('astro:page-load', tell);
 			},
 			update: (update: HistoryUpdate) => {
 				if (update.type === 'pop') return history.back();
 				const url = toPreview(update.url);
-				if (location.pathname + location.search !== url) void swup.navigate(url, { history: update.type });
+				if (location.pathname + location.search !== url) void navigate(url, { history: update.type });
 			},
 		},
 	});

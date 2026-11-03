@@ -21,15 +21,9 @@ export const service = defineType({
       name: 'description',
       title: 'Description',
       type: 'text',
-      rows: 3,
-      description: 'One or two sentences, e.g. Verbal and visual identity, brand systems, guidelines, tone of voice, identity development and implementation.',
+      rows: 5,
+      description: 'What the service covers, then a blank line and a sentence or two about it. Each part shows as its own paragraph on the Studio page.',
       validation: (rule) => rule.required(),
-    }),
-    defineField({
-      name: 'image',
-      title: 'Image',
-      type: 'figure',
-      description: 'Shown in the Studio page photo column while this service is open. Without one, the cover of the first project that used this service is shown.',
     }),
   ],
   preview: {

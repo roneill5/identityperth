@@ -1,0 +1,10 @@
+---
+/** Headings inside rich text carry an id, so jump links and shared links can point at them. */
+import { blockText, headingId } from '../../lib/portable-text';
+
+const { node } = Astro.props;
+const Tag = (['h2', 'h3', 'h4'].includes(node?.style) ? node.style : 'h2') as 'h2' | 'h3' | 'h4';
+const id = headingId(blockText(node));
+---
+
+<Tag id={id}><slot /></Tag>

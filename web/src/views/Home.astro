@@ -2,41 +2,74 @@
 /**
  * Home: the splash. The hero fills the viewport (the showreel once it
  * exists, the image until then) and the whole thing links to Projects;
- * scrolling or clicking goes there through the ticker curtain
+ * scrolling or clicking slides the page up into the work
  * (Forth & Back behaviour, Figma page 6).
  */
 import Base from '../layouts/Base.astro';
-import SanityImage from '../components/SanityImage.astro';
 import VideoEmbed from '../components/VideoEmbed.astro';
 import Ticker from '../components/Ticker.astro';
 import Wordmark from '../components/Wordmark.astro';
 import { client } from '../sanity/client';
 import { stegaClean } from '@sanity/client/stega';
-import { HOME_QUERY } from '../sanity/queries';
+import { HOME_QUERY, PROJECTS_QUERY } from '../sanity/queries';
+import Media from '../components/Media.astro';
 
 /** The draft client on /preview, the build-time one everywhere else. */
 const sanity = Astro.locals.sanity ?? client;
 
 const home = await sanity.fetch(HOME_QUERY);
-const video = home?.heroVideo ? { streamId: stegaClean(home.heroVideo), playback: 'loop' as const } : null;
+// The first row of Projects, warmed from here at idle so the landing is already painted (page.ts, data-warm-idle).
+const firstTiles = (await sanity.fetch(PROJECTS_QUERY)).slice(0, 3);
+const video = home?.heroVideo ? { streamId: stegaClean(home.heroVideo) } : null;
+// The portrait (9:16) cut, for screens taller than they are wide. Each cut loads only while it is the one displayed.
+// Both play from their MP4 file, so the showreel keeps playing while the page slides away to Projects (transitions.ts).
+const tallVideo = video && home?.heroVideoMobile ? { streamId: stegaClean(home.heroVideoMobile) } : null;
 const phrases = (home?.ticker ?? []).filter((p): p is string => Boolean(p));
+// The showreel covers the space above the ticker at every window shape, like
+// the still image, cropped from the centre: a window wider than 16:9 loses
+// the same amount off the top and the bottom, a narrower one off the sides
+// (Ross, 28 Oct; the full-width box before it left ink bands above and below
+// on 16:10 screens and tablets). So the cut must keep its logos and titles
+// inside a safe zone: docs/showreel-safe-zones/ has the overlays for the
+// designer (Ross, 30 Oct: corner logos 32px from the frame edge were cut on
+// nearly every laptop). A portrait cut, when there is one, takes over on
+// portrait screens and covers the same space.
+const coverBox = ['absolute inset-x-0 top-0', phrases.length ? 'bottom-(--ticker-h)' : 'bottom-0'];
+const videoBox = [...coverBox, tallVideo && 'portrait:hidden'];
+const tallBox = [...coverBox, 'landscape:hidden'];
 ---
 
 <Base page="splash" description={home?.seo?.description} image={home?.seo?.image?.asset?.url}>
 	<section class="relative flex h-dvh flex-col" data-hero data-splash>
+		<h1 class="sr-only">Identity Perth. Brand, creative and digital agency.</h1>
 		<div class="relative flex-1 overflow-hidden bg-ink">
 			{video ? (
-				<VideoEmbed video={video} fill loading="eager" />
-			) : home?.heroImage?.asset ? (
-				<SanityImage image={home.heroImage} fill sizes="100vw" loading="eager" fetchpriority="high" />
+				<>
+					<div class:list={videoBox}>
+						<VideoEmbed video={video} fill loading="eager" fetchpriority="high" preload preloadMedia={tallVideo ? '(orientation: landscape)' : undefined} file />
+					</div>
+					{tallVideo ? (
+						<div class:list={tallBox}>
+							<VideoEmbed video={tallVideo} fill loading="eager" fetchpriority="high" preload preloadMedia="(orientation: portrait)" file />
+						</div>
+					) : null}
+				</>
 			) : (
 				<div class="absolute inset-0 flex items-center justify-center text-lime">
 					<Wordmark class="h-[8vw]" />
 				</div>
 			)}
-			<a href="/projects" class="absolute inset-0 z-10" aria-label="See our projects" data-advance-link data-swup-preload></a>
+			<a href="/projects" class="absolute inset-0 z-10" aria-label="See our projects" data-advance-link></a>
 		</div>
 	</section>
+
+	{firstTiles.length ? (
+		<div hidden data-warm-idle>
+			{firstTiles.map((p, i) =>
+				p.cover ? <Media media={p.cover} aspect={i === 0 ? 1025 / 475 : 1} fill sizes={i === 0 ? '(min-width: 1024px) 71vw, 100vw' : '(min-width: 1024px) 35vw, (min-width: 768px) 50vw, 100vw'} loading="lazy" file /> : null,
+			)}
+		</div>
+	) : null}
 
 	{phrases.length ? (
 		<div slot="ticker" class="fixed left-0 z-20 h-dvh w-full bg-ink" style="top:calc(100dvh - var(--ticker-h))" data-ticker-screen>

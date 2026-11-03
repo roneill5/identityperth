@@ -1,45 +1,51 @@
 ---
 /**
- * Gallery: a wall of everything Identity has made, three across in the order
- * they were added (Figma page 1: rows of matching ratios). Nothing links
- * anywhere (it is separate from Projects); hovering a tile shows its caption
- * on a lime bar under a small magnifier cursor (not an arrow, not a
- * hand). On phones it is three narrow columns with 10px gaps and a tap
- * opens the image in a panel with its caption (scripts/gallery.ts), as on
- * Forth and Back. Images blur up as they load instead of animating in.
+ * Gallery: a wall of everything Identity has made, three columns on every
+ * screen, each image at its own shape, nothing cropped (Ross, 3 Nov; 4:5 and
+ * square tiles before that). The images are dealt into the columns at build
+ * time in their CMS order, each to the shortest column so far, so the wall
+ * reads in that order left to right and the columns finish level; the page
+ * needs no script for it and nothing moves as images arrive. Nothing links or
+ * opens anywhere (it is separate from Projects; the phone tap panel went on
+ * 30 Oct, Ross) and nothing is written on it (Bel, 21 Oct). Images blur up as
+ * they load instead of animating in.
  */
 import Base from '../layouts/Base.astro';
 import SanityImage from '../components/SanityImage.astro';
 import { client } from '../sanity/client';
 import { GALLERY_QUERY } from '../sanity/queries';
-import { urlFor } from '../sanity/image';
 
 /** The draft client on /preview, the build-time one everywhere else. */
 const sanity = Astro.locals.sanity ?? client;
 
 const items = await sanity.fetch(GALLERY_QUERY);
+
+const COLUMNS = 3;
+// Column heights in column widths; the small extra per image stands in for the gap below it.
+const GAP = 0.04;
+const columns: { item: (typeof items)[number]; index: number }[][] = Array.from({ length: COLUMNS }, () => []);
+const heights: number[] = Array(COLUMNS).fill(0);
+items.forEach((item, index) => {
+	const ratio = item.image?.asset?.metadata?.dimensions?.aspectRatio || 1;
+	const shortest = heights.indexOf(Math.min(...heights));
+	columns[shortest].push({ item, index });
+	heights[shortest] += 1 / ratio + GAP;
+});
 ---
 
-<Base title="Gallery" description="A wall of work from the Identity studio in Perth.">
+<Base title="Gallery" description="A wall of work from the Identity studio in Perth: brand identities, packaging, campaigns and websites for clients across Western Australia.">
 	<h1 class="sr-only">Gallery</h1>
 	{items.length ? (
-		<div class="gallery-wall grid grid-cols-3 gap-[10px] px-[14px] pt-5 lg:gap-4 lg:px-0 lg:pt-0">
-			{items.map((item, i) => {
-				const label = item.caption ?? item.project?.title ?? null;
-				const client = item.project?.client?.name ?? null;
-				const large = item.image?.asset ? urlFor(item.image).width(1200).quality(80).url() : null;
-				return (
-					<figure class="group relative overflow-hidden bg-ink" data-lightbox={large ?? undefined} data-caption={[label, client].filter(Boolean).join(', ') || undefined}>
-						{item.image && <SanityImage image={item.image} sizes="(min-width: 1024px) 24vw, 33vw" loading={i < 6 ? 'eager' : 'lazy'} />}
-						{(label || client) && (
-							<figcaption class="pointer-events-none absolute inset-x-0 bottom-0 hidden h-[23px] translate-y-full items-center justify-between gap-3 bg-lime px-2.5 font-sans text-[11px] leading-none text-ink transition-transform duration-300 ease-(--ease-out-expo) group-hover:translate-y-0 lg:flex">
-								<span class="truncate">{label}</span>
-								<span class="shrink-0">{client !== label ? client : null}</span>
-							</figcaption>
-						)}
-					</figure>
-				);
-			})}
+		<div class="gallery-wall grid grid-cols-3 items-start gap-[10px] px-[14px] lg:gap-4 lg:px-0">
+			{columns.map((column) => (
+				<div class="flex flex-col gap-[10px] lg:gap-4">
+					{column.map(({ item, index }) => (
+						<figure class="relative overflow-hidden bg-ink">
+							{item.image && <SanityImage image={item.image} sizes="(min-width: 1024px) 24vw, 33vw" loading={index < 6 ? 'eager' : 'lazy'} preload={index < 3} />}
+						</figure>
+					))}
+				</div>
+			))}
 		</div>
 	) : (
 		<p class="type-body px-gutter py-[20vh] text-paper/70">The gallery is being hung.</p>

@@ -5,6 +5,10 @@ export default defineCliConfig({
     projectId: 't2bz0tb2',
     dataset: 'production',
   },
+  // The Studio lives under /backend of the site. sanity.config.ts carries the
+  // same path for routing; this one tells `sanity build` to write asset URLs
+  // under it (without it they come out root-relative and the Studio is blank).
+  project: {basePath: '/backend'},
   // Keep the built Studio on the latest compatible Sanity release.
   deployment: {autoUpdates: true},
   // Generate TypeScript types for the Astro app's GROQ queries.

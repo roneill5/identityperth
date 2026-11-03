@@ -2,25 +2,25 @@ import {defineArrayMember, defineField, defineType} from 'sanity'
 import {orderRankField, orderRankOrdering} from '@sanity/orderable-document-list'
 import {ImagesIcon} from '@sanity/icons/Images'
 
+/**
+ * A project: what it is, who it was for, the cover, the words at the top of
+ * the page and the exports in order. Nothing else (Ross, 28 Oct: lightweight,
+ * no extra options). The page's title, description and share image come from
+ * these fields, so there is nothing separate to fill in for search engines.
+ */
 export const project = defineType({
   name: 'project',
   title: 'Project',
   type: 'document',
   icon: ImagesIcon,
   orderings: [orderRankOrdering],
-  groups: [
-    {name: 'overview', title: 'Overview', default: true},
-    {name: 'content', title: 'Content'},
-    {name: 'seo', title: 'SEO'},
-  ],
   fields: [
     orderRankField({type: 'project'}),
     defineField({
       name: 'title',
       title: 'Title',
       type: 'string',
-      description: 'The piece of work, e.g. Kindred Magazine',
-      group: 'overview',
+      description: 'The piece of work, e.g. The DAM Wine Range',
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -28,81 +28,50 @@ export const project = defineType({
       title: 'Client',
       type: 'reference',
       to: [{type: 'client'}],
-      group: 'overview',
       validation: (rule) => rule.required(),
     }),
     defineField({
       name: 'slug',
       title: 'URL',
       type: 'slug',
-      group: 'overview',
+      description: 'The address after identityperth.com/projects/',
       options: {source: 'title', maxLength: 96},
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'cover',
+      title: 'Cover',
+      type: 'media',
+      description: 'Export 1: an image or a silent video loop. Shown in the project tile and at the top of the project page. For images, set the hotspot: tiles are square, the page is wide.',
       validation: (rule) => rule.required(),
     }),
     defineField({
       name: 'tagline',
       title: 'Tagline',
       type: 'string',
-      description: 'One line, e.g. A magazine made for life beyond the listing.',
-      group: 'overview',
-      validation: (rule) => rule.max(90).warning('Keep it to one line'),
+      description: 'The lime line under the title.',
+      validation: (rule) => rule.max(160).warning('Keep it to a line or two'),
     }),
     defineField({
       name: 'summary',
       title: 'Summary',
       type: 'text',
-      rows: 4,
-      description: 'Two or three sentences shown when hovering the project tile and at the top of the project page.',
-      group: 'overview',
-      validation: (rule) => rule.required().max(400),
-    }),
-    defineField({
-      name: 'cover',
-      title: 'Cover',
-      type: 'media',
-      description: 'An image or a silent video loop. Shown in the project tile and at the top of the project page; it does not change on hover. For images, set the hotspot: tiles are square, the page is wide.',
-      group: 'overview',
-      validation: (rule) => rule.required(),
-    }),
-    defineField({
-      name: 'year',
-      title: 'Year',
-      type: 'number',
-      group: 'overview',
-      validation: (rule) => rule.integer().min(2000).max(2100),
+      rows: 6,
+      description: 'The paragraphs under the tagline. Separate them with a blank line. The first one is also the page description in search results.',
+      validation: (rule) => rule.required().max(1200).warning('Long for the top of a page'),
     }),
     defineField({
       name: 'services',
       title: 'Services',
       type: 'array',
       of: [defineArrayMember({type: 'reference', to: [{type: 'service'}]})],
-      group: 'overview',
       validation: (rule) => rule.unique(),
     }),
     defineField({
       name: 'body',
       title: 'Project content',
       type: 'projectBody',
-      group: 'content',
     }),
-    defineField({
-      name: 'credits',
-      title: 'Credits',
-      type: 'array',
-      group: 'content',
-      of: [
-        defineArrayMember({
-          type: 'object',
-          name: 'credit',
-          fields: [
-            defineField({name: 'role', title: 'Role', type: 'string', validation: (rule) => rule.required()}),
-            defineField({name: 'name', title: 'Name', type: 'string', validation: (rule) => rule.required()}),
-          ],
-          preview: {select: {title: 'name', subtitle: 'role'}},
-        }),
-      ],
-    }),
-    defineField({name: 'seo', type: 'seo', group: 'seo'}),
   ],
   preview: {
     select: {title: 'title', client: 'client.name', media: 'cover.image'},

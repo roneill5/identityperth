@@ -1,12 +1,55 @@
 ---
-import Base from '../layouts/Base.astro';
+/**
+ * The 404, on the plain layout like the legal pages (Ross, 30 Oct): the
+ * words on the left (what happened, two ways on, a line to get in touch) and
+ * a game of Pong against the computer on the right (Bel's pick, 21 Oct).
+ * Stacked on phones.
+ */
+import Plain from '../layouts/Plain.astro';
+import { getSettings } from '../sanity/fetch';
+import { client } from '../sanity/client';
+import { stegaClean } from '@sanity/client/stega';
+
+const settings = await getSettings(Astro.locals.sanity ?? client);
+const email = settings?.email ? stegaClean(settings.email) : null;
+// The Menu pill's look (global.css); the ::before keeps a 44px tap target around the 30px pill.
+const button = "relative inline-flex h-[30px] items-center rounded-full border-[1.5px] border-paper px-[14px] pt-px font-display text-[20px] uppercase leading-none tracking-[1.8px] text-paper transition-colors duration-200 before:absolute before:inset-x-0 before:-inset-y-[7px] before:content-[''] hover:border-lime hover:text-lime";
 ---
 
-<Base title="Page not found" page="notfound">
-	<div class="flex min-h-dvh flex-col justify-center px-gutter py-16">
-		<p class="type-label text-lime">404</p>
-		<h1 class="type-h1 mt-4 max-w-[14em]">Without Identity, who are you?</h1>
-		<p class="type-body mt-6 max-w-[30em] text-paper/80">That page isn’t here. The work is.</p>
-		<a href="/projects" class="type-label mt-8 inline-block text-lime hover:text-paper">See the projects</a>
+<Plain title="Page not found" description="That page is not here. The work is." notFound>
+	<div class="grid gap-12 px-[14px] pt-8 pb-14 lg:grid-cols-2 lg:gap-16 lg:px-gutter lg:pt-20 lg:pb-24" data-not-found>
+		<div class="max-w-[34em]">
+			<p class="type-label text-lime">Error 404</p>
+			<h1 class="type-h1 mt-4">Page not found.</h1>
+			<p class="type-body mt-6 text-paper/85">The page you’re after has moved, been renamed, or was never made in the first place.</p>
+			<p class="type-body mt-4 text-paper/85">While you’re here, fancy a game of Pong?</p>
+			<div class="mt-8 flex flex-wrap gap-3">
+				<a href="/" class={button}>Home</a>
+				<a href="/projects" class={button}>Projects</a>
+			</div>
+			{email && (
+				<p class="type-body mt-10 text-paper/85">
+					Looking for something else? <a href={`mailto:${email}`} class="text-link text-lime hover:text-paper">Let’s chat.</a>
+				</p>
+			)}
+		</div>
+		<div>
+			<p class="type-label text-lime">Pong</p>
+			<div class="pong mt-4 w-full" style="aspect-ratio:16/9">
+				<canvas class="absolute inset-0 h-full w-full touch-none" data-pong aria-label="Pong. W and S or the arrow keys move the left paddle, space serves; on a touch screen, drag to move and tap to serve."></canvas>
+			</div>
+			<p class="type-small mt-3 text-paper/60">
+				<span class="lg:hidden">Drag to move your paddle, tap to serve.</span>
+				<span class="hidden lg:inline">W and S or the arrow keys move your paddle, space serves.</span>
+			</p>
+		</div>
 	</div>
-</Base>
+</Plain>
+
+<script>
+	import { initPong } from '../scripts/pong';
+	import { track } from '../scripts/analytics';
+	document.querySelectorAll<HTMLCanvasElement>('canvas[data-pong]').forEach((canvas) => initPong(canvas));
+	// The missing address is the event's page_location: the list of broken links to redirect after launch.
+	track('page_not_found');
+</script>

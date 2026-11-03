@@ -9,26 +9,31 @@ import Projects from '../../views/Projects.astro';
 import Project from '../../views/Project.astro';
 import Studio from '../../views/Studio.astro';
 import Gallery from '../../views/Gallery.astro';
+import LegalPage from '../../views/LegalPage.astro';
 import NotFound from '../../views/NotFound.astro';
 
 export const prerender = false;
 
-const path = (Astro.params.path ?? '').replace(/\/+$/, '');
-const [section = '', slug = ''] = path.split('/');
-const known = path === '' || (section === 'projects') || (section === 'studio' && !slug) || (section === 'gallery' && !slug);
-if (!known) Astro.response.status = 404;
+const parts = (Astro.params.path ?? '').split('/').filter(Boolean);
+const [section = '', slug = ''] = parts;
+const single = parts.length === 1;
+const known = parts.length === 0 || (section === 'projects' && parts.length <= 2) || (single && ['studio', 'gallery'].includes(section));
+// Any other single segment may be a legal page; its view answers 404 itself when there is none.
+if (!known && !single) Astro.response.status = 404;
 ---
 
-{path === '' ? (
+{parts.length === 0 ? (
 	<Home />
 ) : section === 'projects' && !slug ? (
 	<Projects />
-) : section === 'projects' ? (
+) : section === 'projects' && parts.length === 2 ? (
 	<Project slug={slug} />
-) : section === 'studio' && !slug ? (
+) : section === 'studio' && single ? (
 	<Studio />
-) : section === 'gallery' && !slug ? (
+) : section === 'gallery' && single ? (
 	<Gallery />
+) : single ? (
+	<LegalPage slug={section} />
 ) : (
 	<NotFound />
 )}

@@ -1,0 +1,16 @@
+---
+/**
+ * The cursor on devices with a mouse: the ID roundel, inverting in brand
+ * colours. Layers cut to the roundel's shape and moved together
+ * (scripts/cursor.ts, global.css). Hidden until the script shows them. The
+ * wrapper only carries the shape; it must not become a stacking context.
+ */
+import roundelSvg from '../assets/brand/roundel.svg?raw';
+
+/** The cursor's layers, bottom to top (global.css says what each does). */
+const CURSOR_LAYERS = ['grey', 'invert', 'burn', 'dodge', 'burn', 'dodge', 'lime', 'ink'];
+---
+
+<div aria-hidden="true" style={`--cursor-mask:url("data:image/svg+xml,${encodeURIComponent(roundelSvg)}")`}>
+	{CURSOR_LAYERS.map((layer) => <span class={`cursor cursor--${layer} is-hidden`}></span>)}
+</div>

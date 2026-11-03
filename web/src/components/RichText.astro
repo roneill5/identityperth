@@ -3,6 +3,7 @@
 import { PortableText } from 'astro-portabletext';
 import Figure from './portable-text/Figure.astro';
 import Link from './portable-text/Link.astro';
+import Heading from './portable-text/Heading.astro';
 
 interface Props {
 	value: unknown;
@@ -13,6 +14,6 @@ const { value, class: className } = Astro.props;
 
 {Array.isArray(value) && value.length ? (
 	<div class:list={['prose type-body', className]}>
-		<PortableText value={value as never} components={{ type: { figure: Figure }, mark: { link: Link } }} />
+		<PortableText value={value as never} components={{ type: { figure: Figure }, mark: { link: Link }, block: { h2: Heading, h3: Heading, h4: Heading } }} />
 	</div>
 ) : null}

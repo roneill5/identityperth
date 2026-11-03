@@ -4,11 +4,11 @@ The 2026 rebuild of the Identity website. Two apps side by side:
 
 ```
 identityperth/
-├── web/       Astro site (Tailwind, Swup, GSAP) → static files on Cloudflare Workers
+├── web/       Astro site (Tailwind, GSAP) → static files on Cloudflare Workers
 └── backend/   Sanity Studio (content editing) → built into the site at /backend
 ```
 
-The CMS lives at `/backend` because `/studio` is the agency's own page.
+The CMS lives at `/backend` because `/studio` is the agency's own page. That path is set once, as `project.basePath` in `backend/sanity.cli.ts`: the Studio build writes its asset URLs under it and the dev server serves it there. Do not add `basePath` to `sanity.config.ts` as well, or the Studio expects `/backend/backend`.
 
 Design: Figma "Identity-Duplicate" (ID-Website-2026 v1). Reference for behaviour: forthandback.la.
 
@@ -26,7 +26,7 @@ Run from the repo root:
 | --- | --- |
 | `npm run dev` | Astro dev server at http://localhost:4321 |
 | `npm run dev:studio` | Sanity Studio at http://localhost:3333/backend |
-| `npm run build` | Builds the Studio into `web/public/backend`, then the site into `web/dist` (the Studio ends up at `/backend`) |
+| `npm run build` | Builds the Studio into `web/public/backend`, renders the share images into `web/public/og`, then builds the site into `web/dist` (the Studio ends up at `/backend`) |
 | `npm run deploy` | Deploys the last build by hand (`wrangler deploy` from `web/`, needs `npx wrangler login` once). Production normally deploys itself, see Deploying |
 | `npm run typegen` | Regenerates `web/sanity.types.ts` from the schema and the GROQ queries |
 | `npm run install:all` | `npm install` in both apps |
@@ -35,11 +35,14 @@ The first time, run `npm run install:all`. Installing `web/` also runs `wrangler
 
 ## What is in the CMS right now
 
-The published content mirrors the Figma for review: the three projects from the Projects page (So Dam Pink & Perky, Kindred Magazine, Pelvic Physio Collective) with the design's images, six placeholder projects with lorem text and grey covers, the six gallery tiles from page 1 plus grey placeholders, and the Studio column photos from pages 3 and 4. The 22 projects imported from the old site are parked as drafts in the Studio and can be published whenever they are wanted. `backend/scripts/design-content.mjs` is what set this up; `npm run seed:build` + `seed:import` would put the full v1 import back.
+Live content: 20 projects built from the design team's export folders (see Project pages below), 30 clients, six services, the team, the Studio page, the Terms & Conditions and the home showreel on Cloudflare Stream. The gallery holds the five design-review tiles plus nine grey placeholders until the real set arrives. The CMS was pared right back on 28 Oct (Ross): every field left is rendered somewhere on the site, there are no toggles, and the old site's parked drafts are gone.
 
 ## What editors see in the Studio
 
-Home (hero video or image, ticker phrases, SEO), Studio (About copy and headings, highlights, Clients intro, the photo column, SEO), Projects, Gallery, Services, Team, Clients, Client comments, and Site settings (name, tagline, menu text, emails, phone, address, socials, default SEO). Nothing else: the schema was pared back on 19 October to what the site actually renders. `backend/scripts/tidy-cms.mjs` strips any leftover fields from old documents and is safe to re-run.
+The sidebar follows the site's pages: Home, Projects, Studio (the Studio page with Services, Team and Clients nested under it), Gallery, then Legal pages and Site settings. `backend/structure.ts` lays it out with Sanity's structure builder.
+
+
+Home (hero video and its portrait cut, ticker phrases, SEO), Studio (About copy and headings, highlights, Clients intro, the photo column, SEO), Projects (title, client, URL, cover, tagline, summary, services, the exports in order), Gallery (an image per tile), Services (title and description), Team, Clients (a name), Legal pages (title, URL, text; unlisted pages that nothing links to, shared by address) and Site settings (tagline, menu text, emails, phone, address, socials, search defaults). Nothing else: every field is rendered somewhere.
 
 The Studio's Preview tab shows the site with unpublished changes and click-to-edit overlays; how that works is under Previewing drafts.
 
@@ -56,10 +59,10 @@ Sanity CORS already allows `localhost:4321`, `127.0.0.1:4321`, `identityperth.co
 
 The Studio's Presentation tool (the Preview tab) renders the site with unpublished changes:
 
-- The Studio opens `/preview/enable` with a one-time secret (`@sanity/preview-url-secret`). `web/src/pages/preview/enable.ts` validates it and sets the `idp-preview` cookie for 24 hours; `/preview/disable` clears it.
-- `web/src/middleware.ts` refuses `/preview/*` without that cookie. With it, the request gets a Sanity client that reads drafts using the server's `SANITY_READ_TOKEN`, and the response is marked `no-store` and `noindex`.
+- The Studio opens `/preview/enable` with a one-time secret (`@sanity/preview-url-secret`). `web/src/pages/preview/enable.ts` validates it and sets the `idp-preview` cookie for 12 hours, scoped to `/preview`; `/preview/disable` clears it. The cookie's value is an expiry time and an HMAC of it keyed by the server's token, so it cannot be made up (security review, 28 Oct).
+- `web/src/middleware.ts` refuses `/preview/*` without a valid cookie (checked in constant time): a page opened directly, or after the 12 hours, is sent to the Studio's login (`/backend/presentation?preview=<path>`), which opens the preview of that page once the editor is in; inside the Studio's own preview frame it answers 401 instead. With a valid cookie, the request gets a Sanity client that reads drafts using the server's `SANITY_READ_TOKEN`, and the response carries `no-store`, `noindex` and the same security headers as the static pages.
 - `web/src/pages/preview/[...path].astro` renders the same page bodies as the public routes (`web/src/views/`) with that client, so the preview cannot drift from the real pages. Draft content arrives with stega encoding (invisible characters that give the overlays their edit links); `stegaClean` strips them wherever a value is used as an identifier (titles in `<head>`, Stream IDs, mailto and tel links).
-- `web/src/scripts/preview.ts` loads `@sanity/visual-editing` on preview pages only and keeps Swup navigation inside `/preview`.
+- `web/src/scripts/preview.ts` loads `@sanity/visual-editing` on preview pages only and keeps client-side navigation inside `/preview`.
 
 The public site is untouched by all of this: no stega, no token, no rendering on request. Locally, `SANITY_READ_TOKEN` lives in `web/.env` and `web/.dev.vars` (both gitignored); in production it is a Worker secret (see Deploying). For the Preview tab in development, open the Studio built into the dev site at http://localhost:4321/backend/ (run `npm run build --prefix backend` first), or the Studio dev server at http://localhost:3333/backend, which previews the Astro dev server on port 4321.
 
@@ -67,32 +70,69 @@ The public site is untouched by all of this: no stega, no token, no rendering on
 
 | Type | Used for |
 | --- | --- |
-| `home` (single) | Hero video (a Cloudflare Stream ID) or hero image, ticker phrases, SEO |
-| `studio` (single) | About copy, highlights, studio photography |
-| `siteSettings` (single) | Site name, tagline, menu text, contact details, socials, default SEO |
-| `project` | A piece of work: cover, tagline, summary, services, body blocks, credits |
-| `galleryItem` | One tile on the Gallery page, optionally linked to a project |
+| `home` (single) | Hero video (a Cloudflare Stream ID) and its portrait cut, ticker phrases, SEO |
+| `studio` (single) | About copy and heading phrases, highlights, clients intro, studio photography, SEO |
+| `siteSettings` (single) | Tagline, menu text, contact details, socials, search defaults (the site name is fixed in `web/src/lib/site.ts`) |
+| `project` | A piece of work: title, client, URL, cover, tagline, summary, services, the exports in order (`mediaFull` and `mediaPair` blocks) |
+| `galleryItem` | One image on the Gallery wall |
 | `service` | The capability list (Insight & Strategy, Brand & Identity, ...) |
 | `teamMember` | People on the Studio page |
 | `client` | Client names |
-| `testimonial` | Client comments |
+| `legalPage` | Terms & Conditions, a privacy policy: title, address and the text. Unlisted: reachable by address only |
 
-Projects, gallery items, services, team, clients and testimonials are drag-to-reorder lists in the Studio. The order there is the order on the site.
+Projects, gallery items, services, team, clients and legal pages are drag-to-reorder lists in the Studio. The order there is the order on the site.
 
 Video is never uploaded to Sanity: everything lives on Cloudflare Stream and only the Stream ID is stored (the hero on Home, `video` objects on project pages).
 
-## Seeding content from the old site
+## Uploading videos to Stream
 
-The archived v1 site (`~/Sites/identityperth-v1`) has 22 project write-ups with imagery. To load them into Sanity:
+The account is on Stream's base plan: 1,000 minutes of stored video for US$5 a month, plus US$1 per 1,000 minutes watched. Charges are by length, never by file size, and encoding and bandwidth are free, so upload the best master available (up to 30 GB). On 26 Oct the account held about 4 minutes, including Bromley's and Range's home page videos, which belong to other client sites and must not be deleted.
 
-```sh
-cd backend
-npx sanity login            # once
-npm run seed:build          # writes seed/v1.ndjson (images referenced by path)
-npm run seed:import         # uploads documents and assets to the production dataset
+Since 26 Oct every video on the site is on Stream: the home showreel (Proof 5b since 28 Oct; earlier proofs were deleted from Stream once replaced) and its portrait cut for phones (Proof 5b Mobile, in Home's "Hero video for phones" field), The DAM Wine Range's three and PowerPlay's two. The stand-in files were removed from `web/public/media/`; the stand-in field and the `/video/` route stay for emergencies but nothing uses them.
+
+Identity has Cloudflare Stream, but the wrangler login used for deploys has no Stream permission, so uploads need a Cloudflare API token with Account, Stream, Edit (dashboard, My Profile, API Tokens, Create Custom Token). Save it as one line in `.stream-token` at the repo root (gitignored) and run:
+
+```
+cd backend && STREAM_TOKEN=$(cat ../.stream-token) npx sanity exec scripts/stream-videos.mjs --with-user-token -- <manifest.json>
 ```
 
-`--replace` is on, so re-running overwrites those same documents and nothing else.
+The manifest lists each file, a name for the Stream dashboard and where its ID goes: `{ "doc": "home", "field": "heroVideo" }` for the home showreel, `{ "doc": "<project id>", "video": "cover.video" }` (or a body path such as `body[_key=="tangy"].media.video`) for a project video, which also clears its stand-in file. The script turns signed URLs off, waits until Stream has processed each video, skips any video already uploaded under the same name, and handles files over 200 MB in pieces. Rebuild and deploy afterwards. Uploading through the dashboard works too: paste each video's ID into the CMS by hand.
+
+## Project summaries
+
+A project's summary can run to several paragraphs, separated by a blank line (up to 600 characters). The project page shows each paragraph; the tile on Projects and the page's search description use only the first (`paragraphs()` in `web/src/lib/text.ts`).
+
+## The Studio client list
+
+The names under Clients on the Studio page are typed on the Studio page document (`clients`, Belinda's 22 in her order), not drawn from the Clients documents, which exist only for projects to point at (Ross, 29 Oct: "we just want Bel's 22"). Add or reorder names there.
+
+## Project pages
+
+Project pages follow the design team's exports in their numbered order (Ross, 28 Oct): export 1 is the cover, then square exports sit side by side in pairs and wide exports each get a full width block. There is no set rhythm, nothing is reordered and wides are never split. The page's title, description and share card come from the title, the summary's first paragraph and the cover, and the tile hover shows the title and services only.
+
+## Staging, search engines and headers
+
+Only a build whose site URL is `https://identityperth.com` (or `www`) is indexable. Build staging with `SITE_URL=https://identityperth.ross-o-neill.workers.dev npm run build`: that gets `Disallow: /` in `robots.txt`, a `noindex, nofollow` tag on every page and `X-Robots-Tag: noindex` on every response. A build with `SITE_URL` unset is a production build, canonical to identityperth.com, and must not be left on an address people can find.
+
+`web/scripts/headers.mjs` writes `public/_headers` before every build: `Content-Security-Policy: frame-ancestors 'self'` (the Studio's preview pane may frame the site, nobody else may), `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, HSTS, and cache lifetimes for the unhashed files in `public/`. `web/src/middleware.ts` sets the same on the Worker-rendered preview pages.
+
+For search engines: `@astrojs/sitemap` writes `sitemap-index.xml` (the Worker routes are left out) and `robots.txt` points at it on production; every page carries structured data (`web/src/components/SiteHead.astro`: the studio as an `Organization` with its address, phone, email and social profiles, the `WebSite`, and on project pages a `BreadcrumbList` and the `CreativeWork`); titles end in "Identity Perth"; project descriptions are the summary's first paragraph; `public/_redirects` sends the old WordPress addresses (`/work/`, `/what-we-do/`, `/about-us/`, `/culture/`, `/contact-us/`, feeds and author pages) to their nearest page; `public/icons/` holds the roundel as PNG for tabs, home screens and the `Organization` logo (rendered from `web/src/assets/brand/roundel.svg` with sharp). Analytics: see below. `docs/LAUNCH.md` is the cut-over checklist.
+
+## Analytics
+
+Analytics run on identityperth.com only. Staging, the editors' preview and the Studio at `/backend` never load them, so the numbers and the recordings are real visits.
+
+- **Google Analytics 4 through Cloudflare Zaraz** (property "Identity Perth", G-4YFE37WMQN). With `PUBLIC_ZARAZ=true`, `web/src/components/SiteHead.astro` loads Zaraz's script from the site's own domain (`/cdn-cgi/zaraz/i.js`) and Zaraz sends GA4 from Cloudflare, so no Google tag runs in the browser. Zaraz's "All other events" action forwards every `zaraz.track()` call with its properties; the site reports each client-router navigation with `zaraz.spaPageview()`, so Zaraz's own page views on URL changes are off. `PUBLIC_GA_ID` loads Google's own tag instead, as a fallback; never both.
+- **Microsoft Clarity** (project z77zmahlca) with `PUBLIC_CLARITY_ID`: session recordings and heatmaps, loaded after the page.
+- **Events** are listed at the top of `web/src/scripts/analytics.ts`: contact links (email, careers, phone), links to other sites, project cards (and where they were clicked), menu and nav clicks, how people leave the showreel and after how long, Studio sections and people opened, scroll depth, 404s and the 404's game. GA4's own names are used where it has them, so its standard reports work. Each event also tags the Clarity recording, so recordings can be filtered by it.
+
+Zaraz was already on for the zone before the rebuild, auto-injecting GA4 and the WordPress site's Clarity project into every host in it (staging, admin, dev, mainwp and wp-admin all showed up in GA4). Since 2 Nov both tools are blocked on any host but identityperth.com and on the back ends (WordPress admin and login, `/backend`, `/preview`). `node scripts/zaraz.mjs` in `web/` prints the set-up; `node scripts/zaraz.mjs launch` switches it to the new site at cut-over: auto-inject off, because Cloudflare does not inject into pages a Worker serves and with it off Zaraz cannot reach the zone's other hosts, and the WordPress Clarity tool off, because the site loads its own. It uses the account token in `.cloudflare-token` at the repo root (gitignored, one line, never commit).
+
+In GA4, register `area` and `label` once as event-scoped custom dimensions (Admin, Custom definitions), and mark `contact` as a key event once it has arrived.
+
+## Share images
+
+Every page gets its own 1200 x 630 card for links shared on social media and in chat: the ID mark, a label, the title in Shippori Mincho and a line under it on the left half, the page's picture full bleed on the right half (the project cover, or for a video cover a frame two seconds in from Stream; the showreel's first frame; four Studio or Gallery photos) and the lime ticker bar along the bottom. A share image cannot be a video: Slack, iMessage, LinkedIn and the rest show `og:image`, a still. `web/scripts/og.mjs` renders them with satori and resvg before every build into the gitignored `web/public/og/` (`npm run og` in `web/` renders them on their own). A share image set in the CMS on a page or in Site settings takes precedence over the generated card.
 
 ## Fonts
 
@@ -100,11 +140,11 @@ The design was drawn in Capraia (serif), Hansief (condensed caps) and Figtree (b
 
 ## Deploying
 
-Production is Cloudflare Workers Builds: every push to `main` on GitHub builds the Studio and the site and deploys the Worker `identityperth-web`, and every publish in the Studio starts the same build through a deploy hook. One-time setup, in order:
+Production is Cloudflare Workers Builds: every push to `main` on GitHub builds the Studio and the site and deploys the Worker `identityperth`, and every publish in the Studio starts the same build through a deploy hook. One-time setup, in order:
 
 1. **GitHub.** Push this repository to GitHub; `main` is the production branch.
-2. **Connect the Worker.** In the Cloudflare dashboard: Workers & Pages, Create, Workers, Import a repository, pick the repo. Settings: Worker name `identityperth-web`, production branch `main`, root directory `/`, build command `npm run install:all && npm run build`, deploy command `npm run deploy`. Leave the Node version alone: Builds reads the root `.nvmrc`. Save, and the first build deploys the site to its `workers.dev` address.
-3. **Preview token.** In https://www.sanity.io/manage (project Identity Perth, API, Tokens) add a token with the Viewer role named "Site preview", then store it on the Worker: `cd web && npx wrangler secret put SANITY_READ_TOKEN` and paste it when asked (`npx wrangler login` once first). The same value goes in `web/.env` and `web/.dev.vars` locally. Until it is set, the Studio's Preview tab answers "SANITY_READ_TOKEN is not set on the server".
+2. **Connect the Worker.** The Worker `identityperth` exists in the Identity account (created 20 Oct) and the site deploys to it by hand with `npm run deploy`; its staging address is https://identityperth.ross-o-neill.workers.dev. To make pushes deploy it: open the Worker, Settings, Builds, Connect to Git, pick the repo. Settings: production branch `main`, root directory `/`, build command `npm run install:all && npm run build`, deploy command `npm run deploy`. Leave the Node version alone: Builds reads the root `.nvmrc`.
+3. **Preview token.** The Sanity token already exists (sanity.io/manage, project Identity Perth, API, Tokens: "Site preview", Viewer role, created 20 Oct) and sits in the gitignored `web/.dev.vars` and `web/.env`. Put it on the Worker with `cd web && npx wrangler login && npx wrangler secret bulk .dev.vars` (the login opens a browser, so run it in your own terminal). Until it is set, the Studio's Preview tab answers "SANITY_READ_TOKEN is not set on the server". If the token is ever lost, make a new Viewer token in sanity.io/manage and put it in both files.
 4. **Deploy hook.** On the Worker: Settings, Builds, Deploy Hooks. Create one named "Sanity publish" for branch `main` and copy its URL. Treat it like a password: anyone holding it can start builds.
 5. **Sanity webhook.** From `backend/`: `npx sanity exec scripts/rebuild-webhook.mjs --with-user-token -- <deploy hook URL>`. That creates the "Rebuild site on publish" webhook (publish, unpublish and delete of any document; drafts ignored). `--list` shows what exists and `--delete <id>` removes one. The same can be done by hand under API, Webhooks in sanity.io/manage.
 6. **Domain.** When it is time to cut over, add `identityperth.com` as a custom domain on the Worker (Settings, Domains & Routes). Sanity CORS already allows that origin; add the `workers.dev` one with `npx sanity cors add <origin> --credentials` if the Studio is used there before then.
@@ -125,27 +165,46 @@ Do not deploy to the Worker named `identity-perth`. That one belongs to the arch
 
 ```
 src/
-├── layouts/Base.astro          head, sidebar, #swup container, menu overlay
+├── layouts/Base.astro          head, client router, sidebar, #page container, menu overlay
+├── layouts/Plain.astro         the legal pages: site colours, type and cursor, a bar with the lockup and a link home, no sidebar, menu or router
 ├── components/                 Sidebar, MenuOverlay, Ticker, ProjectTile, SanityImage, Media, RichText...
 ├── views/                      the page bodies (Home, Projects, Project, Studio, Gallery, NotFound), shared by the public routes and the preview
-├── pages/                      index, projects/, gallery, studio, 404 (static files); preview/ and backend/ (the two routes the Worker renders); Thinking links out to Substack for now (`THINKING_URL` in lib/site.ts)
+├── pages/                      index, projects/, gallery, studio, [slug] (unlisted legal pages), 404 (static files); preview/ and backend/ (the two routes the Worker renders); Thinking is hidden until stage two (`NAV` in lib/site.ts)
 ├── middleware.ts               the preview cookie guard
 ├── sanity/                     client (published, and drafts for the preview), queries (GROQ), image URL builder
-├── scripts/                    app.ts (Swup), transitions.ts (curtain, cover-to-hero flip), menu.ts, page.ts (reveals, image blur-up), studio.ts, cycle.ts, motion.ts, preview.ts
+├── scripts/                    app.ts (client router hooks), transitions.ts (home slide, cover-to-hero flip), menu.ts, page.ts (reveals, image blur-up), studio.ts, cycle.ts, motion.ts, preview.ts
 └── styles/global.css           design tokens, type scale, fonts
 ```
 
-Motion hooks any component can use without JavaScript: `data-reveal`, `data-reveal-group`, `data-parallax="0.15"`, `data-hover-video`, `data-loop-video`, `data-slideshow`, `data-splash`, `data-accordion`, `data-cycle`, `data-studio`, `data-flip` / `data-flip-target`. They are set up again after every Swup page change. Every Sanity image carries `data-img` and blurs up from its LQIP when it loads.
+Motion hooks any component can use without JavaScript: `data-reveal`, `data-reveal-group`, `data-parallax="0.15"`, `data-hover-video`, `data-loop-video`, `data-slideshow`, `data-splash`, `data-accordion`, `data-cycle`, `data-studio`, `data-flip` / `data-flip-target`. They are set up again after every client-side page change. Every Sanity image carries `data-img` and blurs up from its LQIP when it loads. The files themselves are hosted with the site: Sanity's CDN does the hotspot crop, then Astro fetches each image at build time and writes the srcset widths into `dist` as WebP (`imageService: 'compile'` in the Cloudflare adapter, `image.domains` in `astro.config.mjs`), so visitors never request Sanity. The on-demand preview keeps the CDN URLs.
 
-Transitions: the splash home rises its ticker screen as a curtain over the hero and the next page is revealed underneath; clicking a project tile grows the cover into the project page hero (filled images are cropped in CSS from the same original, with the Sanity hotspot as `object-position`, so the framing never jumps); everything else is a short fade. All in `scripts/transitions.ts` and `scripts/app.ts`. The Studio accordion animates open and shut (`scripts/accordion.ts`).
+Navigation is client-side through Astro's `<ClientRouter />` (Swup was replaced on 20 Oct). `scripts/app.ts` swaps only `#page` and `#ticker`, so the sidebar, menu and widgets never move; the router's own animations are off and GSAP does the choreography: the splash home rises its ticker screen as a curtain over the hero and the next page is revealed underneath (the curtain holds, covered, if the next page is still loading); clicking a project tile grows the cover into the project page hero (filled images are cropped in CSS from the same original, with the Sanity hotspot as `object-position`, so the framing never jumps); everything else is a short fade. Links prefetch as they scroll into view. All in `scripts/transitions.ts` and `scripts/app.ts`. The Studio accordion animates open and shut (`scripts/accordion.ts`).
+
+## Logo animation
+
+Opening the menu draws ENTITY out of the ID mark letter by letter (`web/src/scripts/logo.ts`; each letter is its own path in the SVG), then lands the roundel at the end of the word: each letter is wiped on from left to right while it fades up and slides the last little way into place, 35 ms apart on an expo ease, so the word is there in about 0.6 s. It is a single GSAP timeline, so leaving plays it backwards from wherever it is, last letter first, a little quicker. The ID mark never moves and the lockup never shrinks: on a narrower desktop the word runs over the column edge, above the page (Belinda, 21 Oct). Reduced motion jumps between the two states. The sidebar shows the ID mark alone: its hover reveal was removed on 21 Oct (Ross), so the word only ever appears in the menu. The animator's glitch proof was tried in two forms (his frames as sprites, then a vector version) and set aside on 20 Oct in favour of this. 
 
 ## Phones and tablets (under 1024px)
 
 Modelled on forthandback.la's phone layout (teardown 19 October): a plain 88px header with the logo that scrolls away, a fixed 45px bar along the bottom with the Menu pill and the weather and clock, overlays that sit above that bar (the menu, the gallery image panel) with the page behind dimmed and blurred, project tiles with a caption row underneath instead of hover text, 14px gutters and 10px gaps, a 4:5 hero on project pages, a three-column gallery where a tap opens the image with its caption, and a Studio page that fits one screen: a swipeable strip of the photos above the accordion, everything closed to start, and the strip folding away while a section is open. The desktop layout starts at 1024px.
 
-## Widgets
+## Cursor, 404 and what was removed
 
-Live bits beside the menu button: weather in Joondalup from [Open-Meteo](https://open-meteo.com/) (free, no key, cached for ten minutes) drawn with Microsoft's [Fluent](https://github.com/microsoft/fluentui-system-icons) weather icons (MIT, still), and an analogue clock on Perth time. Code in `web/src/scripts/weather.ts`, icons in `web/src/assets/icons/weather/`.
+The cursor on devices with a mouse (`web/src/scripts/cursor.ts`, the markup in `web/src/layouts/Base.astro`) is the ID roundel, 18px on the pointer, doubling over anything clickable and pinching on press (Nick's thought via Ross, 22 Oct). It inverts in solid brand colours: exactly lime over anything dark and exactly ink over anything light, with nothing of the page showing through, which is what Ross asked for after the earlier two-layer version (white difference under lime multiply) read as see-through over photos. It is eight blend-mode layers cut to the roundel's shape, moved together; `web/src/styles/global.css` explains each one. A backdrop-filter version was tried first and dropped: Chrome rendered it, but neither Playwright's WebKit nor the Mac's own WebKit snapshots can render backdrop-filter at all, so it could not be checked for Safari, and if it failed there the cursor would vanish over dark areas. The native arrow is hidden while it runs and comes back over text fields. The class that hides it (`has-cursor` on `<html>`) is put back after every click-through navigation, because Astro's router replaces all of `<html>`'s attributes with the next page's; until 22 Oct that brought the arrow back next to the roundel after the first click. The editors' preview does not run it at all: Sanity's overlays sit in a shadow DOM the cursor's styles cannot reach, so editors would see the arrow and the dot together. It started as a copy of studioscotts.com.au's dot, grew a hairline ring and a plus for a day, lost them again on 21 Oct when Ross asked for a smaller dot with no ring, and became the roundel on 22 Oct. The 404 page plays Pong against the computer (`web/src/scripts/pong.ts`, W and S or the arrow keys, space serves). The Joondalup weather and Perth clock widgets were removed on 21 Oct at Belinda's request; the other mini games stay on the `mini-games` branch.
 
-The mini games (the dog along the bottom of Projects, Studio and Gallery, Pong on the 404, Comic Sans mode) are kept on the `mini-games` branch, off `main` for now.
+## Headings, links and the tile hover (21 Oct, Ross)
+
+The serif headings and nav (`.type-nav`, `.type-menu`, `.type-h1` to `.type-h3`, `.type-accordion` in `web/src/styles/global.css`) are tracked tight, -0.01em to -0.015em, because Shippori Mincho's Latin sits wide on its own. Text links (`.text-link`, and links inside rich text) carry a faint dotted rule so they read as links, solid on hover; nav links and tiles do not. A project tile's hover (`web/src/components/ProjectTile.astro`) stacks the title, then the work done (the project's services, comma separated, so a project with no services in the CMS shows no line there), then one description (the summary, or the tagline when there is none); at the foot of a project page the next project (`web/src/components/NextProject.astro`) is a lime serif headline, "Next project.", over the standard wide project card turned round (`infoFirst` on `ProjectTile`): on devices with a mouse the slate wash and text show at rest over a black and white cover, and hovering clears the wash to the full-colour cover with the text kept over a soft dark fade. Phones keep the cover in colour with the caption row. On the Studio page the photo column is the studio's own photos whatever is open, except Team, which shows the portraits; in the other sections nothing moves by itself (`web/src/scripts/studio.ts`). Team keeps its original behaviour (Belinda, 23 Oct): on desktop, opening a person drops their role and bio and scrolls their portrait to the middle of the screen beside the list, and scrolling the portraits past the middle opens the person each one belongs to. The Clients intro is set in the serif and the client names in the sans, the other way round from the first build. In Team the list shows names, with the role and bio opening under each; on phones the portrait sits inside the opened bio. (Name and role captions on the portraits were tried on 21 Oct and taken out on 23 Oct.) Every font weight is one step up from the Figma (Ross, 21 Oct): Figtree at 500, Shippori Mincho at 500, bold at 700; Hansief ships in one weight, so the display caps stay as they are.
+
+## Video
+
+### Showreel safe zones
+
+The home showreel fills the window above the ticker, cropped from the centre, so a window wider than 16:9 loses the same amount off the top and the bottom (41px of a 1080p frame on a 1920x1080 kiosk, 61 on a MacBook Air, 106 at 1920x950, 135 on a 1536x730 laptop) and a narrower one loses the sides. The ticker never sits over the video. `docs/showreel-safe-zones/` holds overlay PNGs for the desktop (1920x1080) and phone (1080x1920) cuts: anything that matters stays inside the dashed line. They were drawn by a one-off script; the numbers come from scratchpad measurements on 30 Oct 2026.
+
+Every video lives on Cloudflare Stream and plays as Stream's HLS in a plain `<video>` (`web/src/components/VideoEmbed.astro`, `web/src/lib/video.ts`), with the video's first frame (Stream's thumbnail at 0 s) as a poster image behind it, so a frame is on screen the moment the page is and the video fades in over it. Safari plays HLS itself; other browsers load hls.js (the light build, once, only when a video is near). A source attaches only when the element is displayed and within a screen of the viewport, loops play only while on screen, and turning a phone swaps the home hero's two cuts (`web/src/scripts/page.ts`). The Stream player iframe went on 29 Oct: it cost a third of a megabyte per video and showed nothing until it had loaded. Nothing is uploaded to Sanity and there are no stand-in files: `backend/scripts/stream-videos.mjs` uploads to Stream and writes the IDs into the CMS, and a video the site stops using is deleted from Stream at the same time.
+
+## Preloading
+
+Each page's first picture carries a preload hint (`preload` on `SanityImage` and `VideoEmbed`): the project cover or its poster, the first tile of each gallery column, the first Studio photo, the home hero's poster for the current orientation. The head preconnects to Stream. Hovering or touching a project tile fetches the hero-sized candidate of the same picture (`data-warm-sizes`, page.ts), so the tile-to-hero flip lands on a loaded image. The client router already prefetches the next page's HTML as links scroll into view, and the home page warms the first Projects tiles at idle. A video cover flips too, and keeps playing through it: covers play from their MP4 file (Stream makes one on request; `stream-videos.mjs` asks for it, `mp4Url` in `lib/video.ts`), because a file element keeps its playback when moved while a streaming one is reset by the browser. The playing `<video>` itself rides inside the flying copy and steps into the hero's box when the copy sits over it (`carryVideo`, `adoptVideo` in page.ts), and the same on the way back; the new page's video manager leaves a carried element alone until it is handed over. A cover that is not playing yet falls back to a frozen frame on a canvas, with the new page's video resuming from that moment (`resumeVideoAt`). The home showreel (both cuts) plays from its MP4 file too, so it keeps playing while the page slides away to Projects; everything else stays a stream.
 

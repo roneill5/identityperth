@@ -12,12 +12,12 @@ const { projects, lead = true, class: className } = Astro.props;
 const wide = (i: number) => lead && i % 3 === 0;
 ---
 
-<div class:list={['grid grid-cols-1 gap-[10px] px-[14px] pt-5 md:grid-cols-2 lg:gap-6 lg:px-0 lg:pt-0', className]} data-reveal-group>
+<div class:list={['grid grid-cols-1 gap-[10px] px-[14px] md:grid-cols-2 lg:gap-6 lg:px-0', className]} data-reveal-group>
 	{projects.map((project, i) => (
 		<ProjectTile
 			project={project}
 			variant={wide(i) ? 'wide' : 'square'}
-			loading={i < 3 ? 'eager' : 'lazy'}
+			loading={i < 1 ? 'eager' : 'lazy'}
 			class={wide(i) ? 'md:col-span-2' : undefined}
 		/>
 	))}

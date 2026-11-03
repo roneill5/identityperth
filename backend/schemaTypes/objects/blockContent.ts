@@ -12,6 +12,7 @@ export const blockContent = defineType({
         {title: 'Normal', value: 'normal'},
         {title: 'Heading', value: 'h2'},
         {title: 'Subheading', value: 'h3'},
+        {title: 'Minor heading', value: 'h4'},
         {title: 'Quote', value: 'blockquote'},
       ],
       lists: [

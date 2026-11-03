@@ -3,26 +3,22 @@ import {PresentationIcon} from '@sanity/icons/Presentation'
 
 /**
  * The Studio page: a column of studio photography beside an accordion of
- * About, Services, Team, Clients and Contact. Services, Team and Clients are
- * their own documents; Contact details live in Site settings.
+ * About, Services, Team, Clients and Contact. Services and Team are their
+ * own documents; the client list is typed here (Belinda's selection, not
+ * every client with a project; Ross, 29 Oct); Contact details live in Site
+ * settings.
  */
 export const studio = defineType({
   name: 'studio',
   title: 'Studio',
   type: 'document',
   icon: PresentationIcon,
-  groups: [
-    {name: 'about', title: 'About', default: true},
-    {name: 'images', title: 'Images'},
-    {name: 'seo', title: 'SEO'},
-  ],
   fields: [
     defineField({
       name: 'aboutHeading',
       title: 'About heading',
       type: 'string',
       description: 'e.g. Connected capability. Shown to screen readers and when motion is reduced.',
-      group: 'about',
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -30,14 +26,12 @@ export const studio = defineType({
       title: 'Heading phrases',
       type: 'array',
       description: 'Optional. The heading cycles through these, one word at a time, starting with the About heading.',
-      group: 'about',
       of: [defineArrayMember({type: 'string'})],
     }),
     defineField({
       name: 'aboutBody',
       title: 'About text',
       type: 'blockContent',
-      group: 'about',
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -45,44 +39,32 @@ export const studio = defineType({
       title: 'Highlights',
       type: 'array',
       description: 'Short lines shown in lime after the About text, e.g. The relationship stays close.',
-      group: 'about',
       of: [defineArrayMember({type: 'string'})],
     }),
     defineField({
       name: 'clientsIntro',
       title: 'Clients intro',
       type: 'text',
-      rows: 3,
-      description: 'Optional text above the client list.',
-      group: 'about',
+      rows: 2,
+      description: 'Optional line above the client list.',
+    }),
+    defineField({
+      name: 'clients',
+      title: 'Clients',
+      type: 'array',
+      description: 'The names shown under Clients, in this order. Just names: the Clients documents are what projects point at.',
+      of: [defineArrayMember({type: 'string'})],
     }),
     defineField({
       name: 'images',
-      title: 'About images',
+      title: 'Studio photos',
       type: 'array',
       description:
-        'The photo column beside the accordion is in the same order as the accordion: these show while About is open, then each service, each team portrait, then the Clients and Contact images. Scrolling the column opens the matching section. Photos are cropped to 5:7; set the hotspot.',
-      group: 'images',
+        'The photo column beside the accordion, top to bottom in this order. Photos are cropped to 5:7 (1500 x 2083 is ideal); set the hotspot. While Team is open the column shows the portraits instead.',
       of: [defineArrayMember({type: 'figure'})],
-      validation: (rule) => rule.min(1).warning('Add at least one image'),
+      validation: (rule) => rule.min(1).warning('Add at least one photo'),
     }),
-    defineField({
-      name: 'clientsImages',
-      title: 'Clients images',
-      type: 'array',
-      description: 'Shown in the column while Clients is open.',
-      group: 'images',
-      of: [defineArrayMember({type: 'figure'})],
-    }),
-    defineField({
-      name: 'contactImages',
-      title: 'Contact images',
-      type: 'array',
-      description: 'Shown in the column while Contact is open.',
-      group: 'images',
-      of: [defineArrayMember({type: 'figure'})],
-    }),
-    defineField({name: 'seo', type: 'seo', group: 'seo'}),
+    defineField({name: 'seo', type: 'seo'}),
   ],
   preview: {
     prepare() {

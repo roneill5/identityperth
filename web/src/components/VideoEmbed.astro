@@ -1,40 +1,63 @@
 ---
 /**
- * Renders a `video` object from Sanity through the Cloudflare Stream player.
- * Loops run in background mode (silent, autoplay, no controls, no pointer
- * events); players show controls and play on click.
+ * Renders a `video` object from Sanity as a plain <video> playing Stream's
+ * HLS, over the video's first frame as a poster: the frame is on screen
+ * the moment the page is, and the video fades in over it once it plays
+ * (`[data-video] video` in global.css). Sources attach only when the element
+ * is displayed and within a screen of the viewport (scripts/page.ts), so a
+ * page of tiles costs posters, not streams. Every video is a silent loop
+ * that autoplays and covers its box.
+ * `preload` adds a preload hint for the poster (the page's first picture),
+ * optionally for one orientation only (the home hero's two cuts).
  */
-import { embedUrl, type VideoData } from '../lib/video';
+import { hlsUrl, mp4Url, posterUrl, type VideoData } from '../lib/video';
 
 interface Props {
 	video: VideoData;
 	/** Width/height ratio for the frame. Defaults to 16:9. */
 	aspect?: number;
+	/** Width/height ratio used below 768px instead of `aspect` (wide blocks are squares on phones). */
+	portraitAspect?: number;
 	/** Fill the positioned parent instead of sizing by aspect ratio. */
 	fill?: boolean;
+	/** The `sizes` for the poster, e.g. "(min-width: 1024px) 71vw, 100vw". */
+	sizes?: string;
 	class?: string;
 	loading?: 'lazy' | 'eager';
+	fetchpriority?: 'high' | 'low' | 'auto';
+	/** Preload the poster: this is the page's first picture. */
+	preload?: boolean;
+	/** A media query the preload applies to, e.g. "(orientation: portrait)". */
+	preloadMedia?: string;
+	/** Play the whole video from its MP4 file (Stream makes one on request) instead of the stream: a file element keeps playing when a transition moves it, a stream resets. Covers and the home hero. */
+	file?: boolean;
 }
 
-const { video, aspect = 16 / 9, fill = false, class: className, loading = 'lazy' } = Astro.props;
-const loop = video.playback !== 'player';
-const src = embedUrl(video);
+const { video, aspect = 16 / 9, portraitAspect, fill = false, sizes = '100vw', class: className, loading = 'lazy', fetchpriority, preload = false, preloadMedia, file = false } = Astro.props;
+const src = hlsUrl(video);
+const widths = [480, 960, 1440, 1920];
+const poster = src ? posterUrl(video, 960) : null;
+const posterSet = src ? widths.map((w) => `${posterUrl(video, w)} ${w}w`).join(', ') : null;
 ---
 
 {src ? (
 	<div
-		class:list={['overflow-hidden bg-ink', fill ? 'absolute inset-0 h-full w-full' : 'relative w-full', className]}
-		style={fill ? undefined : `aspect-ratio:${aspect}`}
-		data-video={loop ? 'loop' : 'player'}
+		class:list={['overflow-hidden bg-ink', fill ? 'absolute inset-0 h-full w-full' : 'relative w-full', !fill && portraitAspect && 'aspect-(--ar-p) md:aspect-(--ar)', className]}
+		style={fill ? undefined : portraitAspect ? `--ar:${aspect};--ar-p:${portraitAspect}` : `aspect-ratio:${aspect}`}
+		data-video="loop"
 	>
-		<iframe
-			class="absolute inset-0 h-full w-full"
-			src={src}
-			title="Video"
-			loading={loading}
-			allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
-			allowfullscreen
-			style={loop ? 'pointer-events:none' : undefined}
-		/>
+		{preload && <link rel="preload" as="image" imagesrcset={posterSet} imagesizes={sizes} media={preloadMedia} fetchpriority={fetchpriority} />}
+		<img src={poster} srcset={posterSet} sizes={sizes} alt="" class="absolute inset-0 h-full w-full object-cover" loading={loading} decoding="async" fetchpriority={fetchpriority} draggable="false" aria-hidden="true" />
+		<video
+			class="absolute inset-0 h-full w-full object-cover"
+			data-hls={src}
+			data-mp4={file ? mp4Url(video) : undefined}
+			data-loop
+			muted
+			loop
+			playsinline
+			preload="none"
+			aria-hidden="true"
+		></video>
 	</div>
 ) : null}
