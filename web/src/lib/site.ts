@@ -29,9 +29,9 @@ export const NAV = [
 ] as const;
 
 /**
- * The privacy policy stays at /privacy, but nothing links to it until Nick has
- * confirmed the text (Ross, 4 Nov): the menu's contact column and the legal
- * pages' footer show the link only when this is true.
+ * Whether the menu's contact column and the legal pages' footer link to the
+ * privacy policy. False keeps /privacy reachable by address while its text is
+ * under review (used on 4 Nov until Nick confirmed it).
  */
 export const PRIVACY_LINKED = true;
 

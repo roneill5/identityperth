@@ -159,3 +159,10 @@ const addressLines = settings?.address?.split('\n').filter(Boolean) ?? [];
 		</button>
 	</div>
 </div>
+
+{/* Editors' preview: the Studio only refreshes for documents whose text it can see, and the closed menu is
+    visibility-hidden, so a Site settings edit went unnoticed (4 Nov). One always-visible, invisible pixel of
+    its text keeps the document registered; preview.ts then reloads for it. */}
+{Astro.locals.preview && settings?.menuText && (
+	<span class="pointer-events-none fixed bottom-0 left-0 h-px w-px overflow-hidden opacity-0" aria-hidden="true">{settings.menuText}</span>
+)}
