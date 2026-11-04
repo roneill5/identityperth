@@ -254,6 +254,17 @@ export function initPage(root: ParentNode = document) {
 			const adaptive = 'adaptive' in video.dataset && !matchMedia(DESKTOP).matches;
 			if (video.dataset.mp4 && !adaptive) {
 				video.src = video.dataset.mp4;
+				// Stream only makes the file on request: a cover whose file is missing streams instead of standing still (4 Nov).
+				video.addEventListener(
+					'error',
+					() => {
+						delete video.dataset.mp4;
+						video.removeAttribute('src');
+						attached.delete(video);
+						void attach(video).then(() => play(video));
+					},
+					{ once: true },
+				);
 				return;
 			}
 			const src = video.dataset.hls!;
