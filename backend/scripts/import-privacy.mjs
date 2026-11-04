@@ -31,7 +31,7 @@ const PHONE = {text: '+61 8 6255 8629', href: 'tel:+61862558629'}
 
 const body = [
   p('This policy explains how Identity Perth Pty Ltd collects, holds, uses and discloses personal information, on identityperth.com and in our work with clients.'),
-  p('Identity Perth Pty Ltd (ABN 83 647 771 373), trading as Identity Perth (“Identity”, “we”, “us” and “our”), is a creative agency in Joondalup, Western Australia. We handle personal information in line with the Australian Privacy Principles in the Privacy Act 1988 (Cth). This policy was last updated on 3 November 2026.'),
+  p('Identity Perth Pty Ltd (ABN 83 647 771 373), trading as Identity Perth (“Identity”, “we”, “us” and “our”), is a creative agency in Joondalup, Western Australia. We handle personal information in line with the Australian Privacy Principles in the Privacy Act 1988 (Cth).'),
 
   h2('Scope'),
   h3('1. Who this policy covers'),
@@ -141,7 +141,7 @@ const body = [
   h3('20. Other websites'),
   p('The Site links to other websites and to our social media profiles. Those sites and platforms have their own privacy policies, which govern any information you give them; we are not responsible for how they handle it.'),
   h3('21. Changes to this policy'),
-  p('We may update this policy from time to time, for example when we change the tools we use. The current version is always at identityperth.com/privacy, with the date it was last updated at the top. Continuing to use the Site after a change means the updated policy applies to your visit.'),
+  p('We may update this policy from time to time, for example when we change the tools we use. The current version is always at identityperth.com/privacy. Continuing to use the Site after a change means the updated policy applies to your visit.'),
   h3('22. Contact us'),
   p('Identity Perth Pty Ltd, 5/15 Vanden Way, Joondalup WA 6027, Australia. Email ', EMAIL, ' or call ', PHONE, '.'),
 ]
