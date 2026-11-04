@@ -26,6 +26,8 @@ export default defineConfig({
     // click-to-edit overlays. The site's /preview routes do the rendering;
     // /preview/enable is where the Studio proves itself and gets a cookie.
     presentationTool({
+      // The tab is "Preview" to editors (the README and the Notion notes call it that); the route stays /presentation.
+      title: 'Preview',
       previewUrl: {
         // The Studio ships inside the site at /backend, so the preview origin is the
         // Studio's own and is left unset (a literal like 'same-origin' crashes the tool
