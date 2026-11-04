@@ -8,7 +8,8 @@ import { track } from './analytics';
 
 export function initSplash(section: HTMLElement): () => void {
 	const link = section.querySelector<HTMLAnchorElement>('[data-advance-link]');
-	if (!link) return () => {};
+	// In the editors' preview a scroll is a look, not a move to Projects; the link itself still works.
+	if (!link || document.documentElement.hasAttribute('data-preview')) return () => {};
 
 	const WHEEL = 12; // px of downward wheel delta before it counts
 	const SWIPE = 28; // px of upward swipe

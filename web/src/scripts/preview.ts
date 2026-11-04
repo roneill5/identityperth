@@ -12,44 +12,23 @@ const toSite = (path: string) => path.replace(/^\/preview(?=\/|$)/, '') || '/';
 const toPreview = (path: string) => (path === '/' ? PREFIX : PREFIX + path);
 
 // Live updates (Ross, 3 Nov): when an edit is saved in the Studio, the page is rendered again with the
-// latest draft, once typing pauses, and opens where the editor was reading. A reload rather than a
-// client-router swap, so the page transitions and the scroll hold stay out of it.
-const SCROLL_KEY = 'idp-preview-scroll';
-const PAUSE = 600; // ms after the last saved edit before the page re-renders
+// latest draft once typing pauses. Since 4 Nov the fresh render is swapped into the page in place
+// (app.ts answers idp:preview-refresh) rather than reloaded, so nothing flashes, replays or scrolls
+// away; the Studio's refreshing state ends when the swap has landed.
+const PAUSE = 500; // ms after the last saved edit before the page re-renders
 let refreshTimer = 0;
-
-function restoreScroll() {
-	let saved: string | null = null;
-	try {
-		saved = sessionStorage.getItem(SCROLL_KEY);
-		sessionStorage.removeItem(SCROLL_KEY);
-	} catch {
-		return;
-	}
-	if (!saved) return;
-	const [path, y] = JSON.parse(saved) as [string, number];
-	if (path !== location.pathname) return;
-	const go = () => requestAnimationFrame(() => window.scrollTo(0, y));
-	if (document.readyState === 'complete') go();
-	else addEventListener('load', go, { once: true });
-}
+const waiting: Array<() => void> = [];
+document.addEventListener('idp:preview-refreshed', () => waiting.splice(0).forEach((done) => done()));
 
 function rerender(delay: number): Promise<void> {
 	window.clearTimeout(refreshTimer);
-	refreshTimer = window.setTimeout(() => {
-		try {
-			sessionStorage.setItem(SCROLL_KEY, JSON.stringify([location.pathname, window.scrollY]));
-		} catch {
-			// Private windows: the page still refreshes, at the top.
-		}
-		location.reload();
-	}, delay);
-	// The Studio shows its refreshing state until the reload replaces this page.
-	return new Promise(() => {});
+	return new Promise((resolve) => {
+		waiting.push(resolve);
+		refreshTimer = window.setTimeout(() => document.dispatchEvent(new Event('idp:preview-refresh')), delay);
+	});
 }
 
 export function initPreview() {
-	restoreScroll();
 
 	document.addEventListener(
 		'click',

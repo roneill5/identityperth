@@ -180,7 +180,8 @@ export function initPage(root: ParentNode = document) {
 	const container = root.querySelector<HTMLElement>('#page') ?? document.body;
 	// The home page on its way out (transitions.ts, .leave) is still in the document; nothing here is for it.
 	const q = <T extends Element>(selector: string): T[] => Array.from(root.querySelectorAll<T>(selector)).filter((el) => !el.closest('.leave, .leave-ticker'));
-	const reduce = reducedMotion();
+	// The editors' preview shows everything at rest: no reveals or drift to replay on every saved edit.
+	const reduce = reducedMotion() || document.documentElement.hasAttribute('data-preview');
 	const skipOnScreen = settled;
 	settled = false;
 	// The slide from home starts the page a screen lower (transitions.ts); what will be on screen once it lands counts as on screen.

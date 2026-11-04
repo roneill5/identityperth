@@ -199,10 +199,19 @@ const releaseScroll = () => {
 	}
 };
 
+// The editors' preview (Base.astro sets data-preview on <html>) has no choreography: pages swap in the
+// moment they arrive, nothing is held, and a saved edit swaps the page's fresh render in without a
+// reload (preview.ts asks with idp:preview-refresh; Ross, 4 Nov: "disable page transitions from the editor").
+const PREVIEW = document.documentElement.hasAttribute('data-preview');
+
 // A navigation starts: close the menu and play the leaving animation while the next page loads.
 document.addEventListener('astro:before-preparation', (e) => {
 	const event = e as TransitionBeforePreparationEvent;
 	menu.close(true);
+	if (PREVIEW) {
+		current = null;
+		return;
+	}
 	holdScroll();
 	current = pick(event.from, event.to);
 	const load = event.loader;
@@ -250,6 +259,36 @@ document.addEventListener('astro:page-load', () => {
 	if (transition) void transition.in().finally(releaseScroll);
 	else releaseScroll();
 });
+
+// A saved edit in the Studio: fetch this page's fresh render and swap the page containers in place, the
+// reader's scroll kept, so the editor sees the change without a reload. Only the latest request lands.
+let refreshSeq = 0;
+if (PREVIEW) {
+	document.addEventListener('idp:preview-refresh', async () => {
+		const seq = ++refreshSeq;
+		const y = window.scrollY;
+		try {
+			const res = await fetch(location.href, { cache: 'no-store' });
+			if (!res.ok) throw new Error(`Preview render answered ${res.status}`);
+			const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+			if (seq !== refreshSeq) return;
+			for (const id of ['page', 'ticker']) {
+				const oldEl = document.getElementById(id);
+				const newEl = doc.getElementById(id);
+				if (oldEl && newEl) oldEl.replaceWith(newEl);
+			}
+			document.title = doc.title;
+			syncPageKind();
+			updateNav();
+			initPage();
+			window.scrollTo(0, y);
+		} catch {
+			location.reload();
+			return;
+		}
+		document.dispatchEvent(new Event('idp:preview-refreshed'));
+	});
+}
 
 // Editors' preview: the overlays and Studio sync load from PreviewEditing.astro.
 // The custom cursor stays off there: the overlays live in a shadow DOM the
