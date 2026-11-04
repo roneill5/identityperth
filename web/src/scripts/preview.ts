@@ -53,12 +53,12 @@ function restoreScroll() {
 	else addEventListener('load', go, { once: true });
 }
 
-function rerender(delay: number): Promise<void> {
+function rerender(delay: number, reload = false): Promise<void> {
 	window.clearTimeout(refreshTimer);
 	return new Promise((resolve) => {
 		waiting.push(resolve);
 		refreshTimer = window.setTimeout(() => {
-			if (!document.getElementById('page')) return reloadInPlace();
+			if (reload || !document.getElementById('page')) return reloadInPlace();
 			document.dispatchEvent(new Event('idp:preview-refresh'));
 			window.clearTimeout(fallbackTimer);
 			fallbackTimer = window.setTimeout(reloadInPlace, FALLBACK);
@@ -82,7 +82,8 @@ export function initPreview() {
 
 	enableVisualEditing({
 		zIndex: 1000,
-		refresh: (payload) => rerender(payload.source === 'manual' ? 0 : PAUSE),
+		// Site settings feed the sidebar and the menu, which sit outside the swapped page containers: reload for those.
+		refresh: (payload) => rerender(payload.source === 'manual' ? 0 : PAUSE, (payload as { document?: { _type?: string } }).document?._type === 'siteSettings'),
 		history: {
 			subscribe: (report: HistoryAdapterNavigate) => {
 				const tell = () => report({ type: 'push', url: toSite(location.pathname) + location.search });
