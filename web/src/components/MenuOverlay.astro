@@ -16,7 +16,7 @@ import IdMark from '../assets/brand/id-mark.svg';
 import EntityLetters from '../assets/brand/entity-letters.svg';
 import Roundel from './Roundel.astro';
 import RingIcon from './icons/RingIcon.astro';
-import { NAV } from '../lib/site';
+import { NAV, PRIVACY_LINKED } from '../lib/site';
 import { stegaClean } from '@sanity/client/stega';
 
 interface Settings {
@@ -131,9 +131,11 @@ const addressLines = settings?.address?.split('\n').filter(Boolean) ?? [];
 						))}
 					</p>
 				) : null}
-				<p class="text-[13px] text-paper/60 lg:text-[14px]">
-					<a href="/privacy" class="text-link inline-block py-0.5 hover:text-lime lg:py-0" data-astro-prefetch="false" data-menu-prefetch>Privacy policy</a>
-				</p>
+				{PRIVACY_LINKED && (
+					<p class="text-[13px] text-paper/60 lg:text-[14px]">
+						<a href="/privacy" class="text-link inline-block py-0.5 hover:text-lime lg:py-0" data-astro-prefetch="false" data-menu-prefetch>Privacy policy</a>
+					</p>
+				)}
 			</div>
 		</div>
 		</div>

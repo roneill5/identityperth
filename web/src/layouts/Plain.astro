@@ -13,6 +13,7 @@ import Wordmark from '../components/Wordmark.astro';
 import Cursor from '../components/Cursor.astro';
 import { getSettings } from '../sanity/fetch';
 import { client } from '../sanity/client';
+import { PRIVACY_LINKED } from '../lib/site';
 import { stegaClean } from '@sanity/client/stega';
 
 interface Props {
@@ -57,7 +58,7 @@ const bar = `${box} flex items-center justify-between gap-6 px-[14px] lg:px-gutt
 				<p class="flex gap-5">
 					{email && <a href={`mailto:${email}`} class="text-link hover:text-lime">{email}</a>}
 					<a href="/" class="text-link hover:text-lime">identityperth.com</a>
-					<a href="/privacy" class="text-link hover:text-lime">Privacy</a>
+					{PRIVACY_LINKED && <a href="/privacy" class="text-link hover:text-lime">Privacy</a>}
 				</p>
 			</div>
 		</footer>

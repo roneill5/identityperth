@@ -28,6 +28,13 @@ export const NAV = [
 	{ label: 'Gallery', href: '/gallery', external: false, prefetch: true },
 ] as const;
 
+/**
+ * The privacy policy stays at /privacy, but nothing links to it until Nick has
+ * confirmed the text (Ross, 4 Nov): the menu's contact column and the legal
+ * pages' footer show the link only when this is true.
+ */
+export const PRIVACY_LINKED = false;
+
 export type NavItem = (typeof NAV)[number];
 
 /** The sections that are pages on this site. */
