@@ -33,7 +33,7 @@ export const NAV = [
  * confirmed the text (Ross, 4 Nov): the menu's contact column and the legal
  * pages' footer show the link only when this is true.
  */
-export const PRIVACY_LINKED = false;
+export const PRIVACY_LINKED = true;
 
 export type NavItem = (typeof NAV)[number];
 
