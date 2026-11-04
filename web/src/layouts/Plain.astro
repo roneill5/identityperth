@@ -15,6 +15,7 @@ import { getSettings } from '../sanity/fetch';
 import { client } from '../sanity/client';
 import { PRIVACY_LINKED } from '../lib/site';
 import { stegaClean } from '@sanity/client/stega';
+import PreviewEditing from '../components/PreviewEditing.astro';
 
 interface Props {
 	title?: string;
@@ -62,6 +63,7 @@ const bar = `${box} flex items-center justify-between gap-6 px-[14px] lg:px-gutt
 				</p>
 			</div>
 		</footer>
+		{Astro.locals.preview && <PreviewEditing />}
 		<Cursor />
 		<script>
 			import { initCursor } from '../scripts/cursor';
