@@ -121,30 +121,28 @@ const body = [
 
   h2('Security and retention'),
   h3('15. Security'),
-  p('We protect personal information with measures that are reasonable for its sensitivity: the Site is served over HTTPS, our systems are protected by passwords and multi-factor authentication, access is limited to the people who need it, and our providers are established companies with their own security programs. No method of storage or transmission is completely secure, and we cannot guarantee that information will never be accessed without authority. If a data breach is likely to result in serious harm to you, we will notify you and the Office of the Australian Information Commissioner as the law requires.'),
+  p('We take reasonable steps to protect personal information from misuse, loss and unauthorised access: the Site is served over HTTPS, access to our systems is limited to the people who need it, and our providers are established companies with their own security programs. No method of storage or transmission is completely secure, and we cannot guarantee that information will never be accessed without authority. If a data breach is likely to result in serious harm to you, we will notify you and the Office of the Australian Information Commissioner as the law requires.'),
   h3('16. How long we keep it'),
-  p('We keep personal information for as long as we need it for the purposes above, then delete or de-identify it. In general: client and supplier records are kept for seven years after the last transaction, as tax and company law require; applications are kept for twelve months, or longer with your agreement; analytics data is kept for the periods in part 4; general correspondence is kept while it remains relevant to our relationship.'),
+  p('We keep personal information for as long as we need it for the purposes above, or as long as the law requires, then delete or de-identify it. Analytics data is kept for the periods in part 4.'),
 
   h2('Your rights'),
   h3('17. Access and correction'),
-  p('You can ask us for a copy of the personal information we hold about you, and ask us to correct anything that is inaccurate, out of date, incomplete or misleading. Email ', EMAIL, '. We will respond within 30 days, and we may need to confirm your identity first. We do not charge for a request, though we may charge a reasonable fee for the cost of supplying copies. If we refuse a request, we will tell you why in writing and how you can complain.'),
-  h3('18. People outside Australia'),
-  p('If you are in the United Kingdom or the European Economic Area you may have further rights under local law, including to object to processing and to ask for erasure or portability of your information. Contact us and we will honour them where they apply.'),
-  h3('19. Children'),
+  p('You can ask us for a copy of the personal information we hold about you, and ask us to correct anything that is inaccurate, out of date, incomplete or misleading. Email ', EMAIL, '. We will respond within a reasonable time, and we may need to confirm your identity first. We do not charge for a request, though we may charge a reasonable fee for the cost of supplying copies. If we refuse a request, we will tell you why in writing and how you can complain.'),
+  h3('18. Children'),
   p('The Site is not directed at children under 16 and we do not knowingly collect their personal information. If you believe a child has given us information, contact us and we will delete it.'),
-  h3('20. Complaints'),
+  h3('19. Complaints'),
   p([
-    'If you are concerned about how we have handled your personal information, email ', EMAIL, ' with the details and we will investigate and reply within 30 days. If you are not satisfied with our response, you can complain to the Office of the Australian Information Commissioner at ',
+    'If you are concerned about how we have handled your personal information, email ', EMAIL, ' with the details and we will investigate and reply within a reasonable time. If you are not satisfied with our response, you can complain to the Office of the Australian Information Commissioner at ',
     {text: 'oaic.gov.au', href: 'https://www.oaic.gov.au/'},
     ' or on 1300 363 992.',
   ]),
 
   h2('Other matters'),
-  h3('21. Other websites'),
+  h3('20. Other websites'),
   p('The Site links to other websites and to our social media profiles. Those sites and platforms have their own privacy policies, which govern any information you give them; we are not responsible for how they handle it.'),
-  h3('22. Changes to this policy'),
+  h3('21. Changes to this policy'),
   p('We may update this policy from time to time, for example when we change the tools we use. The current version is always at identityperth.com/privacy, with the date it was last updated at the top. Continuing to use the Site after a change means the updated policy applies to your visit.'),
-  h3('23. Contact us'),
+  h3('22. Contact us'),
   p('Identity Perth Pty Ltd, 5/15 Vanden Way, Joondalup WA 6027, Australia. Email ', EMAIL, ' or call ', PHONE, '.'),
 ]
 
@@ -160,11 +158,12 @@ for (let i = 0; i < body.length; i++) {
   b.children[0].text = `(${String.fromCharCode(97 + letter++)}) ${b.children[0].text}`
 }
 
-const rank = await client.fetch(`*[_type=="legalPage" && !(_id in path("drafts.**"))]|order(orderRank desc)[0].orderRank`)
+const rank = await client.fetch(`*[_id=="legal-privacy"][0].orderRank`)
+  ?? (await client.fetch(`*[_type=="legalPage" && !(_id in path("drafts.**"))]|order(orderRank desc)[0].orderRank`))?.replace(/:$/, '1:')
 await client.createOrReplace({
   _id: 'legal-privacy',
   _type: 'legalPage',
-  orderRank: rank ? `${rank.slice(0, -1)}1:` : '0|hzzzzz:',
+  orderRank: rank ?? '0|hzzzzz:',
   title: 'Privacy Policy',
   slug: {_type: 'slug', current: 'privacy'},
   body,
