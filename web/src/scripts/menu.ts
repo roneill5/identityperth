@@ -1,3 +1,4 @@
+import { prefetch } from 'astro:prefetch';
 import { gsap, EASE, reducedMotion } from './motion';
 import { createLogoReveal } from './logo';
 
@@ -14,6 +15,10 @@ export function initMenu() {
 	const toggles = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-menu-toggle]'));
 	const items = Array.from(menu.querySelectorAll<HTMLElement>('[data-menu-item]'));
 	const contact = menu.querySelector<HTMLElement>('[data-menu-contact]');
+	// The closed overlay is hidden with visibility, not display, so the router's viewport prefetch fetched
+	// every page it links at load (111 KB, on a phone alongside the showreel). Those links opt out
+	// (MenuOverlay) and are fetched the first time the menu opens, well ahead of the tap.
+	const ahead = Array.from(menu.querySelectorAll<HTMLAnchorElement>('a[data-menu-prefetch]'));
 	// The lockup arrives letter by letter once the panel is in, the roundel last (logo.ts).
 	const lockupEl = menu.querySelector<HTMLElement>('[data-menu-lockup]');
 	const lockup = lockupEl ? createLogoReveal(lockupEl) : null;
@@ -45,6 +50,7 @@ export function initMenu() {
 		if (open) return;
 		lastFocus = document.activeElement as HTMLElement | null;
 		setState(true);
+		ahead.splice(0).forEach((a) => prefetch(a.href));
 		if (reducedMotion()) tl.progress(1);
 		else tl.timeScale(1).play(0);
 		menu.querySelector<HTMLElement>('a, button')?.focus({ preventScroll: true });

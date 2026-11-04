@@ -66,12 +66,14 @@ const addressLines = settings?.address?.split('\n').filter(Boolean) ?? [];
 			<ul class="type-menu flex flex-col gap-y-2 text-[36px] leading-[1.2] lg:flex-row lg:flex-wrap lg:gap-x-[0.54em] lg:gap-y-0 lg:text-[clamp(2.25rem,3.6vw,4.75rem)]">
 				{NAV.map((item) => (
 					<li class="overflow-hidden pb-[0.24em] -mb-[0.24em]">
+						{/* Fetched when the menu first opens (menu.ts), not at page load: the closed overlay only looks hidden to the router's viewport prefetch. */}
 						<a
 							href={item.href}
 							class="inline-block text-paper transition-colors duration-200 hover:text-lime"
 							target={item.external ? '_blank' : undefined}
 							rel={item.external ? 'noopener' : undefined}
-							data-astro-prefetch={item.prefetch ? undefined : 'false'}
+							data-astro-prefetch="false"
+							data-menu-prefetch={item.prefetch ? '' : undefined}
 							data-menu-item
 							data-menu-link
 						>
@@ -130,7 +132,7 @@ const addressLines = settings?.address?.split('\n').filter(Boolean) ?? [];
 					</p>
 				) : null}
 				<p class="text-[13px] text-paper/60 lg:text-[14px]">
-					<a href="/privacy" class="text-link inline-block py-0.5 hover:text-lime lg:py-0">Privacy policy</a>
+					<a href="/privacy" class="text-link inline-block py-0.5 hover:text-lime lg:py-0" data-astro-prefetch="false" data-menu-prefetch>Privacy policy</a>
 				</p>
 			</div>
 		</div>

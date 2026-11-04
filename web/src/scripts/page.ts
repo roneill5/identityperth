@@ -48,6 +48,46 @@ function play(video: HTMLVideoElement) {
 	video.play().catch(() => video.addEventListener('canplay', () => void video.play().catch(() => {}), { once: true }));
 }
 
+const DESKTOP = '(min-width: 64rem)';
+
+/** Chrome on Android reports its bandwidth estimate; under 2 Mbps a showreel starts a step softer (iOS reports nothing). */
+const slowConnection = () => ((navigator as Navigator & { connection?: { downlink?: number } }).connection?.downlink || Infinity) < 2;
+
+/**
+ * The rendition a stream starts on: the sharpest the box can show, and for an adaptive showreel no sharper
+ * than 480p (360p on a slow connection), so the first frames arrive at once (720p took twice as long) and
+ * it steps up from there. `levels` are in hls.js order, lowest bitrate first. Home.astro's inline script
+ * makes the same choice ahead of this: keep the two together.
+ */
+function startLevel(levels: Array<{ width: number; height: number }>, video: HTMLVideoElement, adaptive: boolean) {
+	const limit = Math.max(video.clientWidth, video.clientHeight) * (window.devicePixelRatio || 1);
+	const fit = levels.map((l, i) => ({ i, size: Math.max(l.width, l.height) })).filter((l) => l.size <= limit * 1.2);
+	const start = adaptive ? fit.filter((l) => l.size <= (slowConnection() ? 640 : 854)) : fit;
+	return start.length ? start[start.length - 1].i : fit.length ? fit[0].i : levels.length - 1;
+}
+
+/** The showreel's stream fetched ahead, by its URL: its player waits for this, then reads it all from cache. */
+const warming = new Map<string, Promise<unknown>>();
+
+declare global {
+	interface Window {
+		/** Set by the inline script in Home.astro: the showreel's HLS URL and the fetch of its first seconds. */
+		__reel?: { src: string; ready: Promise<unknown> };
+	}
+}
+
+/**
+ * On phones and tablets the showreel streams, and the page only sets its videos up once everything on it has
+ * loaded (1.7 s in on a 2.5 Mbps phone). Home.astro's inline script starts fetching the playlists and the
+ * first 4 s while the page is still parsing; this notes that fetch, and fetches the player alongside it, so
+ * `attach` waits for both and the player's own requests are answered from cache (4 Nov).
+ */
+export function warmShowreel() {
+	const reel = window.__reel;
+	if (!reel) return;
+	warming.set(reel.src, Promise.all([reel.ready, import('hls.js/light')]).catch(() => {}));
+}
+
 /** A video transitions.ts lifted out of the leaving page, still playing, and the selector of the element it lands in. */
 let carried: { video: HTMLVideoElement; host: string } | null = null;
 
@@ -210,12 +250,16 @@ export function initPage(root: ParentNode = document) {
 			// A cover plays its MP4 file, so the flip can carry the element between pages. The home showreel does
 			// too on desktop; on phones and tablets (data-adaptive) it streams, since one file cannot adapt to a
 			// weak connection: at 2.5 Mbps the 32 MB phone cut stalled 22 times in its first half minute (3 Nov).
-			const adaptive = 'adaptive' in video.dataset && !matchMedia('(min-width: 64rem)').matches;
+			const adaptive = 'adaptive' in video.dataset && !matchMedia(DESKTOP).matches;
 			if (video.dataset.mp4 && !adaptive) {
 				video.src = video.dataset.mp4;
 				return;
 			}
 			const src = video.dataset.hls!;
+			// The showreel's first pieces are already on their way (warmShowreel): wait for them, so the player's
+			// own requests are answered from cache instead of downloading the same 4 s again.
+			const ahead = warming.get(src);
+			if (ahead) await Promise.race([ahead, new Promise((r) => setTimeout(r, 8000))]);
 			// hls.js wherever it runs (Safari included, from iOS 17.1), so every browser starts on the
 			// sharpest rendition the box can use instead of the lowest one: the default bandwidth guess
 			// is set high and the player still steps down if the connection cannot keep up.
@@ -233,14 +277,8 @@ export function initPage(root: ParentNode = document) {
 				backBufferLength: 10,
 				startFragPrefetch: true,
 			});
-			hls.on(Hls.Events.MANIFEST_PARSED, () => {
-				// Start on the best rendition the box can show (capLevelToPlayerSize takes over once playing).
-				const limit = Math.max(video.clientWidth, video.clientHeight) * (window.devicePixelRatio || 1);
-				const fit = hls.levels.map((l, i) => ({ i, size: Math.max(l.width, l.height) })).filter((l) => l.size <= limit * 1.2);
-				// An adaptive showreel starts no sharper than 480p, so the first frames arrive at once (720p took twice as long), and steps up from there.
-				const start = adaptive ? fit.filter((l) => l.size <= 854) : fit;
-				hls.startLevel = start.length ? start[start.length - 1].i : fit.length ? fit[0].i : hls.levels.length - 1;
-			});
+			// Start on the best rendition the box can show (capLevelToPlayerSize takes over once playing).
+			hls.on(Hls.Events.MANIFEST_PARSED, () => (hls.startLevel = startLevel(hls.levels, video, adaptive)));
 			hls.on(Hls.Events.ERROR, (_event, data) => {
 				if (!data.fatal) return;
 				// A dropped network: try again. A decode problem: let hls.js recover. Anything else: the browser's own player.
@@ -318,7 +356,10 @@ export function initPage(root: ParentNode = document) {
 
 	// Pictures the next page opens on (the first Projects tiles, from home) are
 	// fetched once this page has loaded and gone idle, each at the candidate
-	// the browser would pick for this screen.
+	// the browser would pick for this screen. While a showreel is still
+	// fetching its first seconds, they wait for it (or 6 s) so as not to slow it.
+	const reel = Array.from(warming.values());
+	const reelFirst = reel.length ? Promise.race([Promise.all(reel), new Promise((r) => setTimeout(r, 6000))]) : Promise.resolve();
 	q<HTMLElement>('[data-warm-idle]').forEach((box) => {
 		const warm = () =>
 			box.querySelectorAll<HTMLImageElement>('img[srcset]').forEach((img) => {
@@ -326,7 +367,7 @@ export function initPage(root: ParentNode = document) {
 				probe.sizes = img.sizes;
 				probe.srcset = img.srcset;
 			});
-		const idle = () => ('requestIdleCallback' in window ? requestIdleCallback(warm, { timeout: 4000 }) : setTimeout(warm, 1500));
+		const idle = () => void reelFirst.then(() => ('requestIdleCallback' in window ? requestIdleCallback(warm, { timeout: 4000 }) : setTimeout(warm, 1500)));
 		if (document.readyState === 'complete') idle();
 		else addEventListener('load', idle, { once: true });
 	});

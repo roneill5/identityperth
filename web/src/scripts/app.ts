@@ -1,7 +1,7 @@
 import { swapFunctions, type TransitionBeforePreparationEvent, type TransitionBeforeSwapEvent } from 'astro:transitions/client';
 import { gsap, ScrollTrigger, reducedMotion } from './motion';
 import { initMenu } from './menu';
-import { initPage, destroyPage, markImages } from './page';
+import { initPage, destroyPage, markImages, warmShowreel } from './page';
 import { initCursor } from './cursor';
 import { initAnalytics } from './analytics';
 import { armFlips, slideIn, slideOut, flipIn, flipOut, unflipIn, unflipOut, decoded } from './transitions';
@@ -30,6 +30,8 @@ const PAGE = '#page';
 const menu = initMenu();
 // Before the first astro:page-load, so the first page view is seen as the first.
 initAnalytics();
+// Also before it: notes the showreel fetch Home.astro's inline script began, so the player waits for it.
+warmShowreel();
 
 // The scroll line along the top of the viewport (global.css) stands in for the scrollbar.
 const scrollLine = document.querySelector<HTMLElement>('.scroll-line');

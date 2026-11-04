@@ -103,6 +103,8 @@ const clarity = clarityId && !noindex ? clarityId : null;
 <link rel="icon" href="/icons/icon-32.png" type="image/png" sizes="32x32" />
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
 <link rel="preconnect" href={STREAM_HOST} />
+{/* Twice, as fonts need: the player's requests and the showreel warm-up (Home.astro) are anonymous CORS fetches, which a browser keeps on separate connections from the poster's. */}
+<link rel="preconnect" href={STREAM_HOST} crossorigin />
 <link rel="preload" href={figtree} as="font" type="font/woff2" crossorigin />
 <link rel="preload" href={shippori} as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="/fonts/hansief.otf" as="font" type="font/otf" crossorigin />

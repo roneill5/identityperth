@@ -49,7 +49,8 @@ const posterSet = src ? widths.map((w) => `${posterUrl(video, w)} ${w}w`).join('
 		data-video="loop"
 	>
 		{preload && <link rel="preload" as="image" imagesrcset={posterSet} imagesizes={sizes} media={preloadMedia} fetchpriority={fetchpriority} />}
-		<img src={poster} srcset={posterSet} sizes={sizes} alt="" class="absolute inset-0 h-full w-full object-cover" loading={loading} decoding="async" fetchpriority={fetchpriority} draggable="false" aria-hidden="true" />
+		{/* With a media-matched preload, the shown cut's poster is already fetched and a lazy one never fetches the hidden cut's. */}
+		<img src={poster} srcset={posterSet} sizes={sizes} alt="" class="absolute inset-0 h-full w-full object-cover" loading={preloadMedia ? 'lazy' : loading} decoding="async" fetchpriority={fetchpriority} draggable="false" aria-hidden="true" />
 		<video
 			class="absolute inset-0 h-full w-full object-cover"
 			data-hls={src}

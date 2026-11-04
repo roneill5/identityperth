@@ -55,6 +55,40 @@ const tallBox = [...coverBox, 'landscape:hidden'];
 							<VideoEmbed video={tallVideo} fill loading="eager" fetchpriority="high" preload preloadMedia="(orientation: portrait)" file adaptive />
 						</div>
 					) : null}
+					<script is:inline>
+						// Phones and tablets stream the showreel (page.ts), and its player only starts once the whole page
+						// has loaded. This runs while the page is still parsing: it fetches the playlists and the first
+						// 4 s of the rendition the player will start on (the sharpest that fits, no sharper than 480p, or
+						// 360p under 2 Mbps where the browser says: as page.ts chooses), so the player finds them in the
+						// cache. page.ts waits for `__reel` (4 Nov).
+						(() => {
+							if (matchMedia('(min-width: 64rem)').matches) return;
+							const video = [...document.querySelectorAll('video[data-adaptive][data-hls]')].find((v) => v.getClientRects().length);
+							if (!video) return;
+							const src = video.dataset.hls;
+							const text = (url) => fetch(url).then((r) => (r.ok ? r.text() : Promise.reject(r.status)));
+							const slow = ((navigator.connection || {}).downlink || Infinity) < 2;
+							const cap = Math.min(slow ? 640 : 854, Math.max(innerWidth, innerHeight) * (devicePixelRatio || 1) * 1.2);
+							const ready = text(src).then(async (master) => {
+								const lines = master.split('\n');
+								let best = null;
+								lines.forEach((line, n) => {
+									const res = line.startsWith('#EXT-X-STREAM-INF') && /RESOLUTION=(\d+)x(\d+)/.exec(line);
+									if (!res) return;
+									const size = Math.max(Number(res[1]), Number(res[2]));
+									const bandwidth = Number((/[:,]BANDWIDTH=(\d+)/.exec(line) || [])[1]);
+									if (size <= cap && (!best || bandwidth > best.bandwidth)) best = { bandwidth, uri: lines[n + 1].trim() };
+								});
+								if (!best) return;
+								const level = new URL(best.uri, src).href;
+								const playlist = await text(level);
+								const init = (/#EXT-X-MAP:URI="([^"]+)"/.exec(playlist) || [])[1];
+								const first = playlist.split('\n').find((l) => l.trim() && !l.startsWith('#'));
+								await Promise.all([init, first].filter(Boolean).map((u) => fetch(new URL(u.trim(), level).href).then((r) => r.arrayBuffer())));
+							});
+							window.__reel = { src, ready: ready.catch(() => {}) };
+						})();
+					</script>
 				</>
 			) : (
 				<div class="absolute inset-0 flex items-center justify-center text-lime">
