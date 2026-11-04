@@ -3,10 +3,12 @@ import {structureTool} from 'sanity/structure'
 import {presentationTool, defineLocations, defineDocuments} from 'sanity/presentation'
 import {schemaTypes} from './schemaTypes'
 import {structure, SINGLETONS} from './structure'
+import {StudioIcon} from './components/StudioIcon'
 
 export default defineConfig({
   name: 'default',
   title: 'Identity Perth',
+  icon: StudioIcon,
 
   projectId: 't2bz0tb2',
   dataset: 'production',
