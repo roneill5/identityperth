@@ -42,10 +42,11 @@ export default defineConfig({
           {route: '/', filter: '_id == "home"'},
           {route: '/studio', filter: '_id == "studio"'},
           {route: '/projects/:slug', filter: '_type == "project" && slug.current == $slug'},
-          {route: '/:slug', filter: '_type == "legalPage" && slug.current == $slug'},
           // Lists with no document of their own open Site settings: their menu, contact details and sharing defaults.
+          // Before '/:slug', which matches them too and found no legal page called "projects" (5 Nov).
           {route: '/projects', filter: '_id == "siteSettings"'},
           {route: '/gallery', filter: '_id == "siteSettings"'},
+          {route: '/:slug', filter: '_type == "legalPage" && slug.current == $slug'},
         ]),
         locations: {
           // Every resolver needs a `select`, or the Studio says the document is not used on any page.
