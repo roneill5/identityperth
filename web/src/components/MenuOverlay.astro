@@ -58,9 +58,10 @@ const addressLines = settings?.address?.split('\n').filter(Boolean) ?? [];
 			</span>
 			{/* The roundel rides 10px above the top of the word on desktop: at half its own height (it grows with the
 			    screen, the word stops at 99px) it met the scroll line on wide screens and left the screen past 2400px.
-			    On phones it sits lower, clear of the top edge (Ross, 5 Nov). A margin, not a translate: GSAP takes
-			    over the element's translate for the pop-in (logo.ts) and cannot read a min() or max() there. */}
-			<Roundel class="logo__roundel mt-[10px] h-5 w-5 text-slate lg:-mt-[10px] lg:h-[2.2vw] lg:w-[2.2vw]" />
+			    On phones it rides 5px above, 8px from the top of the screen (Ross, 5 Nov: above the word, not beside
+			    it). A margin, not a translate: GSAP takes over the element's translate for the pop-in (logo.ts) and
+			    cannot read a min() or max() there. */}
+			<Roundel class="logo__roundel -mt-[5px] h-5 w-5 text-slate lg:-mt-[10px] lg:h-[2.2vw] lg:w-[2.2vw]" />
 		</a>
 
 		{settings?.tagline && <p class="type-display mt-3 max-w-[12em] text-[16px] leading-[1.15] text-paper lg:hidden">{settings.tagline}</p>}
