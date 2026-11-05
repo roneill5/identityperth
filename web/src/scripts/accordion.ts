@@ -11,6 +11,8 @@ import { gsap, EASE, reducedMotion } from './motion';
  * items lit. Other scripts open items through `openDetails` so they animate.
  * A closing panel and an opening one share one duration and curve, so
  * whatever sits below them moves once, smoothly (Ross, 29 Oct).
+ * The panel is the one element after the summary: wrap an item's content in
+ * a single element, or only its first child animates.
  */
 const DURATION = 0.35;
 const CLEAR = 'height,opacity,overflow';

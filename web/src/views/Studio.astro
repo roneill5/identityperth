@@ -114,9 +114,13 @@ const sections = [
 						<li>
 							<details class="accordion group" data-item={`services:${service._id}`}>
 								<summary class="type-h2 py-2 text-paper transition-colors duration-300 group-open:text-lime hover:text-lime lg:py-[4.75px]">{service.title}</summary>
-								{paragraphs(service.description).map((p, i) => (
-									<p class:list={['type-small max-w-[414px] pb-1 leading-[1.45] text-paper lg:max-w-[500px] lg:text-[16.5px] lg:leading-[1.35]', i === 0 ? 'pt-1' : 'pt-2']}>{p}</p>
-								))}
+								{/* One panel: accordion.ts slides the single element after the summary, so loose paragraphs left
+								    the second one snapping in and out while the first slid (Ross, 5 Nov). */}
+								<div>
+									{paragraphs(service.description).map((p, i) => (
+										<p class:list={['type-small max-w-[414px] pb-1 leading-[1.45] text-paper lg:max-w-[500px] lg:text-[16.5px] lg:leading-[1.35]', i === 0 ? 'pt-1' : 'pt-2']}>{p}</p>
+									))}
+								</div>
 							</details>
 						</li>
 					))}
