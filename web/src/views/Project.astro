@@ -67,7 +67,8 @@ const schema = project
 			</div>
 
 			<div class="grid gap-8 px-[14px] py-10 lg:grid-cols-[minmax(0,31vw)_minmax(0,1fr)] lg:px-gutter lg:py-16">
-				<dl class="type-small grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 self-start text-paper/80" data-reveal>
+				{/* Body size, the same as the summary beside it (was the small size: Ross, 5 Nov). */}
+				<dl class="type-body grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 self-start text-paper/80" data-reveal>
 					{meta.map((m) => (
 						<>
 							<dt class="text-lime">{m.label}</dt>
