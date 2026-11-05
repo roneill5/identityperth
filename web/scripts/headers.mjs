@@ -33,6 +33,8 @@ const text = [
 	block('/og/*', ['Cache-Control: public, max-age=86400']),
 	block('/icons/*', ['Cache-Control: public, max-age=604800']),
 	block('/favicon.svg', ['Cache-Control: public, max-age=604800']),
+	// Static .txt files go out as bare text/plain, which many fetchers read as Latin-1: curly apostrophes came out as "â€™".
+	block('/llms.txt', ['Content-Type: text/plain; charset=utf-8']),
 ].join('\n\n');
 
 mkdirSync(join(process.cwd(), 'public'), { recursive: true });
