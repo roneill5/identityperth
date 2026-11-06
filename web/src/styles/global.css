@@ -203,10 +203,12 @@
 		padding: 0.75rem 1rem;
 		background: var(--color-lime);
 		color: var(--color-ink);
-		transform: translateY(-120%);
 	}
-	.skip-link:focus-visible {
-		transform: none;
+	/* Out of sight until a keyboard reaches it: clipped away, not parked just above the screen, which
+	   iPhone Safari brought into view at the top left (Ross, 6 Nov). Still focusable and read out. */
+	.skip-link:not(:focus-visible) {
+		clip-path: inset(50%);
+		opacity: 0;
 	}
 
 	/* Links in running text */
@@ -472,6 +474,16 @@ body[data-page="splash"] [data-bottom-bar] {
 body[data-page="splash"] .site-main {
 	padding-bottom: 0;
 	margin-left: 0;
+}
+/* The splash takes the swipe itself (scripts/splash.ts), so the browser must not move the page under the
+   finger first: iPhone Safari bounces even a page that fits the screen, so the first 28px of a swipe
+   dragged the showreel up and it sprang back as the slide began, the jump before the scroll (Ross, 6 Nov). */
+body[data-page="splash"],
+body[data-page="splash"] * {
+	touch-action: none;
+}
+html:has(> body[data-page="splash"]) {
+	overscroll-behavior: none;
 }
 
 /* The fixed bar along the bottom on phones and tablets */

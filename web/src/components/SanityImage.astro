@@ -56,7 +56,10 @@ const {
 	portraitAspect,
 	fill = false,
 	sizes = '100vw',
-	widths = [320, 480, 768, 1024, 1440, 1920, 2560],
+	// 400, 1200 and 1320 are for phones (6 Nov): a full-width picture on a 3x iPhone needs 1086 to 1236 pixels, and
+	// with 1440 the next size up it downloaded half as many pixels again as the screen has. Each phone now gets the
+	// smallest file at least as wide as its screen's pixels, so nothing is less sharp (a third less to download).
+	widths = [320, 400, 480, 768, 1024, 1200, 1320, 1440, 1920, 2560],
 	loading = 'lazy',
 	fetchpriority,
 	preload = false,

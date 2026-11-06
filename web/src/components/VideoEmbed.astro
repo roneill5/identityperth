@@ -37,7 +37,8 @@ interface Props {
 
 const { video, aspect = 16 / 9, portraitAspect, fill = false, sizes = '100vw', class: className, loading = 'lazy', fetchpriority, preload = false, preloadMedia, file = false, adaptive = false } = Astro.props;
 const src = hlsUrl(video);
-const widths = [480, 960, 1440, 1920];
+// 1200 and 1320 for full-width covers on 3x phones, as in SanityImage (6 Nov). Stream makes any width on request.
+const widths = [480, 960, 1200, 1320, 1440, 1920];
 const poster = src ? posterUrl(video, 960) : null;
 const posterSet = src ? widths.map((w) => `${posterUrl(video, w)} ${w}w`).join(', ') : null;
 ---

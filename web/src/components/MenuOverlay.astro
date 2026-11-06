@@ -116,10 +116,11 @@ const addressLines = settings?.address?.split('\n').filter(Boolean) ?? [];
 				{settings?.socials?.length ? (
 					<div>
 						<span class="block text-lime">socials:</span>
-						<ul class="leading-[1.6]">
+						{/* Spaced like the address lines (Ross, 6 Nov). The negative margin keeps the taller tap area without adding to the spacing. */}
+						<ul>
 							{settings.socials.map((s) => (
 								<li>
-									<a href={safeHref(s.url) ?? '#'} class="text-link inline-block py-0.5 hover:text-lime lg:py-0" rel="noopener" target="_blank">{s.label}</a>
+									<a href={safeHref(s.url) ?? '#'} class="text-link -my-1 inline-block py-1 hover:text-lime lg:my-0 lg:py-0" rel="noopener" target="_blank">{s.label}</a>
 								</li>
 							))}
 						</ul>

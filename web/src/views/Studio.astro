@@ -55,6 +55,9 @@ const column: ColumnImage[] = [
 ];
 
 const summaryClass = 'type-accordion flex items-center justify-between border-b border-slate py-3 lg:pt-2 lg:pb-[7px]';
+// How wide a strip photo is on phones: the strip's height (the screen less 370px, at least 220px) at 5:7. Said
+// as "full width" before, so a 210px photo downloaded a 1440px file (6 Nov).
+const STRIP_SIZES = '(min-width: 1024px) 37vw, (max-height: 590px) 160px, calc((100vh - 370px) * 0.72)';
 const sections = [
 	{ id: 'about', label: 'About' },
 	{ id: 'services', label: 'Services' },
@@ -66,13 +69,15 @@ const sections = [
 
 <Base title="Studio" metaTitle={page?.seo?.title} description={page?.seo?.description ?? 'Identity is a connected strategic and creative partner in Perth, Western Australia.'}>
 	<div class="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,calc(31.02vw+var(--spacing-gutter)))] lg:gap-x-gutter" data-studio>
+		{/* svh, the screen with Safari's bars showing: dvh follows the address bar as it shrinks and grows,
+		    so the strip changed size while the page scrolled (Ross, 6 Nov). */}
 		<div
-			class="studio-strip flex h-[calc(100dvh-370px)] min-h-[220px] gap-[10px] overflow-x-auto px-[14px] lg:order-1 lg:h-auto lg:min-h-0 lg:flex-col lg:gap-4 lg:overflow-visible lg:px-0 lg:pt-0"
+			class="studio-strip flex h-[calc(100svh-370px)] min-h-[220px] gap-[10px] overflow-x-auto px-[14px] lg:order-1 lg:h-auto lg:min-h-0 lg:flex-col lg:gap-4 lg:overflow-visible lg:px-0 lg:pt-0"
 			data-studio-images
 		>
 			{column.map((item, i) => (
 				<div class:list={['relative h-full shrink-0 overflow-hidden bg-ink lg:h-auto lg:w-auto lg:shrink', item.mono && 'grayscale', item.group !== 'about' && 'hidden']} style={`aspect-ratio:${item.aspect}`} data-group={item.group} data-opens={item.opens}>
-					<SanityImage image={{ ...item.image, alt: item.image.alt ?? item.alt ?? null }} aspect={item.aspect} fill sizes="(min-width: 1024px) 37vw, 100vw" loading={i < 2 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : undefined} preload={i === 0} />
+					<SanityImage image={{ ...item.image, alt: item.image.alt ?? item.alt ?? null }} aspect={item.aspect} fill sizes={STRIP_SIZES} loading={i < 2 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : undefined} preload={i === 0} />
 				</div>
 			))}
 		</div>
@@ -195,10 +200,11 @@ const sections = [
 					{settings?.socials?.length ? (
 						<div>
 							<span class="block text-lime">socials:</span>
-							<ul class="leading-[1.6]">
+							{/* Spaced like the address lines (Ross, 6 Nov). The negative margin keeps the taller tap area without adding to the spacing. */}
+							<ul>
 								{settings.socials.map((s) => (
 									<li>
-										<a href={safeHref(s.url) ?? '#'} class="text-link inline-block py-1 hover:text-lime lg:py-0" rel="noopener" target="_blank">{s.label}</a>
+										<a href={safeHref(s.url) ?? '#'} class="text-link -my-1 inline-block py-1 hover:text-lime lg:my-0 lg:py-0" rel="noopener" target="_blank">{s.label}</a>
 									</li>
 								))}
 							</ul>
