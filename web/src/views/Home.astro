@@ -61,9 +61,10 @@ const tallBox = [...coverBox, 'landscape:hidden'];
 						// has loaded. This runs while the page is still parsing: it fetches the playlists and the first
 						// 4 s of the rendition the player will start on (the sharpest that fits, no sharper than 480p, or
 						// 360p under 2 Mbps where the browser says: as page.ts chooses), so the player finds them in the
-						// cache. page.ts waits for `__reel` (4 Nov).
+						// cache. page.ts waits for `__reel` (4 Nov). iPhones have no MediaSource and play the stream with
+						// their own player, which fetches its own pieces (6 Nov).
 						(() => {
-							if (matchMedia('(min-width: 64rem)').matches) return;
+							if (matchMedia('(min-width: 64rem)').matches || !('MediaSource' in window)) return;
 							const video = [...document.querySelectorAll('video[data-adaptive][data-hls]')].find((v) => v.getClientRects().length);
 							if (!video) return;
 							const src = video.dataset.hls;

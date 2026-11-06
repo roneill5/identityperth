@@ -45,6 +45,11 @@ import PreviewEditing from '../components/PreviewEditing.astro';
 		<div class="scroll-line" aria-hidden="true"></div>
 		<Sidebar pathname={Astro.url.pathname} />
 		<main id="page" class:list={['site-main relative min-h-[calc(100dvh-100px)] lg:min-h-dvh', Astro.props.class]}>
+			{/* A tab opened before 6 Nov runs scripts that never move to a newer build: they swap each next page in
+			    and run what it carries, this included. Run like that, after its page has loaded, it reloads the page,
+			    so the tab picks up the current build. Tabs from later builds load a newer build's pages in full
+			    themselves (scripts/app.ts) and have __build set, so this does nothing there. */}
+			<script is:inline>document.readyState === 'complete' && !window.__build && location.reload();</script>
 			<div id="main" tabindex="-1" class="outline-none" data-page={page}>
 				<slot />
 			</div>

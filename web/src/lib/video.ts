@@ -21,7 +21,7 @@ function streamId(video?: VideoData | null): string | null {
 	return /^[a-f0-9]{32}$/i.test(id) ? id : null;
 }
 
-/** The HLS manifest, adaptive bitrate, which every browser can play (Safari natively, the rest through hls.js). */
+/** The HLS manifest, adaptive bitrate, which every browser can play (iPhones natively, the rest through hls.js). */
 export function hlsUrl(video?: VideoData | null): string | null {
 	const id = streamId(video);
 	return id ? `${STREAM_HOST}/${id}/manifest/video.m3u8` : null;

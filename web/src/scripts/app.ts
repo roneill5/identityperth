@@ -28,6 +28,26 @@ import { armFlips, slideIn, slideOut, flipIn, flipOut, unflipIn, unflipOut, deco
 
 const PAGE = '#page';
 const menu = initMenu();
+
+declare global {
+	interface Window {
+		/** This build's scripts. Base.astro reloads a tab swapping in pages without it: one still on a build from before 6 Nov. */
+		__build?: string;
+	}
+}
+
+/**
+ * The build's own scripts, by file name: every page has the same ones, and a deploy that changes the code
+ * renames them. A tab keeps the scripts it loaded with (the swap replaces only #page and #ticker), so a
+ * page from a newer build loads in full instead (astro:before-preparation below), or the tab would go on
+ * running the old code until it was closed.
+ */
+const scriptsIn = (doc: Document) =>
+	Array.from(doc.querySelectorAll<HTMLScriptElement>('script[type="module"][src^="/_astro/"]'), (s) => s.getAttribute('src'))
+		.sort()
+		.join(' ');
+const BUILD = scriptsIn(document);
+window.__build = BUILD;
 // Before the first astro:page-load, so the first page view is seen as the first.
 initAnalytics();
 // Also before it: notes the showreel fetch Home.astro's inline script began, so the player waits for it.
@@ -208,17 +228,29 @@ const PREVIEW = document.documentElement.hasAttribute('data-preview');
 document.addEventListener('astro:before-preparation', (e) => {
 	const event = e as TransitionBeforePreparationEvent;
 	menu.close(true);
+	const load = event.loader;
+	// A page from a newer build (a deploy since this one loaded) loads in full, so only that build runs on it.
+	const fetchNext = async () => {
+		await load();
+		if (scriptsIn(event.newDocument) !== BUILD) event.preventDefault();
+	};
 	if (PREVIEW) {
 		current = null;
+		event.loader = fetchNext;
 		return;
 	}
 	holdScroll();
 	current = pick(event.from, event.to);
-	const load = event.loader;
 	const leaving = current.out();
 	event.loader = async () => {
-		await Promise.all([load(), leaving]);
+		await Promise.all([fetchNext(), leaving]);
 	};
+});
+
+// A page left for a full load mid-transition (a newer build, or a page the router could not fetch) is what the
+// back button can bring back from the browser's cache: faded out and held, as it was then. It loads afresh instead.
+addEventListener('pageshow', (e) => {
+	if (e.persisted && document.documentElement.classList.contains('is-transitioning')) location.reload();
 });
 
 // The next page is here: tear the old one down and swap just the page containers.

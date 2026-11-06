@@ -40,13 +40,32 @@ const isLoop = (video: HTMLVideoElement) => video.hasAttribute('data-loop');
 
 // A play attempt that is refused (nothing buffered yet, or a page swapped in by the client
 // router, where Chrome ignores the muted attribute) is tried again once the stream can play.
+// iOS in Low Power Mode refuses every autoplay, muted or not; those loops start at the next tap.
 function play(video: HTMLVideoElement) {
 	if (!isLoop(video)) return;
 	video.muted = true;
 	video.defaultMuted = true;
 	video.playsInline = true;
-	video.play().catch(() => video.addEventListener('canplay', () => void video.play().catch(() => {}), { once: true }));
+	video.play().catch((error: unknown) => {
+		if (error instanceof DOMException && error.name === 'NotAllowedError') refused.add(video);
+		video.addEventListener('canplay', () => void video.play().catch(() => {}), { once: true });
+	});
 }
+
+/** Loops the browser would not start by themselves. A tap counts as permission, so the next one starts those on screen. */
+const refused = new Set<HTMLVideoElement>();
+const inView = (el: Element) => {
+	const box = el.getBoundingClientRect();
+	return box.width > 0 && box.bottom > 0 && box.top < window.innerHeight;
+};
+const startRefused = () =>
+	refused.forEach((video) => {
+		if (!video.isConnected) return refused.delete(video);
+		if (!inView(video)) return;
+		refused.delete(video);
+		video.play().catch(() => refused.add(video));
+	});
+for (const type of ['touchend', 'click']) addEventListener(type, startRefused, { capture: true, passive: true });
 
 const DESKTOP = '(min-width: 64rem)';
 
@@ -234,9 +253,9 @@ export function initPage(root: ParentNode = document) {
 	markImages(root);
 
 	// Videos: Stream's HLS in a plain <video>, over its poster. A source attaches
-	// once the element is displayed and within a screen of the viewport (hls.js,
-	// loaded then; native HLS only where hls.js cannot run); loops play only
-	// while on screen; turning a phone swaps the home hero's two cuts.
+	// once the element is displayed and within a screen of the viewport (the
+	// iPhone's own player there, hls.js loaded then everywhere else); loops play
+	// only while on screen; turning a phone swaps the home hero's two cuts.
 	// A cover riding in from the last page is not this page's to start: adoptVideo hands it over.
 	const videos = Array.from(q<HTMLVideoElement>('video[data-hls]:not([data-carried])'));
 	if (videos.length) {
@@ -268,19 +287,38 @@ export function initPage(root: ParentNode = document) {
 				return;
 			}
 			const src = video.dataset.hls!;
+			const nativeHls = video.canPlayType('application/vnd.apple.mpegurl') !== '';
+			// The browser's own player. It starts loading now, while the video is still a screen away, as hls.js does:
+			// left to wait for play(), a gallery video stood on its poster for 2 to 4 s after scrolling in (6 Nov).
+			const playNatively = () => {
+				video.preload = 'auto';
+				video.src = src;
+			};
+			// iPhones play the stream with their own player. hls.js can only run there through Apple's
+			// ManagedMediaSource, which has broken from one iOS release to the next (cold starts on 26.2, buffering
+			// after a seek on 27, and a loop is a seek), and on 6 Nov the gallery videos stood still on a new
+			// iPhone in Chrome. Every other browser has the plain MediaSource and keeps hls.js.
+			if (nativeHls && !('MediaSource' in window)) return playNatively();
 			// The showreel's first pieces are already on their way (warmShowreel): wait for them, so the player's
 			// own requests are answered from cache instead of downloading the same 4 s again.
 			const ahead = warming.get(src);
 			if (ahead) await Promise.race([ahead, new Promise((r) => setTimeout(r, 8000))]);
-			// hls.js wherever it runs (Safari included, from iOS 17.1), so every browser starts on the
+			// hls.js wherever it runs (desktop Safari and iPads included), so every browser starts on the
 			// sharpest rendition the box can use instead of the lowest one: the default bandwidth guess
 			// is set high and the player still steps down if the connection cannot keep up.
-			const { default: Hls } = await import('hls.js/light');
-			if (!Hls.isSupported()) {
-				video.src = src;
+			let Hls: typeof import('hls.js/light').default;
+			try {
+				({ default: Hls } = await import('hls.js/light'));
+			} catch {
+				// The player would not load (a dropped connection): the browser's own, where it has one.
+				if (nativeHls) playNatively();
+				else attached.delete(video);
 				return;
 			}
+			if (!Hls.isSupported()) return playNatively();
 			const hls = new Hls({
+				// The plain MediaSource, not Apple's managed one (see above), on Macs and iPads too.
+				preferManagedMediaSource: false,
 				capLevelToPlayerSize: true,
 				// An adaptive showreel assumes a phone connection until it has measured one; the rest assume broadband.
 				abrEwmaDefaultEstimate: adaptive ? 2_000_000 : 25_000_000,
@@ -298,7 +336,7 @@ export function initPage(root: ParentNode = document) {
 				else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
 				else {
 					hls.destroy();
-					video.src = src;
+					playNatively();
 					play(video);
 				}
 			});
