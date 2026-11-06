@@ -68,7 +68,10 @@ const sections = [
 ---
 
 <Base title="Studio" metaTitle={page?.seo?.title} description={page?.seo?.description ?? 'Identity is a connected strategic and creative partner in Perth, Western Australia.'}>
-	<div class="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,calc(31.02vw+var(--spacing-gutter)))] lg:gap-x-gutter" data-studio>
+	{/* Phones: the page runs a little past one screen, and Safari hiding its bar on the way down made it fit, so the
+	    scroll room vanished mid-swipe and the page locked and shook (Ross, 6 Nov). The bottom padding is the height
+	    the bar gives back (none while it shows), so the room stays the same and the strip keeps its size. */}
+	<div class="max-lg:pb-[calc(100dvh-100svh)] lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,calc(31.02vw+var(--spacing-gutter)))] lg:gap-x-gutter" data-studio>
 		{/* svh, the screen with Safari's bars showing: dvh follows the address bar as it shrinks and grows,
 		    so the strip changed size while the page scrolled (Ross, 6 Nov). */}
 		<div

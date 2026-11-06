@@ -248,24 +248,46 @@ export async function flipIn(fallback: () => Promise<void>) {
 	// The copy sits exactly over the hero: a carried cover steps across into it, frame for frame,
 	// and the copy (now only its poster) goes at once rather than fading over the live video.
 	const handedOver = adoptVideo();
-	await resumed;
-	target.style.visibility = '';
 	if (handedOver) {
+		target.style.visibility = '';
 		c.remove();
 		return;
 	}
+	// Landed. The rest (a frozen video catching up, the hero's own picture arriving, the copy fading off)
+	// can take a second or two more on a slow connection, and the page stayed unscrollable for all of it
+	// (Ross, 6 Nov). So the copy moves into the hero and rides with it, and this returns now, which lets
+	// the page scroll (app.ts releases the hold when it resolves); the hand-over finishes on its own.
+	ride(c, target);
+	void (async () => {
+		await resumed;
+		target.style.visibility = '';
+		// Hold the copy until the hero underneath has pixels, so nothing flashes.
+		const hero = target.querySelector<HTMLImageElement>('img:not(.flip img)');
+		await new Promise<void>((resolve) => {
+			if (!hero || (hero.complete && hero.naturalWidth > 0)) return resolve();
+			const done = () => resolve();
+			hero.addEventListener('load', done, { once: true });
+			hero.addEventListener('error', done, { once: true });
+			window.setTimeout(done, 1500);
+		});
+		await gsap.to(c, { opacity: 0, duration: 0.3, ease: 'power1.inOut' });
+		c.remove();
+	})();
+}
 
-	// Hold the copy until the hero underneath has pixels, so nothing flashes.
-	const hero = target.querySelector<HTMLImageElement>('img');
-	await new Promise<void>((resolve) => {
-		if (!hero || (hero.complete && hero.naturalWidth > 0)) return resolve();
-		const done = () => resolve();
-		hero.addEventListener('load', done, { once: true });
-		hero.addEventListener('error', done, { once: true });
-		window.setTimeout(done, 1500);
-	});
-	await gsap.to(c, { opacity: 0, duration: 0.3, ease: 'power1.inOut' });
-	c.remove();
+/**
+ * A copy that has landed on its box goes inside it, filling it, so it scrolls with the page instead of
+ * staying pinned to the screen. The box may still be hidden (its own picture waits under the copy), so
+ * the copy keeps itself visible.
+ */
+function ride(copy: HTMLElement, box: HTMLElement) {
+	gsap.set(copy, { clearProps: 'left,top,width,height' });
+	copy.style.position = 'absolute';
+	copy.style.inset = '0';
+	// Above the box's own picture, not above the page: pinned it sat over everything, and riding it would slide over the phone's bottom bar.
+	copy.style.zIndex = '1';
+	copy.style.visibility = 'visible';
+	box.appendChild(copy);
 }
 
 // ---------- reverse flip ----------
@@ -328,10 +350,18 @@ export async function unflipIn(fallback: () => Promise<void>) {
 	await Promise.all([decoded(500), new Promise((resolve) => window.setTimeout(resolve, 250))]);
 	await Promise.all([shrink, gsap.to(CONTAINER, { opacity: 1, duration: 0.4, ease: 'power1.inOut', clearProps: 'all' })]);
 	const handedOver = adoptVideo();
-	await resumed;
-	cover.style.visibility = '';
-	// A carried video is now in the tile and the copy holds only its poster: it goes at once. An image copy
-	// fades over the tile's own picture, which is the same picture at the same size, so nothing jumps.
-	if (!handedOver) await gsap.to(r.clone, { opacity: 0, duration: 0.25, ease: 'power1.inOut' });
-	r.clone.remove();
+	if (handedOver) {
+		cover.style.visibility = '';
+		r.clone.remove();
+		return;
+	}
+	// Landed on the tile: as on the way in, the copy rides with the tile and the list can scroll at once (6 Nov).
+	ride(r.clone, cover);
+	void (async () => {
+		await resumed;
+		cover.style.visibility = '';
+		// The copy fades over the tile's own picture, which is the same picture at the same size, so nothing jumps.
+		await gsap.to(r.clone, { opacity: 0, duration: 0.25, ease: 'power1.inOut' });
+		r.clone.remove();
+	})();
 }
