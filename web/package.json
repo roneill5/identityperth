@@ -8,6 +8,7 @@
 	"scripts": {
 		"dev": "astro dev",
 		"build": "node scripts/og.mjs && node scripts/headers.mjs && astro build",
+		"build:ci": "node scripts/studio.mjs && npm run build",
 		"og": "node scripts/og.mjs",
 		"preview": "astro preview",
 		"deploy": "wrangler deploy --config dist/server/wrangler.json",

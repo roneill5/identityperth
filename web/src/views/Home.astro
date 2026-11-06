@@ -12,14 +12,15 @@ import Wordmark from '../components/Wordmark.astro';
 import { client } from '../sanity/client';
 import { stegaClean } from '@sanity/client/stega';
 import { HOME_QUERY, PROJECTS_QUERY } from '../sanity/queries';
+import { load } from '../sanity/fetch';
 import Media from '../components/Media.astro';
 
 /** The draft client on /preview, the build-time one everywhere else. */
 const sanity = Astro.locals.sanity ?? client;
 
-const home = await sanity.fetch(HOME_QUERY);
+const home = await load(sanity, HOME_QUERY);
 // The first row of Projects, warmed from here at idle so the landing is already painted (page.ts, data-warm-idle).
-const firstTiles = (await sanity.fetch(PROJECTS_QUERY)).slice(0, 3);
+const firstTiles = (await load(sanity, PROJECTS_QUERY)).slice(0, 3);
 const video = home?.heroVideo ? { streamId: stegaClean(home.heroVideo) } : null;
 // The portrait (9:16) cut, for screens taller than they are wide. Each cut loads only while it is the one displayed.
 // On desktop both play from their MP4 file, so the showreel keeps playing while the page slides away to Projects

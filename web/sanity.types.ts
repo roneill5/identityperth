@@ -523,25 +523,14 @@ export type PROJECTS_QUERY_RESULT = Array<{
 }>;
 
 // Source: ../web/src/sanity/queries.ts
-// Variable: PROJECT_SLUGS_QUERY
-// Query: *[_type == "project" && defined(slug.current)]{  "slug": slug.current}
-export type PROJECT_SLUGS_QUERY_RESULT = Array<{
-  slug: string;
-}>;
-
-// Source: ../web/src/sanity/queries.ts
 // Variable: PROJECT_QUERY
-// Query: *[_type == "project" && slug.current == $slug][0]{  _id,  title,  "slug": slug.current,  tagline,  summary,  seo{ title, description },  "client": client->{ name },  "services": services[]->{ _id, title },  cover{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId } },  body[]{    _key,    _type,    _type == "mediaFull" => {      media{        kind,        image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } },        video{ streamId }      }    },    _type == "mediaPair" => {      left{        kind,        image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } },        video{ streamId }      },      right{        kind,        image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } },        video{ streamId }      }    }  }}
+// Query: *[_type == "project" && slug.current == $slug][0]{  _id,  title,  "slug": slug.current,  tagline,  summary,  "client": client->{ name },  "services": services[]->{ _id, title },  cover{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId } },  seo{ title, description },  body[]{    _key,    _type,    _type == "mediaFull" => { media{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId } } },    _type == "mediaPair" => { left{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId } }, right{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId } } }  }}
 export type PROJECT_QUERY_RESULT = {
   _id: string;
   title: string;
   slug: string;
   tagline: string | null;
   summary: string;
-  seo: {
-    title: string | null;
-    description: string | null;
-  } | null;
   client: {
     name: string;
   };
@@ -574,6 +563,10 @@ export type PROJECT_QUERY_RESULT = {
       streamId: string;
     } | null;
   };
+  seo: {
+    title: string | null;
+    description: string | null;
+  } | null;
   body: Array<
     | {
         _key: string;
@@ -660,6 +653,138 @@ export type PROJECT_QUERY_RESULT = {
       }
   > | null;
 } | null;
+
+// Source: ../web/src/sanity/queries.ts
+// Variable: PROJECT_PAGES_QUERY
+// Query: *[_type == "project" && defined(slug.current)] | order(orderRank){  _id,  title,  "slug": slug.current,  tagline,  summary,  "client": client->{ name },  "services": services[]->{ _id, title },  cover{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId } },  seo{ title, description },  body[]{    _key,    _type,    _type == "mediaFull" => { media{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId } } },    _type == "mediaPair" => { left{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId } }, right{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId } } }  }}
+export type PROJECT_PAGES_QUERY_RESULT = Array<{
+  _id: string;
+  title: string;
+  slug: string;
+  tagline: string | null;
+  summary: string;
+  client: {
+    name: string;
+  };
+  services: Array<{
+    _id: string;
+    title: string;
+  }> | null;
+  cover: {
+    kind: "image" | "video";
+    image: {
+      _type: "figure";
+      asset: {
+        _id: string;
+        url: string;
+        metadata: {
+          lqip: string | null;
+          dimensions: {
+            width: number;
+            height: number;
+            aspectRatio: number;
+          } | null;
+        } | null;
+      } | null;
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      alt: string;
+    } | null;
+    video: {
+      streamId: string;
+    } | null;
+  };
+  seo: {
+    title: string | null;
+    description: string | null;
+  } | null;
+  body: Array<
+    | {
+        _key: string;
+        _type: "mediaFull";
+        media: {
+          kind: "image" | "video";
+          image: {
+            _type: "figure";
+            asset: {
+              _id: string;
+              url: string;
+              metadata: {
+                lqip: string | null;
+                dimensions: {
+                  width: number;
+                  height: number;
+                  aspectRatio: number;
+                } | null;
+              } | null;
+            } | null;
+            media?: unknown;
+            hotspot?: SanityImageHotspot;
+            crop?: SanityImageCrop;
+            alt: string;
+          } | null;
+          video: {
+            streamId: string;
+          } | null;
+        };
+      }
+    | {
+        _key: string;
+        _type: "mediaPair";
+        left: {
+          kind: "image" | "video";
+          image: {
+            _type: "figure";
+            asset: {
+              _id: string;
+              url: string;
+              metadata: {
+                lqip: string | null;
+                dimensions: {
+                  width: number;
+                  height: number;
+                  aspectRatio: number;
+                } | null;
+              } | null;
+            } | null;
+            media?: unknown;
+            hotspot?: SanityImageHotspot;
+            crop?: SanityImageCrop;
+            alt: string;
+          } | null;
+          video: {
+            streamId: string;
+          } | null;
+        };
+        right: {
+          kind: "image" | "video";
+          image: {
+            _type: "figure";
+            asset: {
+              _id: string;
+              url: string;
+              metadata: {
+                lqip: string | null;
+                dimensions: {
+                  width: number;
+                  height: number;
+                  aspectRatio: number;
+                } | null;
+              } | null;
+            } | null;
+            media?: unknown;
+            hotspot?: SanityImageHotspot;
+            crop?: SanityImageCrop;
+            alt: string;
+          } | null;
+          video: {
+            streamId: string;
+          } | null;
+        };
+      }
+  > | null;
+}>;
 
 // Source: ../web/src/sanity/queries.ts
 // Variable: GALLERY_QUERY
@@ -803,8 +928,8 @@ declare global {
     '*[_id == "siteSettings"][0]{\n  tagline,\n  menuText,\n  email,\n  careersEmail,\n  phone,\n  address,\n  socials[]{ _key, label, url },\n  seo{ title, description }\n}': SETTINGS_QUERY_RESULT;
     '*[_id == "home"][0]{\n  heroVideo,\n  heroVideoMobile,\n  ticker,\n  seo{ title, description }\n}': HOME_QUERY_RESULT;
     '*[_type == "project"] | order(orderRank){\n  _id,\n  title,\n  "slug": slug.current,\n  tagline,\n  summary,\n  "client": client->{ name },\n  "services": services[]->{ _id, title },\n  cover{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId } }\n}': PROJECTS_QUERY_RESULT;
-    '*[_type == "project" && defined(slug.current)]{\n  "slug": slug.current\n}': PROJECT_SLUGS_QUERY_RESULT;
-    '*[_type == "project" && slug.current == $slug][0]{\n  _id,\n  title,\n  "slug": slug.current,\n  tagline,\n  summary,\n  seo{ title, description },\n  "client": client->{ name },\n  "services": services[]->{ _id, title },\n  cover{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId } },\n  body[]{\n    _key,\n    _type,\n    _type == "mediaFull" => {\n      media{\n        kind,\n        image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } },\n        video{ streamId }\n      }\n    },\n    _type == "mediaPair" => {\n      left{\n        kind,\n        image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } },\n        video{ streamId }\n      },\n      right{\n        kind,\n        image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } },\n        video{ streamId }\n      }\n    }\n  }\n}': PROJECT_QUERY_RESULT;
+    '*[_type == "project" && slug.current == $slug][0]{\n  _id,\n  title,\n  "slug": slug.current,\n  tagline,\n  summary,\n  "client": client->{ name },\n  "services": services[]->{ _id, title },\n  cover{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId } },\n  seo{ title, description },\n  body[]{\n    _key,\n    _type,\n    _type == "mediaFull" => { media{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId } } },\n    _type == "mediaPair" => { left{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId } }, right{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId } } }\n  }\n}': PROJECT_QUERY_RESULT;
+    '*[_type == "project" && defined(slug.current)] | order(orderRank){\n  _id,\n  title,\n  "slug": slug.current,\n  tagline,\n  summary,\n  "client": client->{ name },\n  "services": services[]->{ _id, title },\n  cover{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId } },\n  seo{ title, description },\n  body[]{\n    _key,\n    _type,\n    _type == "mediaFull" => { media{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId } } },\n    _type == "mediaPair" => { left{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId } }, right{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId } } }\n  }\n}': PROJECT_PAGES_QUERY_RESULT;
     '*[_type == "galleryItem"] | order(orderRank){\n  _id,\n  image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }\n}': GALLERY_QUERY_RESULT;
     '{\n  "page": *[_id == "studio"][0]{\n    aboutHeading,\n    aboutHeadings,\n    aboutBody,\n    aboutHighlights,\n    clientsIntro,\n    clients,\n    images[]{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } },\n    seo{ title, description }\n  },\n  "services": *[_type == "service"] | order(orderRank){ _id, title, description },\n  "team": *[_type == "teamMember"] | order(orderRank){\n    _id, name, role, bio,\n    portrait{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }\n  }\n}': STUDIO_QUERY_RESULT;
     '*[_type == "legalPage" && defined(slug.current)] | order(orderRank){\n  title,\n  "slug": slug.current\n}': LEGAL_PAGES_QUERY_RESULT;

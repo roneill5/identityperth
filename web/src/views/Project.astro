@@ -4,7 +4,8 @@ import NotFound from './NotFound.astro';
 import Media from '../components/Media.astro';
 import NextProject from '../components/NextProject.astro';
 import { client } from '../sanity/client';
-import { PROJECT_QUERY, PROJECTS_QUERY } from '../sanity/queries';
+import { PROJECTS_QUERY } from '../sanity/queries';
+import { getProject, load } from '../sanity/fetch';
 import { paragraphs, snippet } from '../lib/text';
 import { SITE_NAME } from '../lib/site';
 import { stegaClean } from '@sanity/client/stega';
@@ -16,7 +17,7 @@ interface Props {
 	slug: string;
 }
 const { slug } = Astro.props;
-const [project, all] = await Promise.all([sanity.fetch(PROJECT_QUERY, { slug }), sanity.fetch(PROJECTS_QUERY)]);
+const [project, all] = await Promise.all([getProject(sanity, slug), load(sanity, PROJECTS_QUERY)]);
 if (!project) Astro.response.status = 404;
 
 const index = project ? all.findIndex((p) => p.slug === slug) : -1;

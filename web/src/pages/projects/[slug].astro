@@ -1,11 +1,13 @@
 ---
 import Project from '../../views/Project.astro';
 import { client } from '../../sanity/client';
-import { PROJECT_SLUGS_QUERY } from '../../sanity/queries';
+import { PROJECTS_QUERY } from '../../sanity/queries';
+import { load } from '../../sanity/fetch';
 
 export async function getStaticPaths() {
-	const slugs = await client.fetch(PROJECT_SLUGS_QUERY);
-	return slugs.filter((s) => s.slug).map(({ slug }) => ({ params: { slug } }));
+	// The list every project page needs anyway (for its next project): asked for once per build.
+	const projects = await load(client, PROJECTS_QUERY);
+	return projects.filter((p) => p.slug).map(({ slug }) => ({ params: { slug: slug! } }));
 }
 
 const { slug } = Astro.params;

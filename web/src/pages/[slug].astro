@@ -3,9 +3,10 @@
 import LegalPage from '../views/LegalPage.astro';
 import { client } from '../sanity/client';
 import { LEGAL_PAGES_QUERY } from '../sanity/queries';
+import { load } from '../sanity/fetch';
 
 export async function getStaticPaths() {
-	const pages = await client.fetch(LEGAL_PAGES_QUERY);
+	const pages = await load(client, LEGAL_PAGES_QUERY);
 	return pages.filter((p) => p.slug).map(({ slug }) => ({ params: { slug } }));
 }
 

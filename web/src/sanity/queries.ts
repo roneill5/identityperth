@@ -1,11 +1,41 @@
 import { defineQuery } from 'groq';
 
 /*
- * Every query is a static string so Sanity TypeGen can generate result types
- * (run `npm run typegen` at the repo root). Image and media projections are
- * repeated inline for the same reason: TypeGen cannot follow string
- * interpolation.
+ * Fragments: the projections several queries share, written once. Sanity
+ * TypeGen follows constants interpolated into a `defineQuery` string, so the
+ * result types still come out per query (run `npm run typegen` at the repo
+ * root after changing anything here).
  */
+
+/** An image field with what SanityImage needs from its asset: the size and the blurred placeholder. */
+const IMAGE = `{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }`;
+
+/** A media slot: an image or a Stream video. */
+const MEDIA = `{ kind, image${IMAGE}, video{ streamId } }`;
+
+/** The SEO tab. */
+const SEO = `seo{ title, description }`;
+
+/** What a project tile shows, and the head of its page. */
+const PROJECT_CARD = `
+  _id,
+  title,
+  "slug": slug.current,
+  tagline,
+  summary,
+  "client": client->{ name },
+  "services": services[]->{ _id, title },
+  cover${MEDIA}`;
+
+/** A whole project page: the card plus its search fields and the exports under it. */
+const PROJECT_PAGE = `${PROJECT_CARD},
+  ${SEO},
+  body[]{
+    _key,
+    _type,
+    _type == "mediaFull" => { media${MEDIA} },
+    _type == "mediaPair" => { left${MEDIA}, right${MEDIA} }
+  }`;
 
 export const SETTINGS_QUERY = defineQuery(`*[_id == "siteSettings"][0]{
   tagline,
@@ -15,69 +45,31 @@ export const SETTINGS_QUERY = defineQuery(`*[_id == "siteSettings"][0]{
   phone,
   address,
   socials[]{ _key, label, url },
-  seo{ title, description }
+  ${SEO}
 }`);
 
 export const HOME_QUERY = defineQuery(`*[_id == "home"][0]{
   heroVideo,
   heroVideoMobile,
   ticker,
-  seo{ title, description }
+  ${SEO}
 }`);
 
-export const PROJECTS_QUERY = defineQuery(`*[_type == "project"] | order(orderRank){
-  _id,
-  title,
-  "slug": slug.current,
-  tagline,
-  summary,
-  "client": client->{ name },
-  "services": services[]->{ _id, title },
-  cover{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId } }
+/** Every project in menu order, as tiles. Also where the project pages' addresses come from. */
+export const PROJECTS_QUERY = defineQuery(`*[_type == "project"] | order(orderRank){${PROJECT_CARD}
 }`);
 
-export const PROJECT_SLUGS_QUERY = defineQuery(`*[_type == "project" && defined(slug.current)]{
-  "slug": slug.current
+/** One project page, for the editors' preview (one request per page viewed). */
+export const PROJECT_QUERY = defineQuery(`*[_type == "project" && slug.current == $slug][0]{${PROJECT_PAGE}
 }`);
 
-export const PROJECT_QUERY = defineQuery(`*[_type == "project" && slug.current == $slug][0]{
-  _id,
-  title,
-  "slug": slug.current,
-  tagline,
-  summary,
-  seo{ title, description },
-  "client": client->{ name },
-  "services": services[]->{ _id, title },
-  cover{ kind, image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }, video{ streamId } },
-  body[]{
-    _key,
-    _type,
-    _type == "mediaFull" => {
-      media{
-        kind,
-        image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } },
-        video{ streamId }
-      }
-    },
-    _type == "mediaPair" => {
-      left{
-        kind,
-        image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } },
-        video{ streamId }
-      },
-      right{
-        kind,
-        image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } },
-        video{ streamId }
-      }
-    }
-  }
+/** Every project page at once, for the build: one request instead of one per page. */
+export const PROJECT_PAGES_QUERY = defineQuery(`*[_type == "project" && defined(slug.current)] | order(orderRank){${PROJECT_PAGE}
 }`);
 
 export const GALLERY_QUERY = defineQuery(`*[_type == "galleryItem"] | order(orderRank){
   _id,
-  image{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }
+  image${IMAGE}
 }`);
 
 export const STUDIO_QUERY = defineQuery(`{
@@ -88,13 +80,13 @@ export const STUDIO_QUERY = defineQuery(`{
     aboutHighlights,
     clientsIntro,
     clients,
-    images[]{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } },
-    seo{ title, description }
+    images[]${IMAGE},
+    ${SEO}
   },
   "services": *[_type == "service"] | order(orderRank){ _id, title, description },
   "team": *[_type == "teamMember"] | order(orderRank){
     _id, name, role, bio,
-    portrait{ ..., asset->{ _id, url, metadata{ lqip, dimensions{ width, height, aspectRatio } } } }
+    portrait${IMAGE}
   }
 }`);
 

@@ -14,7 +14,7 @@ import RichText from '../components/RichText.astro';
 import RingIcon from '../components/icons/RingIcon.astro';
 import { client } from '../sanity/client';
 import { STUDIO_QUERY } from '../sanity/queries';
-import { getSettings } from '../sanity/fetch';
+import { getSettings, load } from '../sanity/fetch';
 import { paragraphs } from '../lib/text';
 import { safeHref } from '../lib/site';
 import { stegaClean } from '@sanity/client/stega';
@@ -23,8 +23,8 @@ import { stegaClean } from '@sanity/client/stega';
 const sanity = Astro.locals.sanity ?? client;
 
 const [{ page, services, team }, settings] = await Promise.all([
-	sanity.fetch(STUDIO_QUERY),
-	getSettings(),
+	load(sanity, STUDIO_QUERY),
+	getSettings(sanity),
 ]);
 const addressLines = settings?.address?.split('\n').filter(Boolean) ?? [];
 

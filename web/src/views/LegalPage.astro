@@ -14,7 +14,7 @@ import NotFound from './NotFound.astro';
 import RichText from '../components/RichText.astro';
 import RingIcon from '../components/icons/RingIcon.astro';
 import { client } from '../sanity/client';
-import { getSettings } from '../sanity/fetch';
+import { getSettings, load } from '../sanity/fetch';
 import { LEGAL_PAGE_QUERY } from '../sanity/queries';
 import { stegaClean } from '@sanity/client/stega';
 import { blockText, headingId, type TextBlock } from '../lib/portable-text';
@@ -26,7 +26,7 @@ const { slug } = Astro.props;
 
 /** The draft client on /preview, the build-time one everywhere else. */
 const sanity = Astro.locals.sanity ?? client;
-const [page, settings] = await Promise.all([sanity.fetch(LEGAL_PAGE_QUERY, { slug }), getSettings(sanity)]);
+const [page, settings] = await Promise.all([load(sanity, LEGAL_PAGE_QUERY, { slug }), getSettings(sanity)]);
 if (!page) Astro.response.status = 404;
 
 const body = page?.body ?? [];

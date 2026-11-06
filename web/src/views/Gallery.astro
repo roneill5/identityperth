@@ -14,11 +14,12 @@ import Base from '../layouts/Base.astro';
 import SanityImage from '../components/SanityImage.astro';
 import { client } from '../sanity/client';
 import { GALLERY_QUERY } from '../sanity/queries';
+import { load } from '../sanity/fetch';
 
 /** The draft client on /preview, the build-time one everywhere else. */
 const sanity = Astro.locals.sanity ?? client;
 
-const items = await sanity.fetch(GALLERY_QUERY);
+const items = await load(sanity, GALLERY_QUERY);
 
 const COLUMNS = 3;
 // Column heights in column widths; the small extra per image stands in for the gap below it.

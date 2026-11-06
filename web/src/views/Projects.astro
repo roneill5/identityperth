@@ -3,11 +3,12 @@ import Base from '../layouts/Base.astro';
 import ProjectGrid from '../components/ProjectGrid.astro';
 import { client } from '../sanity/client';
 import { PROJECTS_QUERY } from '../sanity/queries';
+import { load } from '../sanity/fetch';
 
 /** The draft client on /preview, the build-time one everywhere else. */
 const sanity = Astro.locals.sanity ?? client;
 
-const projects = await sanity.fetch(PROJECTS_QUERY);
+const projects = await load(sanity, PROJECTS_QUERY);
 ---
 
 <Base title="Projects" metaTitle="Branding, Campaign & Digital Projects | Identity Perth" description="Selected work by Identity, Perth: brand identities, campaigns, websites and packaging for hospitality, property, government and tourism clients across WA.">
