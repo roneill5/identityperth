@@ -114,7 +114,8 @@ let current: Transition | null = null;
 function updateNav(pathname = location.pathname) {
 	document.querySelectorAll<HTMLAnchorElement>('[data-nav-link]').forEach((link) => {
 		const href = link.getAttribute('href') ?? '';
-		const active = !href.startsWith('http') && (pathname === href || pathname.startsWith(`${href}/`));
+		const base = href.replace(/\/$/, '');
+		const active = !href.startsWith('http') && (pathname === base || pathname.startsWith(`${base}/`));
 		if (active) link.setAttribute('aria-current', 'page');
 		else link.removeAttribute('aria-current');
 	});

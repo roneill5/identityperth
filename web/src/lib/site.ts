@@ -21,11 +21,13 @@ export function safeHref(href?: string | null): string | null {
  * it back, add { label: 'Thinking', href: '/thinking', ... } at the end, or
  * an https:// address with `external: true` to open it in a new tab.
  * `prefetch: false` keeps the router from fetching a link ahead of a click.
+ * Internal links end in a slash, the address each page really has: the
+ * no-slash form is a 307, and Google indexed that instead of the page (Nov 2026).
  */
 export const NAV = [
-	{ label: 'Projects', href: '/projects', external: false, prefetch: true },
-	{ label: 'Studio', href: '/studio', external: false, prefetch: true },
-	{ label: 'Gallery', href: '/gallery', external: false, prefetch: true },
+	{ label: 'Projects', href: '/projects/', external: false, prefetch: true },
+	{ label: 'Studio', href: '/studio/', external: false, prefetch: true },
+	{ label: 'Gallery', href: '/gallery/', external: false, prefetch: true },
 ] as const;
 
 /**
@@ -41,5 +43,6 @@ export type NavItem = (typeof NAV)[number];
 export const INTERNAL_NAV = NAV.filter((item) => !item.external);
 
 export function isActive(pathname: string, href: string): boolean {
-	return !href.startsWith('http') && (pathname === href || pathname.startsWith(`${href}/`));
+	const base = href.replace(/\/$/, '');
+	return !href.startsWith('http') && (pathname === base || pathname.startsWith(`${base}/`));
 }

@@ -46,7 +46,7 @@ const sizes = variant === 'wide' ? '(min-width: 1024px) 71vw, 100vw' : '(min-wid
 const services = (project.services ?? []).map((s) => s?.title).filter((t): t is string => Boolean(t));
 ---
 
-<a href={`/projects/${project.slug}`} class:list={['tile group relative block', className]} data-flip data-warm-sizes="(min-width: 1024px) 71vw, 100vw">
+<a href={`/projects/${project.slug}/`} class:list={['tile group relative block', className]} data-flip data-warm-sizes="(min-width: 1024px) 71vw, 100vw">
 	<div class:list={['relative overflow-hidden bg-ink', variant === 'wide' ? 'aspect-square md:aspect-[1025/475]' : 'aspect-square']} data-flip-box>
 		{project.cover && <Media media={project.cover} aspect={aspect} fill sizes={sizes} loading={loading} fetchpriority={loading === 'eager' ? 'high' : undefined} preload={loading === 'eager'} file class={mediaClass} />}
 		<span class:list={['pointer-events-none absolute inset-0 hidden bg-slate/70 transition-opacity duration-500 lg:block', wash]} aria-hidden="true"></span>

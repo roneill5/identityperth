@@ -15,3 +15,24 @@
 /feed/* / 301
 /wp-content/* / 301
 /wp-json/* / 301
+# Old WordPress pages with a direct equivalent here.
+/our-work /projects/ 301
+/our-work/* /projects/ 301
+/who-we-are /studio/ 301
+/who-we-are/* /studio/ 301
+/contact /studio/#contact 301
+/contact/* /studio/#contact 301
+/powerplay /projects/powerplay/ 301
+/powerplay/* /projects/powerplay/ 301
+/the-camfield /projects/the-camfield/ 301
+/the-camfield/* /projects/the-camfield/ 301
+/city-of-wanneroo /projects/city-of-wanneroo/ 301
+/city-of-wanneroo/* /projects/city-of-wanneroo/ 301
+/great-southern-wine-region /projects/great-southern-wine-region/ 301
+/great-southern-wine-region/* /projects/great-southern-wine-region/ 301
+/export-awards /projects/wa-export-awards-2026/ 301
+/export-awards/* /projects/wa-export-awards-2026/ 301
+/sterling_property /projects/sterling-property/ 301
+/sterling_property/* /projects/sterling-property/ 301
+/cape-arid-2 /projects/cape-arid-rooms/ 301
+/cape-arid-2/* /projects/cape-arid-rooms/ 301

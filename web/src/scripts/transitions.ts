@@ -315,7 +315,7 @@ export async function unflipOut(fallback: () => Promise<void>) {
 	const frame = canCarry(video) ? null : freeze(video);
 	if (frame) clone.appendChild(frame);
 	document.body.appendChild(clone);
-	if (canCarry(video)) carryVideo(video, clone, `a[data-flip][href="/projects/${slug}"]`);
+	if (canCarry(video)) carryVideo(video, clone, `a[data-flip][href="/projects/${slug}/"]`);
 	returning = { clone, slug, time: frame ? (video?.currentTime ?? 0) : null };
 	// The list's first screen appears as it is, so the landing tile is there to land on.
 	arriveSettled();
@@ -326,7 +326,7 @@ export async function unflipOut(fallback: () => Promise<void>) {
 export async function unflipIn(fallback: () => Promise<void>) {
 	const r = returning;
 	returning = null;
-	const tile = r ? document.querySelector<HTMLElement>(`a[data-flip][href="/projects/${r.slug}"]`) : null;
+	const tile = r ? document.querySelector<HTMLElement>(`a[data-flip][href="/projects/${r.slug}/"]`) : null;
 	if (!r || !tile) {
 		adoptVideo();
 		r?.clone.remove();
@@ -344,7 +344,7 @@ export async function unflipIn(fallback: () => Promise<void>) {
 		window.scrollTo(0, window.scrollY + box.top - Math.max(0, (window.innerHeight - box.height) / 2));
 		box = cover.getBoundingClientRect();
 	}
-	const resumed = r.time == null ? Promise.resolve() : resumeVideoAt(`a[data-flip][href="/projects/${r.slug}"]`, r.time);
+	const resumed = r.time == null ? Promise.resolve() : resumeVideoAt(`a[data-flip][href="/projects/${r.slug}/"]`, r.time);
 	const shrink = gsap.to(r.clone, { left: box.left, top: box.top, width: box.width, height: box.height, duration: 0.7, ease: 'expo.inOut' });
 	// The list fades in from 0.25 s, or a touch later if its pictures are still decoding.
 	await Promise.all([decoded(500), new Promise((resolve) => window.setTimeout(resolve, 250))]);
