@@ -13,7 +13,7 @@ import SanityImage, { type Figure } from '../components/SanityImage.astro';
 import RichText from '../components/RichText.astro';
 import RingIcon from '../components/icons/RingIcon.astro';
 import { client } from '../sanity/client';
-import { STUDIO_QUERY } from '../sanity/queries';
+import { PROJECTS_QUERY, STUDIO_QUERY } from '../sanity/queries';
 import { getSettings, load } from '../sanity/fetch';
 import { paragraphs } from '../lib/text';
 import { safeHref } from '../lib/site';
@@ -22,11 +22,26 @@ import { stegaClean } from '@sanity/client/stega';
 /** The draft client on /preview, the build-time one everywhere else. */
 const sanity = Astro.locals.sanity ?? client;
 
-const [{ page, services, team }, settings] = await Promise.all([
+// The project list is the one Home and Projects already asked for, so the build makes no extra request for it.
+const [{ page, services, team }, settings, projects] = await Promise.all([
 	load(sanity, STUDIO_QUERY),
 	getSettings(sanity),
+	load(sanity, PROJECTS_QUERY),
 ]);
 const addressLines = settings?.address?.split('\n').filter(Boolean) ?? [];
+
+// A name in the Clients list links to that client's project, the first in the Projects order when there are
+// several (Ross, 19 Nov); a client with no project stays plain text. The list is typed names, not references,
+// so names are compared: equal, or one the opening words of the other ("Bromley Real Estate" finds the project
+// whose client is "Bromley Real Estate Group").
+const nameKey = (name: string) => stegaClean(name).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+const sameClient = (a: string, b: string) => a === b || a.startsWith(`${b} `) || b.startsWith(`${a} `);
+const projectFor = (name: string): string | undefined => {
+	const wanted = nameKey(name);
+	if (!wanted) return undefined;
+	const project = projects.find((p) => p.slug && p.client?.name && sameClient(nameKey(p.client.name), wanted));
+	return project?.slug ? stegaClean(project.slug) : undefined;
+};
 
 const headings = [page?.aboutHeading, ...(page?.aboutHeadings ?? [])].filter(
 	(h, i, all): h is string => Boolean(h) && all.indexOf(h) === i,
@@ -168,9 +183,20 @@ const sections = [
 				<div class="pt-[15px] pb-3">
 					{page?.clientsIntro && <p class="type-h3 mb-4 max-w-[400px] lg:max-w-[500px]">{page.clientsIntro}</p>}
 					<ul class="type-small leading-[1.45] lg:text-[16.5px] lg:leading-[1.35]">
-						{(page?.clients ?? []).map((name) => (
-							<li class="py-0.5 text-paper">{name}</li>
-						))}
+						{(page?.clients ?? []).map((name) => {
+							const slug = projectFor(name);
+							return (
+								<li class="py-0.5 text-paper">
+									{/* The negative margin keeps the taller tap area without adding to the spacing, as on the socials.
+									    Fetched on hover or touch, not on sight: opening Clients would otherwise fetch every linked project at once. */}
+									{slug ? (
+										<a href={`/projects/${slug}/`} class="text-link -my-1 inline-block py-1 hover:text-lime lg:my-0 lg:py-0" data-astro-prefetch="hover">{name}</a>
+									) : (
+										name
+									)}
+								</li>
+							);
+						})}
 					</ul>
 				</div>
 			</details>

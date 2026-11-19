@@ -64,7 +64,8 @@ export const studio = defineType({
       group: 'clients',
       title: 'Clients',
       type: 'array',
-      description: 'The names shown under Clients, in this order. Just names: the Clients documents are what projects point at.',
+      description:
+        'The names shown under Clients, in this order. Just names: the Clients documents are what projects point at. A name that matches the client of a project links to that project (the first in the Projects order if the client has several); the others show as plain text.',
       of: [defineArrayMember({type: 'string'})],
     }),
     defineField({

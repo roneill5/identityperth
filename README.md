@@ -104,7 +104,7 @@ A project's summary can run to several paragraphs, separated by a blank line (up
 
 ## The Studio client list
 
-The names under Clients on the Studio page are typed on the Studio page document (`clients`, Belinda's 22 in her order), not drawn from the Clients documents, which exist only for projects to point at (Ross, 29 Oct: "we just want Bel's 22"). Add or reorder names there.
+The names under Clients on the Studio page are typed on the Studio page document (`clients`, Belinda's 22 in her order), not drawn from the Clients documents, which exist only for projects to point at (Ross, 29 Oct: "we just want Bel's 22"). Add or reorder names there. A name links to that client's project when one exists, the first in the Projects order if there are several; the rest are plain text (Ross, 19 Nov). Nothing is set for this: `web/src/views/Studio.astro` compares each name with the projects' client names, equal or one the opening words of the other, so "Bromley Real Estate" finds the project whose client is "Bromley Real Estate Group".
 
 ## Project pages
 
