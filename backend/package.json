@@ -17,16 +17,16 @@
     "sanity"
   ],
   "dependencies": {
-    "@sanity/icons": "^5.2.3",
-    "@sanity/orderable-document-list": "^2.0.28",
-    "@sanity/ui": "^4.4.10",
-    "react": "^19.2.2",
-    "react-dom": "^19.2.2",
-    "sanity": "^6.19.0",
-    "styled-components": "^6.1.15"
+    "@sanity/icons": "^5.4.0",
+    "@sanity/orderable-document-list": "^2.0.29",
+    "@sanity/ui": "^4.4.12",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "sanity": "^6.24.0",
+    "styled-components": "^6.6.0"
   },
   "devDependencies": {
-    "@types/react": "^19.2.0",
-    "typescript": "^5.9.0"
+    "@types/react": "^19.3.0",
+    "typescript": "^5.9.3"
   }
 }
