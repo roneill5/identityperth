@@ -17,7 +17,9 @@
  *   select_content    a project card: content_type (project), content_id (the slug), area
  *   nav_click         any other link on the site: label, link_url, area
  *   menu_open         the Menu button: area
- *   showreel_advance  leaving the home showreel: method (scroll, swipe, key, click), seconds
+ *   showreel_advance  leaving the home showreel: method (scroll, swipe, key, click), and how long it was
+ *                     watched first, tab in front only: seconds, value (the same number, GA4's event value)
+ *                     and label (the band: under 5s, 5 to 14s, 15 to 29s, 30 to 59s, 60 to 89s, 90s or more)
  *   studio_section    a Studio section opened: label
  *   team_member       a person opened on Studio, from the list or a portrait: label, area
  *   service_open      a service opened on Studio: label

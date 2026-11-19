@@ -131,6 +131,8 @@ Zaraz was already on for the zone before the rebuild, auto-injecting GA4 and the
 
 In GA4, register `area` and `label` once as event-scoped custom dimensions (Admin, Custom definitions), and mark `contact` as a key event once it has arrived.
 
+Showreel watch time needs nothing registered. `showreel_advance` carries the seconds watched (tab in front only) three ways: as `value`, which GA4 totals as the event's Event value (divide by the event count for the average), as a `label` band (under 5s, 5 to 14s, 15 to 29s, 30 to 59s, 60 to 89s, 90s or more) for the spread, and as `seconds`, which GA4 ignores unless a custom metric of that name is registered. Before 19 Nov only `seconds` was sent, so earlier visits have no watch time in GA4.
+
 ## Share images
 
 Every page gets its own 1200 x 630 card for links shared on social media and in chat: the ID mark, a label, the title in Shippori Mincho and a line under it on the left half, the page's picture full bleed on the right half (the project cover, or for a video cover a frame two seconds in from Stream; the showreel's first frame; four Studio or Gallery photos) and the lime ticker bar along the bottom. A share image cannot be a video: Slack, iMessage, LinkedIn and the rest show `og:image`, a still. `web/scripts/og.mjs` renders them with satori and resvg before every build into the gitignored `web/public/og/` (`npm run og` in `web/` renders them on their own). There is no share image field in the CMS: every card is generated (Ross, 3 Nov).
