@@ -27,6 +27,7 @@ const h3 = (t) => block('h3', t)
 const p = (...parts) => block('normal', parts)
 const li = (...parts) => block('normal', parts, 'bullet')
 const EMAIL = {text: 'hello@identityperth.com', href: 'mailto:hello@identityperth.com'}
+const PHONE = {text: '+61 8 6255 8629', href: 'tel:+61862558629'}
 
 const body = [
   p('This policy explains how Identity Perth Pty Ltd collects, holds, uses and discloses personal information, on identityperth.com and in our work with clients.'),
@@ -142,7 +143,7 @@ const body = [
   h3('21. Changes to this policy'),
   p('We may update this policy from time to time, for example when we change the tools we use. The current version is always at identityperth.com/privacy. Continuing to use the Site after a change means the updated policy applies to your visit.'),
   h3('22. Contact us'),
-  p('Identity Perth Pty Ltd, 5/15 Vanden Way, Joondalup WA 6027, Australia. Email ', EMAIL, '.'),
+  p('Identity Perth Pty Ltd, 5/15 Vanden Way, Joondalup WA 6027, Australia. Email ', EMAIL, ' or call ', PHONE, '.'),
 ]
 
 // Legal pages show list items without markers (global.css, .prose-legal): like the Terms, each item carries
